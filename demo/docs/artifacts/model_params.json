@@ -1,0 +1,21 @@
+{
+  "feature_names": ["intercept", "down_force", "platen_speed", "slurry_flow", "pad_age", "pattern_density", "slurry_x_density", "pad_age_squared"],
+  "coefficients": {
+    "intercept": 153.302317,
+    "down_force": 34.64123119,
+    "platen_speed": -1.28031958,
+    "slurry_flow": 0.66534374,
+    "pad_age": 1.56280846,
+    "pattern_density": 156.12730708,
+    "slurry_x_density": -0.87744878,
+    "pad_age_squared": -0.00640866
+  },
+  "training_ranges": {
+    "down_force": {"min": 2.0, "max": 4.4},
+    "platen_speed": {"min": 68.0, "max": 148.0},
+    "slurry_flow": {"min": 118.0, "max": 228.0},
+    "pad_age": {"min": 12.0, "max": 128.0},
+    "pattern_density": {"min": 0.28, "max": 0.76}
+  },
+  "educational_only": true
+}

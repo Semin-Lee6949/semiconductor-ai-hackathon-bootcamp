@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="교육용 합성 CMP 데이터 기반 Recipe 시뮬레이터">
+  <title>CMP Recipe Simulator · Educational Demo</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">SEMICONDUCTOR AI · EDUCATIONAL DEMO</p>
+    <h1>CMP Recipe Simulator</h1>
+    <p>공정조건을 바꾸고 제거율·균일도·Dishing 위험의 변화를 확인하는 합성 데이터 기반 MVP입니다.</p>
+  </header>
+
+  <main>
+    <section class="panel controls" aria-labelledby="controls-title">
+      <div>
+        <p class="section-label">INPUT</p>
+        <h2 id="controls-title">Recipe 조건</h2>
+      </div>
+      <label>Down Force <output id="down_force_value"></output><input id="down_force" type="range" min="2" max="4.4" step="0.1" value="3.2"></label>
+      <label>Platen Speed <output id="platen_speed_value"></output><input id="platen_speed" type="range" min="68" max="148" step="2" value="108"></label>
+      <label>Slurry Flow <output id="slurry_flow_value"></output><input id="slurry_flow" type="range" min="118" max="228" step="2" value="176"></label>
+      <label>Pad Age <output id="pad_age_value"></output><input id="pad_age" type="range" min="12" max="128" step="2" value="58"></label>
+      <label>Pattern Density <output id="pattern_density_value"></output><input id="pattern_density" type="range" min="0.28" max="0.76" step="0.01" value="0.52"></label>
+    </section>
+
+    <section class="results" aria-live="polite">
+      <article class="metric hero"><span>Predicted Removal Rate</span><strong id="removal_rate">—</strong><small>교육용 상대 단위</small></article>
+      <article class="metric"><span>WIWNU Proxy</span><strong id="wiwnu">—</strong><small>낮을수록 양호</small></article>
+      <article class="metric"><span>Dishing Risk</span><strong id="dishing">—</strong><small>합성 위험도</small></article>
+      <article class="metric"><span>Decision</span><strong id="decision">—</strong><small id="recommendation">모델 로딩 중</small></article>
+    </section>
+
+    <section class="panel evidence">
+      <div><p class="section-label">VERIFY</p><h2>모델 근거</h2></div>
+      <dl>
+        <div><dt>Baseline RMSE</dt><dd id="baseline_rmse">—</dd></div>
+        <div><dt>Improved RMSE</dt><dd id="improved_rmse">—</dd></div>
+        <div><dt>Holdout rows</dt><dd id="holdout_rows">—</dd></div>
+        <div><dt>Data audit</dt><dd id="audit">—</dd></div>
+      </dl>
+      <p class="notice">실제 공정 Recipe 추천이 아닙니다. 합성 데이터와 단순 회귀로 데이터→모델→웹 의사결정 흐름만 시연합니다.</p>
+    </section>
+  </main>
+</body>
+</html>
