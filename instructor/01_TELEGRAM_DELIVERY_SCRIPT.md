@@ -48,10 +48,25 @@ AI, Telegram, GitHub에 입력하지 않습니다.
 읽었으면: 번호 + ✅ 보안 확인
 ```
 
-## 메시지 03 — 공식 설치 페이지 · 10분
+## 메시지 03 — 숫자를 믿기 전 질문 · 8분
 
 ```text
-[실습 03/12] 아래 공식 사이트만 이용합니다.
+[실습 03/12] 수율 평균이 내려갔다고 가정합니다.
+공정이 변한 것일까요, 측정·수집·표본 구성이 변한 것일까요?
+
+결측을 모두 지우면 위험조건까지 지울 수 있습니다.
+이상치는 오류일 수도 있지만 실제 Fault일 수도 있습니다.
+오늘은 삭제부터 하지 않고 발생 위치와 영향을 먼저 봅니다.
+
+번호 + 결측/이상치 처리 전에 확인할 것 한 가지를 답해주세요.
+```
+
+강사는 응답을 Tool·Lot·시간·단위·센서 범위로 묶고 설치로 연결한다.
+
+## 메시지 04 — 공식 설치 페이지 · 18분
+
+```text
+[실습 04/12] 아래 공식 사이트만 이용합니다.
 VS Code: https://code.visualstudio.com/download
 Git: https://git-scm.com/downloads
 Python: https://www.python.org/downloads/
@@ -63,10 +78,10 @@ Windows는 PowerShell, macOS는 Terminal을 사용합니다.
 
 강사 화면: `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`의 OS별 설치 명령을 띄운다.
 
-## 메시지 04 — 버전 확인 · 25분
+## 메시지 05 — 버전 확인 · 30분
 
 ```text
-[실습 04/12] 버전 네 개를 확인하세요.
+[실습 05/12] 버전 네 개를 확인하세요.
 
 Windows PowerShell:
 git --version
@@ -86,10 +101,10 @@ codex --version
 
 15명 완료 시 이동. `code`만 실패하면 VS Code 직접 실행으로 통과시킨다.
 
-## 메시지 05 — Codex 로그인 · 35분
+## 메시지 06 — Codex 로그인·Git 설정 · 38분
 
 ```text
-[실습 05/12] 실행:
+[실습 06/12] 실행:
 codex login
 
 브라우저 로그인 후 확인:
@@ -100,18 +115,15 @@ API Key를 채팅이나 코드에 붙이지 마세요.
 진단 완료: 번호 + ✅ Codex
 ```
 
-## 메시지 06 — Git 설정 · 42분
+이어 따옴표 안을 본인 정보로 바꿔 실행한다.
 
 ```text
-[실습 06/12] 따옴표 안을 본인 정보로 바꿔 실행하세요.
 git config --global user.name "YOUR NAME"
 git config --global user.email "YOUR_GITHUB_EMAIL"
 git config --global --list
-
-이름·이메일이 보이면: 번호 + ✅ Git 설정
 ```
 
-## 메시지 07 — 저장소 생성과 Clone · 48분
+## 메시지 07 — 저장소 생성과 Clone · 44분
 
 ```text
 [실습 07/12]
@@ -137,7 +149,7 @@ code .
 탐색기에 AGENTS.md와 PLAN.md가 보이면: 번호 + ✅ Clone
 ```
 
-## 메시지 08 — 자동 환경점검 · 60분
+## 메시지 08 — 자동 환경점검 · 50분
 
 ```text
 [실습 08/12] VS Code Terminal에서 실행하세요.
@@ -151,10 +163,18 @@ FAIL이면: 번호 + 🟡 + FAIL 한 줄만 복사
 
 강사는 조별 READY 수를 기록한다. 이 시점의 미통과자는 보조강사에게 넘긴다.
 
-## 메시지 09 — Codex 읽기 실습 · 70분
+## 메시지 09 — 통계적 데이터 감사 · 52분
 
 ```text
-[실습 09/12] 프로젝트 폴더에서 codex를 실행하고 아래 프롬프트를 넣으세요.
+[실습 09/12] 데이터는 삭제하기 전에 발생 위치부터 봅니다.
+
+Windows: py src/audit.py
+macOS: python3 src/audit.py
+
+확인할 숫자:
+행·열 / 열별 결측 / 완전 중복 / 수치열 범위 / Tool·Lot 표본 수
+
+Codex를 실행하고 아래 프롬프트를 넣으세요.
 
 AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 아직 수정하지 마라.
@@ -162,32 +182,37 @@ AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 실제 파일명을 근거로 설명하라.
 없는 파일이나 확인되지 않은 공정 사실을 만들지 마라.
 
-설명을 읽고 실제 파일과 맞으면: 번호 + ✅ Read
-틀린 내용이 있으면 AI_USAGE.md에 기록하세요.
+이상치는 자동 삭제하지 말고 단위·센서·Tool·Lot·시간 원인을 구분하세요.
+숫자가 확인되면: 번호 + ✅ Audit
 ```
 
-## 메시지 10 — 데이터 감사와 로컬 웹앱 · 82분
+## 메시지 10 — 그래프 갤러리와 seaborn 실습 · 67분
 
 ```text
-[실습 10/12]
+[실습 10/12] 먼저 갤러리를 엽니다.
+seaborn: https://seaborn.pydata.org/examples/index.html
+ggplot2: https://ggplot2.tidyverse.org/reference/index.html
+
+질문→그래프:
+분포→histogram
+Tool 비교→boxplot + 실제 점
+변수 관계→scatter
+Run Drift→line
+결측·상관→heatmap
+
 Windows:
-py src/audit.py
-py src/build_site.py
-py -m http.server 8000 --directory docs
+py -m pip install -r requirements-class.txt
+py lessons/data_quality_visualization_demo.py
 
 macOS:
-python3 src/audit.py
-python3 src/build_site.py
-python3 -m http.server 8000 --directory docs
+python3 -m pip install -r requirements-class.txt
+python3 lessons/data_quality_visualization_demo.py
 
-브라우저: http://localhost:8000
-확인: 행·열, 결측, 중복, 이상치, Tool/Lot 편중
-확인: 입력 2개를 바꾸면 결과가 갱신되는가?
-
-되면: 번호 + ✅ Local MVP
+cmp_audit_gallery.png를 열고 결측 위치·Tool 차이·시간 Drift를 말하세요.
+되면: 번호 + ✅ Gallery
 ```
 
-## 메시지 11 — 최소 변경과 Push · 100분
+## 메시지 11 — 최소 변경과 Push · 95분
 
 ```text
 [실습 11/12] Codex에 요청:
@@ -206,10 +231,20 @@ git push origin main
 GitHub에 Commit이 보이면: 번호 + ✅ Push
 ```
 
-## 메시지 12 — Pages와 제출 · 110분
+## 메시지 12 — 로컬 웹앱·Pages·제출 · 106분
 
 ```text
 [실습 12/12]
+Windows:
+py src/build_site.py
+py -m http.server 8000 --directory docs
+
+macOS:
+python3 src/build_site.py
+python3 -m http.server 8000 --directory docs
+
+브라우저에서 http://localhost:8000 확인 후 Ctrl+C
+
 GitHub 저장소 → Settings → Pages
 Source: Deploy from a branch
 Branch: main / Folder: /docs → Save

@@ -7,12 +7,14 @@
 - [ ] Git, Python 3.11+, VS Code 설치
 - [ ] 공용 테스트 저장소 Fork·Commit·Push
 - [ ] NotebookLM 접속
+- [ ] `requirements-class.txt` 설치와 seaborn 차트 생성
 - [ ] 실제 회사자료 사용 금지 동의
 
 ## 교육장
 
 - [ ] 20명 동시 Wi-Fi와 전원
 - [ ] GitHub·OpenAI·Google 차단 여부
+- [ ] seaborn·ggplot2 공식 Gallery 접속
 - [ ] 프로젝터·마이크·발표 타이머
 - [ ] URL 명단과 QR 백업
 - [ ] 실습 보조인력 1명
@@ -24,4 +26,5 @@
 - [ ] 비공개 Answer Key
 - [ ] Starter Repository
 - [ ] 설치 실패자용 ZIP과 Screenshot
+- [ ] 네트워크 실패 대비 Python wheel cache 또는 생성된 감사 PNG
 - [ ] 중간 제출·발표·평가 양식

@@ -1,0 +1,34 @@
+{
+  "rows": 805,
+  "columns": 15,
+  "exact_duplicate_rows": 5,
+  "missing_by_column": {
+    "down_force_psi": 14,
+    "platen_speed_rpm": 6,
+    "head_speed_rpm": 7,
+    "slurry_flow_ml_min": 10,
+    "pad_age_runs": 11,
+    "pattern_density": 8
+  },
+  "iqr_outlier_candidates": {
+    "sequence": 0,
+    "down_force_psi": 1,
+    "platen_speed_rpm": 2,
+    "head_speed_rpm": 3,
+    "slurry_flow_ml_min": 6,
+    "pad_age_runs": 1,
+    "pattern_density": 0,
+    "removal_rate_proxy": 0,
+    "wiwnu_proxy": 2,
+    "dishing_nm": 2,
+    "erosion_nm": 3,
+    "yield_proxy": 1
+  },
+  "samples_by_tool": {
+    "T01": 426,
+    "T02": 191,
+    "T03": 114,
+    "T04": 74
+  },
+  "warning": "IQR flags are review candidates, not automatic deletion rules. Determine physical, unit, tool, lot, and time context first."
+}

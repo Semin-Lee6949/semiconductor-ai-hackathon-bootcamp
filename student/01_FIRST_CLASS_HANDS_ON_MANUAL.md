@@ -43,16 +43,16 @@
 
 | 시간 | 직접 하는 일 | 통과 증거 |
 |---|---|---|
-| 0~10분 | 결과물·보안·상태표시 확인 | Telegram 번호 응답 |
-| 10~35분 | Git·Python·VS Code·Codex 설치 확인 | 버전 4개 표시 |
-| 35~45분 | Codex 로그인, Git 사용자 설정 | 로그인 상태·Git 이름 |
-| 45~60분 | 개인 저장소 생성·Clone | 내 저장소 폴더 |
-| 60~72분 | 자동 환경점검 | `READY` 출력 |
-| 72~87분 | Codex로 저장소와 데이터 구조 읽기 | 수정 전 계획 |
-| 87~102분 | 데모 빌드·로컬 실행 | 브라우저 화면 |
-| 102~112분 | 한 줄 수정·테스트·Commit·Push | GitHub Commit |
-| 112~118분 | GitHub Pages 설정 | 공개 URL |
-| 118~120분 | 프로젝트 주제선정 가이드 열기 | 후보 2개 기록 |
+| 0~8분 | 현장 질문·결과물·보안 확인 | Telegram 번호 응답 |
+| 8~18분 | 결측·이상치가 판단을 바꾸는 사례 | 처리 전 질문 2개 |
+| 18~38분 | Git·Python·VS Code·Codex 설치 | 버전 4개 표시 |
+| 38~52분 | 로그인·Git 설정·Clone·자동점검 | `READY` 출력 |
+| 52~67분 | noisy CSV 통계 감사 | 결측·중복·이상치 숫자 |
+| 67~80분 | ggplot2·seaborn 갤러리 | 질문별 그래프 선택 |
+| 80~95분 | seaborn 감사 그래프 생성·해석 | PNG와 답변 6개 |
+| 95~106분 | Codex 최소 변경·테스트·Commit | GitHub Commit |
+| 106~116분 | 로컬 웹앱·GitHub Pages | 공개 URL |
+| 116~120분 | 프로젝트 가이드 | 후보 2개 기록 |
 
 ## 3. STEP 1 — 필수 사이트 로그인
 
@@ -267,6 +267,8 @@ AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 
 ## 10. STEP 8 — 데이터 감사 실행
 
+먼저 [`lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`](../lessons/01_DATA_QUALITY_AND_VISUALIZATION.md)를 열어 결측·이상치·그래프 선택 순서를 확인합니다.
+
 Windows:
 
 ```powershell
@@ -294,6 +296,36 @@ python3 src/audit.py
 - 단위 오류, 센서 오류, 실제 희귀 공정상태를 먼저 구분합니다.
 - 전체 상관계수 하나로 원인을 단정하지 않습니다.
 - Tool·Lot·시간 편중을 확인한 뒤 가설을 말합니다.
+
+### ggplot2·seaborn 갤러리
+
+- [seaborn Example Gallery](https://seaborn.pydata.org/examples/index.html)
+- [ggplot2 Reference](https://ggplot2.tidyverse.org/reference/index.html)
+
+두 갤러리에서 histogram, boxplot, scatterplot, lineplot, heatmap을 비교합니다. 문법을 동시에 암기하지 않고, 실습은 Python·seaborn으로 통일합니다.
+
+Windows:
+
+```powershell
+py -m pip install -r requirements-class.txt
+py lessons/data_quality_visualization_demo.py
+```
+
+macOS:
+
+```bash
+python3 -m pip install -r requirements-class.txt
+python3 lessons/data_quality_visualization_demo.py
+```
+
+생성된 `artifacts/data_quality/cmp_audit_gallery.png`를 열고 다음을 답합니다.
+
+1. 결측은 어디에 몰려 있는가?
+2. 이상치 후보는 무엇인가?
+3. 전체 관계가 Tool별로 유지되는가?
+4. 시간 Drift가 있는가?
+5. 처리 전후 결론이 바뀌는가?
+6. 어떤 추가 측정이 필요한가?
 
 ## 11. STEP 9 — 데모 빌드와 로컬 실행
 

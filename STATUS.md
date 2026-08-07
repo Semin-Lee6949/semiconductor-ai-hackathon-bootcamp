@@ -17,6 +17,8 @@
 - [x] 20명 동시 진행용 Telegram 단계별 대본
 - [x] 주제선정·범위축소·7일 프로젝트 가이드
 - [x] 수강생 환경 자동점검 스크립트
+- [x] 통계적 데이터 품질·이상치·결측 처리 실습
+- [x] ggplot2·seaborn Gallery 기반 그래프 선택 가이드
 - [ ] 수강생용 Starter Template Repository 분리
 - [ ] GitHub Pages 배포 실기기 검증
 - [ ] 20명 계정·Fork·Push 사전 테스트

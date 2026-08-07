@@ -6,18 +6,18 @@
 
 ## 1차 강의 — 8월 14일, 120분
 
-- 0~10분: 완료 증거·보안규칙·Telegram 상태표시
-- 10~35분: Git·Python·VS Code·Codex 설치와 버전 확인
-- 35~45분: Codex 로그인·진단, Git 사용자 설정
-- 45~60분: 개인 저장소 생성·Clone
-- 60~72분: 자동 환경점검과 오류 분리
-- 72~87분: Codex로 저장소·데이터 흐름 읽기
-- 87~102분: 데이터 감사·데모 빌드·로컬 웹앱 실행
-- 102~112분: 최소 변경·테스트·Commit·Push
-- 112~118분: GitHub Pages 배포·URL 제출
-- 118~120분: 후보 주제 2개와 프로젝트 가이드 안내
+- 0~8분: 현장 질문·완료 증거·보안·Telegram 상태표시
+- 8~18분: 결측·이상치·표본 편중이 판단을 바꾸는 이유
+- 18~38분: Git·Python·VS Code·Codex 설치와 버전 확인
+- 38~52분: 로그인·Git 설정·개인 저장소 Clone·자동점검
+- 52~67분: noisy CSV 통계 감사 — 스키마·결측·중복·단위·이상치
+- 67~80분: ggplot2·seaborn 갤러리 — 질문에 맞는 그래프 선택
+- 80~95분: seaborn 실습 — 분포·그룹·관계·시간·결측·상관
+- 95~106분: Codex로 최소 변경·테스트·Commit·Push
+- 106~116분: 로컬 웹앱 확인·GitHub Pages 배포·URL 제출
+- 116~120분: 사용자 결정 중심 후보 주제 2개 작성
 
-상세 절차는 `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`, 강사의 Telegram 발송 순서는 `instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`를 따른다. 주제는 모델명이 아니라 사용자 결정·KPI·Holdout 검증·7일 완성성을 기준으로 `student/02_TOPIC_AND_PROJECT_GUIDE.md`에서 선정한다.
+상세 절차는 `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`, 통계·시각화 실습은 `lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`, 강사의 Telegram 발송 순서는 `instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`를 따른다. 주제는 모델명이 아니라 사용자 결정·KPI·Holdout 검증·7일 완성성을 기준으로 `student/02_TOPIC_AND_PROJECT_GUIDE.md`에서 선정한다.
 
 ## 수업 사이 마감
 
