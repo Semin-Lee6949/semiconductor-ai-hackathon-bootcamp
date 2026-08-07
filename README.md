@@ -27,6 +27,9 @@
 - [`COURSE_PLAN.md`](COURSE_PLAN.md): 과정 범위·일정·완료 기준
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
+- [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
+- [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
+- [`student/02_TOPIC_AND_PROJECT_GUIDE.md`](student/02_TOPIC_AND_PROJECT_GUIDE.md): 주제선정·범위축소·7일 프로젝트 가이드
 - [`challenges/`](challenges/): 반도체 AI 문제 10종 카탈로그
 - [`datasets/`](datasets/): 노이즈·결측·이상치·교란이 포함된 A/B 합성 데이터 20팩
 - [`templates/`](templates/): 계획·AI 기록·발표·평가 양식
@@ -55,4 +58,10 @@ python -m http.server 8000 --directory docs
 ```bash
 python tools/generate_datasets.py
 python -m unittest discover -s tests -v
+```
+
+수강생 환경점검:
+
+```bash
+python tools/student_preflight.py
 ```

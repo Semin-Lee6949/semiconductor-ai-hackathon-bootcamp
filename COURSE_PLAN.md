@@ -6,14 +6,18 @@
 
 ## 1차 강의 — 8월 14일, 120분
 
-- 0~10분: 최종 결과물·평가기준·보안규칙
-- 10~35분: Codex로 저장소 읽기, 계획, 최소 수정, 테스트
-- 35~55분: Fork/Clone, Commit/Push, Issue, README
-- 55~75분: 출처 기반 기술조사와 근거 기록
-- 75~90분: 오디오 리뷰 또는 3~5쪽 기술 브리프 구조
-- 90~110분: CMP 데이터 → JSON → 대화형 정적 웹앱 시연
-- 110~118분: 개인 과제와 A/B 데이터 확인, `PLAN.md`, 첫 Commit
-- 118~120분: 중간 제출·발표·보안 안내
+- 0~10분: 완료 증거·보안규칙·Telegram 상태표시
+- 10~35분: Git·Python·VS Code·Codex 설치와 버전 확인
+- 35~45분: Codex 로그인·진단, Git 사용자 설정
+- 45~60분: 개인 저장소 생성·Clone
+- 60~72분: 자동 환경점검과 오류 분리
+- 72~87분: Codex로 저장소·데이터 흐름 읽기
+- 87~102분: 데이터 감사·데모 빌드·로컬 웹앱 실행
+- 102~112분: 최소 변경·테스트·Commit·Push
+- 112~118분: GitHub Pages 배포·URL 제출
+- 118~120분: 후보 주제 2개와 프로젝트 가이드 안내
+
+상세 절차는 `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`, 강사의 Telegram 발송 순서는 `instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`를 따른다. 주제는 모델명이 아니라 사용자 결정·KPI·Holdout 검증·7일 완성성을 기준으로 `student/02_TOPIC_AND_PROJECT_GUIDE.md`에서 선정한다.
 
 ## 수업 사이 마감
 

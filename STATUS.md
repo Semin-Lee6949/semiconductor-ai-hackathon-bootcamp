@@ -13,6 +13,10 @@
 - [ ] 10개 `problem.md`와 `data_dictionary.md` 상세화
 - [x] 문제별 A/B 합성 데이터 20종 생성
 - [x] 비공개 Answer Key와 숨은 패턴표 작성
+- [x] 1차 수강생 설치·실행·배포 실무 매뉴얼
+- [x] 20명 동시 진행용 Telegram 단계별 대본
+- [x] 주제선정·범위축소·7일 프로젝트 가이드
+- [x] 수강생 환경 자동점검 스크립트
 - [ ] 수강생용 Starter Template Repository 분리
 - [ ] GitHub Pages 배포 실기기 검증
 - [ ] 20명 계정·Fork·Push 사전 테스트
