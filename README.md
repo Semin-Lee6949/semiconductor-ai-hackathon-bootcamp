@@ -28,6 +28,7 @@
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
 - [`challenges/`](challenges/): 반도체 AI 문제 10종 카탈로그
+- [`datasets/`](datasets/): 노이즈·결측·이상치·교란이 포함된 A/B 합성 데이터 20팩
 - [`templates/`](templates/): 계획·AI 기록·발표·평가 양식
 - [`demo/`](demo/): CMP 합성 데이터 기반 작동형 시연 예제
 
@@ -48,3 +49,10 @@ python -m http.server 8000 --directory docs
 - API Key·토큰·계정정보를 코드, Prompt, Screenshot, Commit에 남기지 않습니다.
 - AI가 생성한 코드와 해석은 테스트·수치·원문 근거로 사람이 검증합니다.
 - 상관관계를 인과관계로 표현하지 않습니다.
+
+## 전체 데이터 재생성·검증
+
+```bash
+python tools/generate_datasets.py
+python -m unittest discover -s tests -v
+```

@@ -1,0 +1,428 @@
+{
+  "01_photo": {
+    "title": "Photo Dose-Focus Window",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "dose",
+          "focus_nm",
+          "pr_thickness_nm",
+          "peb_temp_c",
+          "field_x",
+          "field_y"
+        ],
+        "targets": [
+          "cd_nm",
+          "cdu_3sigma_nm",
+          "ler_nm",
+          "defect_probability",
+          "spec_pass"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "dose",
+          "focus_nm",
+          "pr_thickness_nm",
+          "peb_temp_c",
+          "field_x",
+          "field_y"
+        ],
+        "targets": [
+          "cd_nm",
+          "cdu_3sigma_nm",
+          "ler_nm",
+          "defect_probability",
+          "spec_pass"
+        ]
+      }
+    }
+  },
+  "02_overlay": {
+    "title": "Overlay Systematic Error",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "field_x",
+          "field_y",
+          "reticle_id",
+          "align_quality",
+          "ambient_temp_c"
+        ],
+        "targets": [
+          "overlay_x_nm",
+          "overlay_y_nm",
+          "residual_nm",
+          "spec_pass"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "field_x",
+          "field_y",
+          "reticle_id",
+          "align_quality",
+          "ambient_temp_c"
+        ],
+        "targets": [
+          "overlay_x_nm",
+          "overlay_y_nm",
+          "residual_nm",
+          "spec_pass"
+        ]
+      }
+    }
+  },
+  "03_dry_etch": {
+    "title": "Dry Etch Endpoint",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "oes_peak_ratio",
+          "endpoint_slope",
+          "rf_source_w",
+          "rf_bias_w",
+          "pressure_mtorr",
+          "gas_flow_sccm",
+          "esc_temp_c",
+          "chamber_age_runs"
+        ],
+        "targets": [
+          "endpoint_time_s",
+          "cd_bias_nm",
+          "selectivity",
+          "overetch_risk"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "oes_peak_ratio",
+          "endpoint_slope",
+          "rf_source_w",
+          "rf_bias_w",
+          "pressure_mtorr",
+          "gas_flow_sccm",
+          "esc_temp_c",
+          "chamber_age_runs"
+        ],
+        "targets": [
+          "endpoint_time_s",
+          "cd_bias_nm",
+          "selectivity",
+          "overetch_risk"
+        ]
+      }
+    }
+  },
+  "04_har_etch": {
+    "title": "HAR Etch Profile",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "aspect_ratio",
+          "pattern_density",
+          "gas_ratio",
+          "rf_bias_w",
+          "pressure_mtorr",
+          "etch_time_s"
+        ],
+        "targets": [
+          "etch_depth_nm",
+          "top_cd_nm",
+          "bottom_cd_nm",
+          "sidewall_angle_deg",
+          "bowing_nm"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "aspect_ratio",
+          "pattern_density",
+          "gas_ratio",
+          "rf_bias_w",
+          "pressure_mtorr",
+          "etch_time_s"
+        ],
+        "targets": [
+          "etch_depth_nm",
+          "top_cd_nm",
+          "bottom_cd_nm",
+          "sidewall_angle_deg",
+          "bowing_nm"
+        ]
+      }
+    }
+  },
+  "05_cmp": {
+    "title": "CMP Multi-objective Optimization",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "down_force_psi",
+          "platen_speed_rpm",
+          "head_speed_rpm",
+          "slurry_flow_ml_min",
+          "pad_age_runs",
+          "pattern_density"
+        ],
+        "targets": [
+          "removal_rate_proxy",
+          "wiwnu_proxy",
+          "dishing_nm",
+          "erosion_nm",
+          "yield_proxy"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "down_force_psi",
+          "platen_speed_rpm",
+          "head_speed_rpm",
+          "slurry_flow_ml_min",
+          "pad_age_runs",
+          "pattern_density"
+        ],
+        "targets": [
+          "removal_rate_proxy",
+          "wiwnu_proxy",
+          "dishing_nm",
+          "erosion_nm",
+          "yield_proxy"
+        ]
+      }
+    }
+  },
+  "06_deposition_apc": {
+    "title": "Deposition Run-to-Run APC",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "temp_c",
+          "pressure_torr",
+          "gas_flow_sccm",
+          "cycles",
+          "chamber_age_runs",
+          "hours_since_maintenance"
+        ],
+        "targets": [
+          "thickness_nm",
+          "uniformity_pct",
+          "sheet_resistance_proxy",
+          "next_run_cycle_correction"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "temp_c",
+          "pressure_torr",
+          "gas_flow_sccm",
+          "cycles",
+          "chamber_age_runs",
+          "hours_since_maintenance"
+        ],
+        "targets": [
+          "thickness_nm",
+          "uniformity_pct",
+          "sheet_resistance_proxy",
+          "next_run_cycle_correction"
+        ]
+      }
+    }
+  },
+  "07_fdc": {
+    "title": "Equipment FDC",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "pressure_mean",
+          "pressure_std",
+          "temperature_c",
+          "rf_power_w",
+          "gas_flow_sccm",
+          "motor_current_a",
+          "vibration_rms",
+          "endpoint_slope",
+          "step_duration_s"
+        ],
+        "targets": [
+          "anomaly_type",
+          "anomaly_score",
+          "yield_loss_proxy"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "pressure_mean",
+          "pressure_std",
+          "temperature_c",
+          "rf_power_w",
+          "gas_flow_sccm",
+          "motor_current_a",
+          "vibration_rms",
+          "endpoint_slope",
+          "step_duration_s"
+        ],
+        "targets": [
+          "anomaly_type",
+          "anomaly_score",
+          "yield_loss_proxy"
+        ]
+      }
+    }
+  },
+  "08_dram": {
+    "title": "DRAM Cell Transistor",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "gate_cd_nm",
+          "eot_nm",
+          "channel_dose_proxy",
+          "anneal_temp_c",
+          "contact_resistance_proxy"
+        ],
+        "targets": [
+          "vth_v",
+          "ion_proxy",
+          "ioff_proxy",
+          "retention_risk",
+          "spec_yield_pct"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "gate_cd_nm",
+          "eot_nm",
+          "channel_dose_proxy",
+          "anneal_temp_c",
+          "contact_resistance_proxy"
+        ],
+        "targets": [
+          "vth_v",
+          "ion_proxy",
+          "ioff_proxy",
+          "retention_risk",
+          "spec_yield_pct"
+        ]
+      }
+    }
+  },
+  "09_nand": {
+    "title": "3D NAND Vth Window",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "layer",
+          "pe_cycle",
+          "program_pulse_v",
+          "temperature_c",
+          "retention_time_h",
+          "state"
+        ],
+        "targets": [
+          "vth_mean_v",
+          "vth_sigma_v",
+          "read_window_v",
+          "ber_proxy",
+          "read_error"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "layer",
+          "pe_cycle",
+          "program_pulse_v",
+          "temperature_c",
+          "retention_time_h",
+          "state"
+        ],
+        "targets": [
+          "vth_mean_v",
+          "vth_sigma_v",
+          "read_window_v",
+          "ber_proxy",
+          "read_error"
+        ]
+      }
+    }
+  },
+  "10_virtual_lot": {
+    "title": "Photo-Etch-CMP Virtual Lot",
+    "variants": {
+      "A": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "photo_cd_nm",
+          "overlay_nm",
+          "etch_bias_nm",
+          "etch_depth_nm",
+          "cmp_dishing_nm",
+          "film_thickness_nm"
+        ],
+        "targets": [
+          "final_cd_nm",
+          "resistance_proxy",
+          "defect_risk",
+          "electrical_result",
+          "yield_proxy"
+        ]
+      },
+      "B": {
+        "student_train_rows": 805,
+        "holdout_rows": 200,
+        "features": [
+          "photo_cd_nm",
+          "overlay_nm",
+          "etch_bias_nm",
+          "etch_depth_nm",
+          "cmp_dishing_nm",
+          "film_thickness_nm"
+        ],
+        "targets": [
+          "final_cd_nm",
+          "resistance_proxy",
+          "defect_risk",
+          "electrical_result",
+          "yield_proxy"
+        ]
+      }
+    }
+  }
+}

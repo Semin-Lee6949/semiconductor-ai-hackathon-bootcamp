@@ -11,8 +11,8 @@
 ## 8월 14일 전 필수
 
 - [ ] 10개 `problem.md`와 `data_dictionary.md` 상세화
-- [ ] 문제별 A/B 합성 데이터 20종 생성
-- [ ] 비공개 Answer Key와 숨은 패턴표 작성
+- [x] 문제별 A/B 합성 데이터 20종 생성
+- [x] 비공개 Answer Key와 숨은 패턴표 작성
 - [ ] 수강생용 Starter Template Repository 분리
 - [ ] GitHub Pages 배포 실기기 검증
 - [ ] 20명 계정·Fork·Push 사전 테스트

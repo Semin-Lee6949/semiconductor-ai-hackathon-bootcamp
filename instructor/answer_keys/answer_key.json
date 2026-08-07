@@ -1,0 +1,492 @@
+{
+  "01_photo_A": {
+    "title": "Photo Dose-Focus Window",
+    "variant": "A",
+    "seed": 20260914,
+    "targets": [
+      "cd_nm",
+      "cdu_3sigma_nm",
+      "ler_nm",
+      "defect_probability",
+      "spec_pass"
+    ],
+    "main_signal": "Focus²와 Scanner bias",
+    "confounder_or_trap": "Field radial position과 Scanner 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in peb_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "01_photo_B": {
+    "title": "Photo Dose-Focus Window",
+    "variant": "B",
+    "seed": 20260924,
+    "targets": [
+      "cd_nm",
+      "cdu_3sigma_nm",
+      "ler_nm",
+      "defect_probability",
+      "spec_pass"
+    ],
+    "main_signal": "PEB×PR thickness interaction",
+    "confounder_or_trap": "Field radial effect와 Dose 상관",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in peb_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "02_overlay_A": {
+    "title": "Overlay Systematic Error",
+    "variant": "A",
+    "seed": 20261014,
+    "targets": [
+      "overlay_x_nm",
+      "overlay_y_nm",
+      "residual_nm",
+      "spec_pass"
+    ],
+    "main_signal": "Rotation·magnification systematic error",
+    "confounder_or_trap": "Tool별 translation과 시간 drift",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in ambient_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "02_overlay_B": {
+    "title": "Overlay Systematic Error",
+    "variant": "B",
+    "seed": 20261024,
+    "targets": [
+      "overlay_x_nm",
+      "overlay_y_nm",
+      "residual_nm",
+      "spec_pass"
+    ],
+    "main_signal": "Local hotspot와 reticle offset",
+    "confounder_or_trap": "Align quality와 위치 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in ambient_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "03_dry_etch_A": {
+    "title": "Dry Etch Endpoint",
+    "variant": "A",
+    "seed": 20261114,
+    "targets": [
+      "endpoint_time_s",
+      "cd_bias_nm",
+      "selectivity",
+      "overetch_risk"
+    ],
+    "main_signal": "Chamber age×Gas/Pressure drift",
+    "confounder_or_trap": "Tool usage imbalance",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in esc_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "03_dry_etch_B": {
+    "title": "Dry Etch Endpoint",
+    "variant": "B",
+    "seed": 20261124,
+    "targets": [
+      "endpoint_time_s",
+      "cd_bias_nm",
+      "selectivity",
+      "overetch_risk"
+    ],
+    "main_signal": "OES contamination-induced endpoint bias",
+    "confounder_or_trap": "Age와 특정 chamber 결합",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in esc_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "04_har_etch_A": {
+    "title": "HAR Etch Profile",
+    "variant": "A",
+    "seed": 20261214,
+    "targets": [
+      "etch_depth_nm",
+      "top_cd_nm",
+      "bottom_cd_nm",
+      "sidewall_angle_deg",
+      "bowing_nm"
+    ],
+    "main_signal": "Aspect ratio×Bias bowing",
+    "confounder_or_trap": "Gas ratio의 비선형 영향",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in pressure_mtorr",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "04_har_etch_B": {
+    "title": "HAR Etch Profile",
+    "variant": "B",
+    "seed": 20261224,
+    "targets": [
+      "etch_depth_nm",
+      "top_cd_nm",
+      "bottom_cd_nm",
+      "sidewall_angle_deg",
+      "bowing_nm"
+    ],
+    "main_signal": "Pattern density×Pressure microloading",
+    "confounder_or_trap": "Aspect ratio와 density 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in pressure_mtorr",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "05_cmp_A": {
+    "title": "CMP Multi-objective Optimization",
+    "variant": "A",
+    "seed": 20261314,
+    "targets": [
+      "removal_rate_proxy",
+      "wiwnu_proxy",
+      "dishing_nm",
+      "erosion_nm",
+      "yield_proxy"
+    ],
+    "main_signal": "Pad age의 비선형 WIWNU 악화",
+    "confounder_or_trap": "Old pad가 특정 tool에 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in slurry_flow_ml_min",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "05_cmp_B": {
+    "title": "CMP Multi-objective Optimization",
+    "variant": "B",
+    "seed": 20261324,
+    "targets": [
+      "removal_rate_proxy",
+      "wiwnu_proxy",
+      "dishing_nm",
+      "erosion_nm",
+      "yield_proxy"
+    ],
+    "main_signal": "Pattern density×Slurry interaction",
+    "confounder_or_trap": "Product mix와 slurry flow 상관",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in slurry_flow_ml_min",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "06_deposition_apc_A": {
+    "title": "Deposition Run-to-Run APC",
+    "variant": "A",
+    "seed": 20261414,
+    "targets": [
+      "thickness_nm",
+      "uniformity_pct",
+      "sheet_resistance_proxy",
+      "next_run_cycle_correction"
+    ],
+    "main_signal": "Chamber-specific thickness drift",
+    "confounder_or_trap": "Chamber age와 생산량 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "06_deposition_apc_B": {
+    "title": "Deposition Run-to-Run APC",
+    "variant": "B",
+    "seed": 20261424,
+    "targets": [
+      "thickness_nm",
+      "uniformity_pct",
+      "sheet_resistance_proxy",
+      "next_run_cycle_correction"
+    ],
+    "main_signal": "Maintenance reset과 temperature hysteresis",
+    "confounder_or_trap": "Maintenance 직후 표본 부족",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "07_fdc_A": {
+    "title": "Equipment FDC",
+    "variant": "A",
+    "seed": 20261514,
+    "targets": [
+      "anomaly_type",
+      "anomaly_score",
+      "yield_loss_proxy"
+    ],
+    "main_signal": "Pressure leak와 late-sequence drift",
+    "confounder_or_trap": "강한 class imbalance와 시간순 분포차",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temperature_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "07_fdc_B": {
+    "title": "Equipment FDC",
+    "variant": "B",
+    "seed": 20261524,
+    "targets": [
+      "anomaly_type",
+      "anomaly_score",
+      "yield_loss_proxy"
+    ],
+    "main_signal": "Arc·bearing·endpoint multi-fault",
+    "confounder_or_trap": "희귀 class와 센서 간 상관",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temperature_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "08_dram_A": {
+    "title": "DRAM Cell Transistor",
+    "variant": "A",
+    "seed": 20261614,
+    "targets": [
+      "vth_v",
+      "ion_proxy",
+      "ioff_proxy",
+      "retention_risk",
+      "spec_yield_pct"
+    ],
+    "main_signal": "Gate CD×EOT interaction",
+    "confounder_or_trap": "Tool offset와 CD sampling bias",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in anneal_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "08_dram_B": {
+    "title": "DRAM Cell Transistor",
+    "variant": "B",
+    "seed": 20261624,
+    "targets": [
+      "vth_v",
+      "ion_proxy",
+      "ioff_proxy",
+      "retention_risk",
+      "spec_yield_pct"
+    ],
+    "main_signal": "Contact resistance×Anneal interaction",
+    "confounder_or_trap": "Anneal과 tool assignment 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in anneal_temp_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "09_nand_A": {
+    "title": "3D NAND Vth Window",
+    "variant": "A",
+    "seed": 20261714,
+    "targets": [
+      "vth_mean_v",
+      "vth_sigma_v",
+      "read_window_v",
+      "ber_proxy",
+      "read_error"
+    ],
+    "main_signal": "P/E cycle의 비선형 wear",
+    "confounder_or_trap": "Log-scale sampling과 state imbalance",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temperature_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "09_nand_B": {
+    "title": "3D NAND Vth Window",
+    "variant": "B",
+    "seed": 20261724,
+    "targets": [
+      "vth_mean_v",
+      "vth_sigma_v",
+      "read_window_v",
+      "ber_proxy",
+      "read_error"
+    ],
+    "main_signal": "Retention time×temperature×layer",
+    "confounder_or_trap": "Holdout의 고온 분포 이동",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in temperature_c",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "10_virtual_lot_A": {
+    "title": "Photo-Etch-CMP Virtual Lot",
+    "variant": "A",
+    "seed": 20261814,
+    "targets": [
+      "final_cd_nm",
+      "resistance_proxy",
+      "defect_risk",
+      "electrical_result",
+      "yield_proxy"
+    ],
+    "main_signal": "Photo CD→Etch bias interaction",
+    "confounder_or_trap": "상류 CD와 etch tool assignment 편중",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in film_thickness_nm",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  },
+  "10_virtual_lot_B": {
+    "title": "Photo-Etch-CMP Virtual Lot",
+    "variant": "B",
+    "seed": 20261824,
+    "targets": [
+      "final_cd_nm",
+      "resistance_proxy",
+      "defect_risk",
+      "electrical_result",
+      "yield_proxy"
+    ],
+    "main_signal": "Overlay×CMP dishing risk propagation",
+    "confounder_or_trap": "Tool-chain offset와 product mix",
+    "injected_quality_issues": [
+      "Gaussian measurement noise",
+      "missing feature values",
+      "exact duplicate rows in train",
+      "extreme numeric outliers",
+      "small target-label corruption",
+      "mixed-unit fault in film_thickness_nm",
+      "tool/lot imbalance",
+      "holdout time or covariate shift"
+    ],
+    "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
+  }
+}

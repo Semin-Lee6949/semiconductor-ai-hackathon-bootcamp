@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "base_seed": 20260814,
+  "educational_synthetic_only": true,
+  "student_packs": 20,
+  "files": [
+    {
+      "path": "datasets/student/01_photo/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "28ee624edeae47e62963ed5a76f7aa7d0fc1597feba6dd11857dfba3279a4216"
+    },
+    {
+      "path": "datasets/student/01_photo/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "7dc2bb51043d65152221b517e96bdbcf74851f5dd6f73f27d777f0de76ebdab3"
+    },
+    {
+      "path": "instructor/answer_keys/01_photo/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "d521abafadb6f8b6cf7f6ea43b90e33d3d81fc0845cffa9ea22e7d6a5c3533cc"
+    },
+    {
+      "path": "datasets/student/01_photo/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "2f3227183a74a6ece027235d2e620f9d90985779d165842f557b19e151690537"
+    },
+    {
+      "path": "datasets/student/01_photo/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "bac6cefefc1974fdce6b53567e1cb16f9025d5d5ddb397c5cb2ff5bb14379d3e"
+    },
+    {
+      "path": "instructor/answer_keys/01_photo/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "c35c4ab11d286748719aac63dee9b83096f3e577f868b34e32a6b6a0e711b384"
+    },
+    {
+      "path": "datasets/student/02_overlay/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "a5510a9c2391f4152e0ec4ac4d3911403d0cad82edf4ba8d93d78427d6bd3bd2"
+    },
+    {
+      "path": "datasets/student/02_overlay/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "5325f375bf39e3ae765940e62c32ee8c142958e0846969f9e2b6b8174fb8690b"
+    },
+    {
+      "path": "instructor/answer_keys/02_overlay/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "e3a3d3534e07ed7018b06d37e3e50e4595e6ea2a8b5b1089651ca80d2c09a89c"
+    },
+    {
+      "path": "datasets/student/02_overlay/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "4ef84c8532769d32b4c05b92bb5bf4e37cfced50213c4b0c92af4d9363d551e6"
+    },
+    {
+      "path": "datasets/student/02_overlay/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "428e82b49519fdb0d52ba0cc8b7c6bef432240ac8121d0d072ea4aba478bc0e5"
+    },
+    {
+      "path": "instructor/answer_keys/02_overlay/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "e6682dea20d1a3675372228f1967a6de6306ecac53e1feb2f64358e6decb67a0"
+    },
+    {
+      "path": "datasets/student/03_dry_etch/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "a31b0733ef9a4a4c38e213d8d8d51917e6955f6d477dbe11e76d0f942cc68f2a"
+    },
+    {
+      "path": "datasets/student/03_dry_etch/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "4edb1293324dc82c041aa28eb3194bf3cafe85aa8114d7ca1228a81f211e18ab"
+    },
+    {
+      "path": "instructor/answer_keys/03_dry_etch/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "807449ffa433883934c7562b95411081571e9b127e230d77c3ba7e57dd76eaac"
+    },
+    {
+      "path": "datasets/student/03_dry_etch/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "7d6eb4be3f3ea28a4ff99088678139f2611be00d78491f9c32db73b0feabd06f"
+    },
+    {
+      "path": "datasets/student/03_dry_etch/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "d1eafb8df8f1c871312875b6079486cefc1322f1647d1e93600aefc354831acc"
+    },
+    {
+      "path": "instructor/answer_keys/03_dry_etch/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "45414f76f9b1defd428bef33b6a145b6c63058ef21c80a8d5a0aace281cd8207"
+    },
+    {
+      "path": "datasets/student/04_har_etch/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "7494d9bfbd9a04c17da8ea08ddc129c23d54730b46c249a687184c6815b31d9a"
+    },
+    {
+      "path": "datasets/student/04_har_etch/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "d91e0260805ecdcf37b0962542a9f7a5fe24a333eccbe379fb97b76808b2d98c"
+    },
+    {
+      "path": "instructor/answer_keys/04_har_etch/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "12b952be79e6bf7884f9cbc014784138956ea1ad5f40939bc7ce787e8816e144"
+    },
+    {
+      "path": "datasets/student/04_har_etch/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "a44ee2817c83516e6a1d404e4070ab11e9fe870869734a5e195472b666722be3"
+    },
+    {
+      "path": "datasets/student/04_har_etch/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "7b385db2ff83f79c4ba4951e281f1fa2b8c16411d316f72577e2e509a5f91520"
+    },
+    {
+      "path": "instructor/answer_keys/04_har_etch/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "39fc671c3d9c55ef10d250ea5b9b7b15f7f4af927425546fe18d4d8cd1abf365"
+    },
+    {
+      "path": "datasets/student/05_cmp/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "d6cce919df4acec47e34448e0a8593e45015e30425e8b5fd9cd6f1124d42e454"
+    },
+    {
+      "path": "datasets/student/05_cmp/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "8749519cea6196015ee8dd41746b420e0b24380114ee7d32be2c2fb7a62868d5"
+    },
+    {
+      "path": "instructor/answer_keys/05_cmp/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "1eb3e25f9851dfca24b7b21e7f27b8f13a33e418c631535f5b4f368a836e7873"
+    },
+    {
+      "path": "datasets/student/05_cmp/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "bda182f2158707e9a85c1637699a68af2d5ab6502cb79fc99ef2c04f2f72e1bd"
+    },
+    {
+      "path": "datasets/student/05_cmp/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "82b662a5fc9f82848bb95f8d69ac54bd4a7f7b3d872fa956202132a0ef48e648"
+    },
+    {
+      "path": "instructor/answer_keys/05_cmp/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "7d580bd799ecba948922e271dbb54ce0b345ea267ab8863c909b9380fd0b130a"
+    },
+    {
+      "path": "datasets/student/06_deposition_apc/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "e5f6b66bfc52fef2cc93a4246f94da9bd8b3c988a6f2313a1fabe51e4e131d65"
+    },
+    {
+      "path": "datasets/student/06_deposition_apc/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "70b4dcfd376c7f191aad851608c64f9336d74600bc4bae77f94799f32b02ace8"
+    },
+    {
+      "path": "instructor/answer_keys/06_deposition_apc/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "224f3270904e57ef10fa2872225c3cee38eb2b01bf6cd0cdc2ab5eae5dda6103"
+    },
+    {
+      "path": "datasets/student/06_deposition_apc/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "6793162dd01040276fa1c739b3b90444e5a7e5d5b940d59036598a3151e386ad"
+    },
+    {
+      "path": "datasets/student/06_deposition_apc/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "e27bfc1361a75f679f031fa8071388676b7a7f83162299bb1c79ca49eea1df0d"
+    },
+    {
+      "path": "instructor/answer_keys/06_deposition_apc/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "bf8cffb5019003b755bcbac7376e1119ac2ef7ff723362d83d69da98f62dc9f7"
+    },
+    {
+      "path": "datasets/student/07_fdc/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "c0bde8b3ba4d68e1001aefdcb3785c9ee8f8486b60877782242d94770685e8fe"
+    },
+    {
+      "path": "datasets/student/07_fdc/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "e42004f213bd7be520f1aa1a5038da3bb32d981b5064af3a44be141387cee876"
+    },
+    {
+      "path": "instructor/answer_keys/07_fdc/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "2cf349147e926a3e4a76d0891774f51b4644c6407a0f05743e54cf14702fd175"
+    },
+    {
+      "path": "datasets/student/07_fdc/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "f677292820290381bbe8bd03a0db689d7e8e5acac5deed34a1b1bd49736b9b9e"
+    },
+    {
+      "path": "datasets/student/07_fdc/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "edd99c4b7d8b011d6be6f59287f13752a5697038e0f3ce05e9e78e309fd64f14"
+    },
+    {
+      "path": "instructor/answer_keys/07_fdc/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "3088b036aeb58c38290b0bcd465f2dfe1343380eca798722027b1f09920a15f3"
+    },
+    {
+      "path": "datasets/student/08_dram/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "264aa708ef5f6e7dbd067ae2a225824fcb8780b2ec05ace57f3be1c8ce135093"
+    },
+    {
+      "path": "datasets/student/08_dram/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "8250b32dfa5f8d6f38c914f93e0f3ac595cc3579038bf26ab7b7586c33e92dd4"
+    },
+    {
+      "path": "instructor/answer_keys/08_dram/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "14985185c0d87289beb1ea0debc9d268b1a83060dd5dfd827031b13010c0bd33"
+    },
+    {
+      "path": "datasets/student/08_dram/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "a710918a6b9efbe179c8747f75c52a1b0392068b0724d7868bef6c1d7b40a0d0"
+    },
+    {
+      "path": "datasets/student/08_dram/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "e230de871b68511601ad1decda7840aafc227135150827cacfaf52224e0e433d"
+    },
+    {
+      "path": "instructor/answer_keys/08_dram/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "ad13fc2b889ebad8828f48445b28acfca65155c5dcf7896ad5edee519b1876a1"
+    },
+    {
+      "path": "datasets/student/09_nand/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "697150c44737014ea30cf79da6e5cd9d96a5e3037505495e9398f16861ee0fd5"
+    },
+    {
+      "path": "datasets/student/09_nand/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "b83bafdec6c307b320f0dbcc6f7fbd5dbd8cfd2860816bbf09e935ec3a6f865c"
+    },
+    {
+      "path": "instructor/answer_keys/09_nand/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "73d2138d48c1e12698e1523686cea90b101273e7bf8cce3215b173632935b46c"
+    },
+    {
+      "path": "datasets/student/09_nand/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "4d6972150f859477e9cf83b5229e6223b42027eb1e9d6ad18698888004fadf8b"
+    },
+    {
+      "path": "datasets/student/09_nand/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "64b5157d286c21dfefe10345fe3e7162b1f61ea2291eeef309363fe1c4c6ba1b"
+    },
+    {
+      "path": "instructor/answer_keys/09_nand/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "f021ceafc816c9b1cb5ccd78d96243c93d710cf1c20b82ba6e6accacbdfbae0c"
+    },
+    {
+      "path": "datasets/student/10_virtual_lot/A/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "589a7d881b86d8b41441d1afaa0f815e1c95ad07f6a0d7babdc12d5f8912f134"
+    },
+    {
+      "path": "datasets/student/10_virtual_lot/A/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "a560ec555c5a69bca7285e02934786f68cec68296005ccaa0e009dc8767a012c"
+    },
+    {
+      "path": "instructor/answer_keys/10_virtual_lot/A/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "6cd25e09688ee27aa16e0f9183c9a2dcb80adf8e08c595ff93c16d466fa198ee"
+    },
+    {
+      "path": "datasets/student/10_virtual_lot/B/train.csv",
+      "kind": "student_train",
+      "rows": 805,
+      "sha256": "6b771c7a84a4ab87fdd883b26d1701fdbce292d718ed3eda1c845a2c21308e86"
+    },
+    {
+      "path": "datasets/student/10_virtual_lot/B/holdout_features.csv",
+      "kind": "student_holdout",
+      "rows": 200,
+      "sha256": "72fea0f6d54078eeb13e0847740cf944b55155b11a17cda872a8ecff28cc1637"
+    },
+    {
+      "path": "instructor/answer_keys/10_virtual_lot/B/holdout_labels.csv",
+      "kind": "instructor_labels",
+      "rows": 200,
+      "sha256": "f9ffc6b82a1299d7e0ba0b023af5291cb788054c760b249796fd0721ea0920d9"
+    }
+  ]
+}
