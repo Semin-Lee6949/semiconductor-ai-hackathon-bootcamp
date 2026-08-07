@@ -102,7 +102,7 @@ A/B의 결론이 같을 것이라고 가정하고 있지 않은가?
 
 | 번호 | 주제 | 핵심 사용자 결정 | 최소 KPI | 권장 난이도 |
 |---|---|---|---|---|
-| 01 | Photo Dose–Focus | 최대 Margin 조건 | CD, CDU, Defect risk | 기본 |
+| 01 | Photo PR Coat–Expose–Develop | PR tone별 두께·Dose·PEB·현상 Margin | CD, CDU, LER, Scum, Collapse | 기본 |
 | 02 | Overlay 보정 | 보정계수와 Hot Spot 점검 | Residual, 합격률 | 기본 |
 | 03 | Dry Etch Endpoint | Endpoint·Over-etch 조건 | CD bias, Selectivity | 중급 |
 | 04 | HAR Etch Profile | Bowing·Taper 제한 조건 | Depth, Sidewall, Bowing | 고급 |

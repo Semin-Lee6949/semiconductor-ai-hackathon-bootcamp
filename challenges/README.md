@@ -2,7 +2,7 @@
 
 모든 변수·수치·Spec은 교육용 합성값입니다.
 
-1. **Photo Dose–Focus Window:** CD·CDU·LER·결함을 함께 고려한 Margin Center
+1. **Photo PR Coat–Expose–Develop:** Positive/Negative PR tone, 코팅 두께, Dose·Focus, PEB·현상조건을 CD·CDU·LER·Scum·Collapse와 연결한 Margin 진단
 2. **Overlay 보정:** Translation·Rotation·Magnification과 Local Hot Spot 분리
 3. **Dry Etch Endpoint:** OES·설비 시계열로 Endpoint·Over-etch·CD Bias 진단
 4. **HAR Etch Profile:** Bowing·Taper·Microloading을 포함한 단면 SVG 시뮬레이션
@@ -19,3 +19,5 @@
 - A/B 모두 Holdout 데이터를 별도로 제공한다.
 - 수강생이 같은 결론을 복사할 수 없도록 숨은 Interaction과 설비 편중을 달리한다.
 - 정답은 모델명이 아니라 **발견해야 할 데이터 문제, 유효한 검증, 안전한 의사결정 범위**로 정의한다.
+
+Photo 과제의 상세 문제해결 흐름은 [`01_PHOTO_PR_PROCESS_GUIDE.md`](01_PHOTO_PR_PROCESS_GUIDE.md)를 따른다.

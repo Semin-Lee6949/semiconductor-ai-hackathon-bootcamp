@@ -1,17 +1,19 @@
 {
   "01_photo_A": {
-    "title": "Photo Dose-Focus Window",
+    "title": "Photo PR Coat-Expose-Develop CD Window",
     "variant": "A",
     "seed": 20260914,
     "targets": [
-      "cd_nm",
+      "resist_line_cd_nm",
       "cdu_3sigma_nm",
       "ler_nm",
+      "scum_probability",
+      "pattern_collapse_probability",
       "defect_probability",
       "spec_pass"
     ],
-    "main_signal": "Focus²와 Scanner bias",
-    "confounder_or_trap": "Field radial position과 Scanner 편중",
+    "main_signal": "PR tone별 Dose-to-CD 방향과 Positive PR Dose×Develop scum",
+    "confounder_or_trap": "Coat thickness와 Tool·Field position 편중",
     "injected_quality_issues": [
       "Gaussian measurement noise",
       "missing feature values",
@@ -25,18 +27,20 @@
     "safe_conclusion": "합성 데이터 범위의 예측·진단 근거만 제시하고 실제 공정 인과나 Recipe로 일반화하지 않는다."
   },
   "01_photo_B": {
-    "title": "Photo Dose-Focus Window",
+    "title": "Photo PR Coat-Expose-Develop CD Window",
     "variant": "B",
     "seed": 20260924,
     "targets": [
-      "cd_nm",
+      "resist_line_cd_nm",
       "cdu_3sigma_nm",
       "ler_nm",
+      "scum_probability",
+      "pattern_collapse_probability",
       "defect_probability",
       "spec_pass"
     ],
-    "main_signal": "PEB×PR thickness interaction",
-    "confounder_or_trap": "Field radial effect와 Dose 상관",
+    "main_signal": "Coat thickness×PEB와 Negative PR crosslink margin",
+    "confounder_or_trap": "PR tone 비율과 Field radial effect",
     "injected_quality_issues": [
       "Gaussian measurement noise",
       "missing feature values",

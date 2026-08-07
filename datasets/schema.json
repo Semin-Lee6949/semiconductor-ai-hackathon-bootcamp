@@ -1,22 +1,31 @@
 {
   "01_photo": {
-    "title": "Photo Dose-Focus Window",
+    "title": "Photo PR Coat-Expose-Develop CD Window",
     "variants": {
       "A": {
         "student_train_rows": 805,
         "holdout_rows": 200,
         "features": [
-          "dose",
-          "focus_nm",
-          "pr_thickness_nm",
+          "pr_tone",
+          "retained_pattern_source",
+          "nominal_cd_nm",
+          "exposure_dose_mj_cm2",
+          "normalized_dose_pct",
+          "focus_um",
+          "coat_thickness_nm",
+          "softbake_temp_c",
           "peb_temp_c",
+          "develop_time_s",
+          "developer_concentration_pct",
           "field_x",
           "field_y"
         ],
         "targets": [
-          "cd_nm",
+          "resist_line_cd_nm",
           "cdu_3sigma_nm",
           "ler_nm",
+          "scum_probability",
+          "pattern_collapse_probability",
           "defect_probability",
           "spec_pass"
         ]
@@ -25,17 +34,26 @@
         "student_train_rows": 805,
         "holdout_rows": 200,
         "features": [
-          "dose",
-          "focus_nm",
-          "pr_thickness_nm",
+          "pr_tone",
+          "retained_pattern_source",
+          "nominal_cd_nm",
+          "exposure_dose_mj_cm2",
+          "normalized_dose_pct",
+          "focus_um",
+          "coat_thickness_nm",
+          "softbake_temp_c",
           "peb_temp_c",
+          "develop_time_s",
+          "developer_concentration_pct",
           "field_x",
           "field_y"
         ],
         "targets": [
-          "cd_nm",
+          "resist_line_cd_nm",
           "cdu_3sigma_nm",
           "ler_nm",
+          "scum_probability",
+          "pattern_collapse_probability",
           "defect_probability",
           "spec_pass"
         ]

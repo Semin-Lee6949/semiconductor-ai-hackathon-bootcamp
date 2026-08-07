@@ -36,27 +36,95 @@ def common(rng: np.random.Generator, n: int, holdout: bool, tools: int = 4) -> d
 
 def photo(rng: np.random.Generator, n: int, v: str, h: bool):
     d = common(rng, n, h, 3)
-    dose = rng.normal(100 + (2 if h else 0), 5, n)
+    negative_share = 0.35 if v == "A" else 0.65
+    negative = rng.random(n) < negative_share
+    tone = np.where(negative, "NEGATIVE", "POSITIVE")
+    retained_source = np.where(negative, "EXPOSED", "UNEXPOSED")
+    nominal_dose = np.where(negative, 78.0, 100.0)
+    normalized_dose = rng.normal(100 + (2 if h else 0), 6.5, n)
+    dose = nominal_dose * normalized_dose / 100
     focus = rng.normal(0.02 if h else 0, 0.075, n)
-    pr = rng.normal(95, 4, n)
-    peb = rng.normal(110, 2.2, n)
+    pr = rng.normal(115 if v == "B" else 100, 11, n)
+    softbake = rng.normal(98, 2.5, n)
+    peb = rng.normal(np.where(negative, 105, 110), 2.4, n)
+    develop = rng.normal(np.where(negative, 54, 48), 6.0, n)
+    developer = rng.normal(2.38, 0.055, n)
     x, y = rng.uniform(-1, 1, (2, n))
     radial = x**2 + y**2
     tool_bias = np.take([-1.3, 0.2, 1.8], d["_tool"])
+    dose_delta = normalized_dose - 100
+    tone_direction = np.where(negative, 1.0, -1.0)
+    tone_cd = tone_direction * 0.27 * dose_delta
+    develop_cd = np.where(negative, -0.025, -0.10) * (develop - np.where(negative, 54, 48))
+    thickness_cd = 0.024 * (pr - 100)
     if v == "A":
-        hidden = 42 * focus**2 + 0.9 * radial + tool_bias
-        main, conf = "Focus²와 Scanner bias", "Field radial position과 Scanner 편중"
+        hidden = 42 * focus**2 + 0.9 * radial + tool_bias + 0.018 * dose_delta * (develop - 50)
+        main = "PR tone별 Dose-to-CD 방향과 Positive PR Dose×Develop scum"
+        conf = "Coat thickness와 Tool·Field position 편중"
     else:
-        hidden = 0.055 * (peb - 110) * (pr - 95) + 1.8 * radial + tool_bias * 0.4
-        main, conf = "PEB×PR thickness interaction", "Field radial effect와 Dose 상관"
-    cd = 50 + 0.33 * (dose - 100) - 0.075 * (pr - 95) + hidden + rng.normal(0, 0.8, n)
-    cdu = 1.6 + 18 * np.abs(focus) + 0.8 * radial + rng.normal(0, 0.25, n)
-    ler = 1.2 + 0.035 * np.abs(dose - 100) + 0.2 * (peb - 110) ** 2 + rng.normal(0, 0.18, n)
-    defect = sigmoid(-4 + 0.9 * (cdu - 2.3) + 0.55 * (ler - 1.5))
-    d.update(dose=dose, focus_nm=focus, pr_thickness_nm=pr, peb_temp_c=peb, field_x=x, field_y=y,
-             cd_nm=cd, cdu_3sigma_nm=cdu, ler_nm=ler, defect_probability=defect,
-             spec_pass=np.where((np.abs(cd - 50) < 3) & (cdu < 3.2) & (defect < 0.35), "PASS", "FAIL"))
-    return d, ["cd_nm", "cdu_3sigma_nm", "ler_nm", "defect_probability", "spec_pass"], main, conf, "peb_temp_c"
+        hidden = 0.035 * (peb - np.where(negative, 105, 110)) * (pr - 105) + 1.8 * radial + tool_bias * 0.4
+        main = "Coat thickness×PEB와 Negative PR crosslink margin"
+        conf = "PR tone 비율과 Field radial effect"
+    cd = 50 + tone_cd + develop_cd + thickness_cd + hidden + rng.normal(0, 0.8, n)
+    cdu = 1.5 + 17 * np.abs(focus) + 0.7 * radial + 0.018 * np.abs(pr - 105) + rng.normal(0, 0.24, n)
+    ler = (
+        1.15
+        + 0.035 * np.abs(dose_delta)
+        + 0.045 * (peb - np.where(negative, 105, 110)) ** 2
+        + 0.12 * negative
+        + rng.normal(0, 0.16, n)
+    )
+    positive_scum = (~negative) * sigmoid(-1.8 - 0.20 * dose_delta - 0.16 * (develop - 48) + 0.035 * (pr - 100))
+    negative_loss = negative * sigmoid(-2.0 - 0.24 * dose_delta - 0.12 * (peb - 105) + 0.025 * (pr - 110))
+    scum = np.clip(positive_scum + 0.55 * negative_loss + rng.normal(0, 0.015, n), 0, 1)
+    aspect_proxy = pr / np.maximum(cd, 10)
+    collapse = np.clip(
+        sigmoid(-7 + 1.7 * aspect_proxy + 0.10 * (develop - 50) - 0.45 * negative)
+        + rng.normal(0, 0.012, n),
+        0,
+        1,
+    )
+    defect = sigmoid(-4 + 0.85 * (cdu - 2.3) + 0.55 * (ler - 1.5) + 2.8 * scum + 2.5 * collapse)
+    d.update(
+        pr_tone=tone,
+        retained_pattern_source=retained_source,
+        nominal_cd_nm=np.full(n, 50.0),
+        exposure_dose_mj_cm2=dose,
+        normalized_dose_pct=normalized_dose,
+        focus_um=focus,
+        coat_thickness_nm=pr,
+        softbake_temp_c=softbake,
+        peb_temp_c=peb,
+        develop_time_s=develop,
+        developer_concentration_pct=developer,
+        field_x=x,
+        field_y=y,
+        resist_line_cd_nm=cd,
+        cdu_3sigma_nm=cdu,
+        ler_nm=ler,
+        scum_probability=scum,
+        pattern_collapse_probability=collapse,
+        defect_probability=defect,
+        spec_pass=np.where(
+            (np.abs(cd - 50) < 3)
+            & (cdu < 3.2)
+            & (scum < 0.25)
+            & (collapse < 0.20)
+            & (defect < 0.35),
+            "PASS",
+            "FAIL",
+        ),
+    )
+    targets = [
+        "resist_line_cd_nm",
+        "cdu_3sigma_nm",
+        "ler_nm",
+        "scum_probability",
+        "pattern_collapse_probability",
+        "defect_probability",
+        "spec_pass",
+    ]
+    return d, targets, main, conf, "peb_temp_c"
 
 
 def overlay(rng: np.random.Generator, n: int, v: str, h: bool):
@@ -254,7 +322,7 @@ def virtual_lot(rng: np.random.Generator, n: int, v: str, h: bool):
 
 
 GENERATORS: list[tuple[str, str, Callable]] = [
-    ("01_photo", "Photo Dose-Focus Window", photo),
+    ("01_photo", "Photo PR Coat-Expose-Develop CD Window", photo),
     ("02_overlay", "Overlay Systematic Error", overlay),
     ("03_dry_etch", "Dry Etch Endpoint", dry_etch),
     ("04_har_etch", "HAR Etch Profile", har_etch),
