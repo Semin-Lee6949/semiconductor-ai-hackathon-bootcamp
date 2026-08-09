@@ -33,6 +33,7 @@
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표
 - [`student/02_TOPIC_AND_PROJECT_GUIDE.md`](student/02_TOPIC_AND_PROJECT_GUIDE.md): 주제선정·범위축소·7일 프로젝트 가이드
+- [`student/03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md`](student/03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md): 설치→데이터카드→근거카드→주장감사→MVP→발표의 개인 성과 집중 가이드
 - [`lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`](lessons/01_DATA_QUALITY_AND_VISUALIZATION.md): 결측·이상치·편중 처리와 ggplot2·seaborn 그래프 선택 실습
 - [`challenges/`](challenges/): 반도체 AI 문제 10종 카탈로그
 - [`datasets/`](datasets/): 노이즈·결측·이상치·교란이 포함된 A/B 합성 데이터 20팩
