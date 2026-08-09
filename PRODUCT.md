@@ -35,7 +35,7 @@ AI 기능을 나열하지 않고 `문제 → 전공 원리·Governing equation �
 ## Capabilities and Constraints
 
 - 첫 강의의 분 단위 Lecture Map과 설치·실습 명령을 제공한다.
-- 플라즈마 RF matcher, Vpp, Vdc와 박막 품질 관계는 문제발견 예시로만 사용한다.
+- Photo PR tone·코팅 두께·Dose·Focus·PEB·현상조건과 CD·결함 위험의 관계를 대표 문제발견 예시로 사용한다.
 - 실제 회사 데이터·내부 Spec·장비 로그·고객정보·개인정보·API Key를 사용하지 않는다.
 - 상관관계를 인과관계로 단정하지 않으며 대안 가설을 최소 하나 검토한다.
 - AI가 제시한 물리식과 해석은 교재·논문·공식 문서로 사람이 확인한다.

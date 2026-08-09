@@ -86,23 +86,24 @@
 - 상관관계를 인과로 과장하지 않는 해석
 - 실제 적용 전 필요한 안전·장비·공정 검증
 
-## F. 완성 예시 — 플라즈마 상태 모니터링
+## F. 완성 예시 — Photo PR 공정 Margin 탐구
 
 ```text
-사용자: 플라즈마 설비 엔지니어
-문제: RF 계통과 플라즈마 상태의 변화를 Log에서 조기에 찾기 어렵다.
-전공 연결: 플라즈마 공학, RF 회로와 임피던스 매칭, 박막 공학, 통계
-입력 후보: RF matcher 상태, Vpp, Vdc, reflected-power index, pressure,
-          gas-flow index, run sequence
-출력 후보: 상태 변화 알람, 박막 두께·균일도·결함의 교육용 Quality index
-AI 역할: 변화점과 이상 조합을 찾고 품질 결과와의 상관관계를 시각화한다.
-사람 검증: 센서 이상·Recipe 차이·Chamber age·계측 편중이라는 대안 설명을 검토한다.
-의사결정: 계속 진행 / 점검 / 재측정이 필요한 Run을 구분한다.
-위험 KPI: 실제 이상을 정상으로 놓치는 비율
-주의: 실제 설비 범위와 Recipe가 아닌 정규화된 합성 데이터만 사용한다.
+사용자: Photo 공정 엔지니어
+문제: PR tone·코팅 두께·Dose·Focus·PEB·현상조건이 함께 바뀔 때
+      CD와 결함 위험을 모두 고려한 작은 DOE 조건을 고르기 어렵다.
+전공 연결: 포토리소그래피, 광학, 고분자·현상 원리, 통계와 DOE
+입력 후보: PR tone, retained pattern source, 코팅 두께, 정규화 Dose,
+          Focus, PEB 온도, 현상시간, Tool·Field 위치
+출력 후보: CD, CDU, LER, Scum, Collapse, Defect risk, Spec pass
+AI 역할: PR tone별 관계와 두께·PEB·현상의 상호작용 후보를 시각화한다.
+사람 검증: 재료계·mask/feature tone·광학계·Tool·Field·계측 편중을 검토한다.
+의사결정: 먼저 검증할 작은 DOE 조건과 추가 계측 항목을 고른다.
+위험 KPI: CD 평균은 맞지만 Scum·Collapse 위험을 놓치는 비율
+주의: 실제 PR 재료와 Recipe가 아닌 교육용 합성 데이터만 사용한다.
 ```
 
-이 예시의 목적은 “알람 정확도”만 높이는 것이 아닙니다. 설비 상태 변화가 박막 Quality와 함께 나타나는지 보고, 센서·공정·계측이라는 서로 다른 설명을 분리하는 것입니다.
+이 예시의 목적은 CD 하나만 예측하는 것이 아닙니다. Positive·Negative PR을 구분하고, CD·CDU·LER와 Scum·Collapse의 trade-off를 함께 보며 실제 적용 전 필요한 작은 DOE를 제안하는 것입니다.
 
 ## G. 내 프로젝트를 한 문장으로 만든다
 

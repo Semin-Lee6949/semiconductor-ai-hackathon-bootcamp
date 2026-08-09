@@ -303,42 +303,42 @@ Tool·Lot·기간 편중:
 
 모든 주요 단계에서 작은 Commit을 남깁니다. 최종 발표는 문제 30초, 데이터·가설 30초, 데모 50초, 성능 30초, 인간 검증 20초, 효과·한계 20초로 구성합니다.
 
-## 6. 대표 탐구 — Plasma FDC
+## 6. 대표 탐구 — Photo PR Coat·Expose·Develop
 
 ### 문제 정의
 
-> 설비 엔지니어가 RF matcher·Vpp·Vdc 등 Run Log를 보고 상태 변화를 조기에 찾고, 박막 품질과 함께 검토하여 계속 진행·점검·재측정을 선택할 수 있게 한다.
+> Photo 공정 엔지니어가 PR tone·코팅 두께·Dose·Focus·PEB·현상조건을 보고 CD·CDU·LER와 Scum·Collapse 위험을 함께 비교하여 먼저 검증할 작은 DOE 조건을 선택할 수 있게 한다.
 
 ### 데이터카드
 
-- 한 행: 하나의 Run 또는 고정 시간창
-- 입력: 정규화한 matcher state, Vpp, Vdc, reflected-power index, pressure, gas-flow index
-- 결과: 교육용 두께·균일도·결함 Quality index
-- 시간 규칙: 알람 시점보다 나중에 측정된 Quality는 예측 입력에 사용하지 않음
-- 편중 후보: Recipe, Chamber, 센서 교체 전후, Run sequence
+- 한 행: 하나의 Photo 측정 Sample 또는 Field
+- 입력: PR tone, retained pattern source, 코팅 두께, 정규화 Dose, Focus, Soft Bake, PEB, 현상시간·농도
+- 결과: 교육용 CD·CDU·LER·Scum·Collapse·Defect·Spec pass
+- 시간 규칙: 노광·현상 이후의 품질 결과를 입력 변수처럼 미리 사용하지 않음
+- 편중 후보: PR tone, Tool, Lot, Field 위치, 측정 순서
 
 ### 세 개의 검증 질문
 
-1. RF 신호 조합의 변화점이 단순 관리한계보다 먼저 이상을 찾는가?
-2. 신호와 Quality의 관계가 Recipe·Chamber별로도 유지되는가?
-3. Sensor drift와 실제 공정 변화라는 대안 설명을 구분할 수 있는가?
+1. Dose–CD 관계가 PR tone별로 다르며, tone을 섞으면 약해지거나 반전되는가?
+2. 코팅 두께와 PEB·현상시간의 상호작용이 CD·Scum·Collapse와 함께 나타나는가?
+3. 관찰된 관계가 Tool·Field·Lot 편중 또는 혼합단위 오류로도 설명되는가?
 
 ### 기준과 개선
 
-- 기준: 이동평균과 관리한계
-- 개선 후보: 변화점 탐지 또는 다변량 이상점수
-- 성능 KPI: Recall과 검출 지연
-- 위험 KPI: False alarm과 정상 Run Hold 비율
-- 오차 분석: 놓친 이상 3건과 불필요한 알람 3건
+- 기준: 전체 평균 또는 단순 선형회귀
+- 개선 후보: PR tone 분리와 두께×Dose·PEB·현상 상호작용을 포함한 모델
+- 성능 KPI: Holdout CD 오차와 Spec pass 분류 성능
+- 위험 KPI: CD는 맞지만 Scum·Collapse 위험을 놓치는 비율
+- 오차 분석: 큰 CD 오차 3건과 놓친 결함 위험 3건
 
 ### 최종 MVP 화면
 
-1. Run 시계열과 변화점
-2. Matcher·Vpp·Vdc와 Quality 동시 보기
-3. Recipe·Chamber 필터
-4. 기준모델과 개선모델 비교
-5. 계속 진행·점검·재측정 제안과 근거
-6. 대안 설명과 추가 측정 항목
+1. Positive·Negative PR tone 선택
+2. 코팅 두께·Dose·Focus·PEB·현상시간 조작
+3. 예상 CD·CDU·LER와 Scum·Collapse 위험
+4. 전체 기준모델과 tone 분리 개선모델 비교
+5. 현재 조건과 작은 DOE 후보의 전후 비교
+6. 대안 설명, 적용 한계와 추가 계측 항목
 
 ## 7. 설치 실패 시 수업을 멈추지 않는 법
 
