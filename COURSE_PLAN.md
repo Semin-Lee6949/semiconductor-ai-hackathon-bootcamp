@@ -6,7 +6,8 @@
 
 ## 1차 강의 — 8월 14일, 120분
 
-- 0~8분: 현장 질문·완료 증거·보안·Telegram 상태표시
+- 수업 전 10분: `student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md` 1차 작성
+- 0~8분: 문제발견 질문 공유·완료 증거·보안·Telegram 상태표시
 - 8~18분: 결측·이상치·표본 편중이 판단을 바꾸는 이유
 - 18~38분: Git·Python·VS Code·Codex 설치와 버전 확인
 - 38~52분: 로그인·Git 설정·개인 저장소 Clone·자동점검
@@ -15,9 +16,9 @@
 - 80~95분: seaborn 실습 — 분포·그룹·관계·시간·결측·상관
 - 95~106분: Codex로 최소 변경·테스트·Commit·Push
 - 106~116분: 로컬 웹앱 확인·GitHub Pages 배포·URL 제출
-- 116~120분: 사용자 결정 중심 후보 주제 2개 작성
+- 116~120분: 데이터 감사 결과를 반영해 문제정의와 후보 주제 2개 재작성
 
-상세 절차는 `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`, 통계·시각화 실습은 `lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`, 강사의 Telegram 발송 순서는 `instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`를 따른다. 주제는 모델명이 아니라 사용자 결정·KPI·Holdout 검증·7일 완성성을 기준으로 `student/02_TOPIC_AND_PROJECT_GUIDE.md`에서 선정한다.
+문제발견은 `student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`, 상세 절차는 `student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`, 통계·시각화 실습은 `lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`, 강사의 Telegram 발송 순서는 `instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`를 따른다. 주제는 모델명이 아니라 사용자 결정·전공 원리·KPI·Holdout 검증·7일 완성성을 기준으로 `student/02_TOPIC_AND_PROJECT_GUIDE.md`에서 선정한다.
 
 ## 수업 사이 마감
 

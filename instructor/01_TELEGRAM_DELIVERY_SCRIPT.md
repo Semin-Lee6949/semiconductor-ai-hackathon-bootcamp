@@ -231,6 +231,20 @@ git push origin main
 GitHub에 Commit이 보이면: 번호 + ✅ Push
 ```
 
+## 사전 메시지 — 문제발견 질문지 · 수업 전 10분
+
+```text
+[사전 준비]
+student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md를 열고
+A·B·C·G 항목을 한 문장씩 먼저 작성하세요.
+
+실제 회사 데이터·Recipe·장비 Log·내부 Spec은 적지 않습니다.
+문제 → 관련 전공 → 도메인 제약 → 데이터 → 사용자 결정 순서로 씁니다.
+완벽한 주제가 아니라 반복해서 불편했던 문제 1개면 됩니다.
+
+완료 응답: 번호 + ✅ 문제 한 문장
+```
+
 ## 메시지 12 — 로컬 웹앱·Pages·제출 · 106분
 
 ```text
@@ -260,6 +274,8 @@ Branch: main / Folder: /docs → Save
 
 ```text
 다음 작업은 모델을 고르는 것이 아니라 주제를 좁히는 것입니다.
+student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md를 다시 열어
+상관관계와 대안 설명을 각각 1개씩 보완하세요.
 student/02_TOPIC_AND_PROJECT_GUIDE.md를 열고
 1순위·2순위 후보와 실제 사용자의 결정을 먼저 적으세요.
 오늘은 후보 2개까지만, 최종 확정은 데이터 감사 후 합니다.
