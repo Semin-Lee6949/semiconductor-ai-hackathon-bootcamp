@@ -24,6 +24,7 @@
 
 ## 저장소 안내
 
+- [`index.html`](index.html): 1차 강의용 반응형 GitHub Pages 자료
 - [`COURSE_PLAN.md`](COURSE_PLAN.md): 과정 범위·일정·완료 기준
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
