@@ -33,16 +33,30 @@ def check_environment(root: Path) -> tuple[list[str], list[str]]:
     else:
         failures.append(f"Python 3.11+ required; found {sys.version.split()[0]}")
 
-    for command, label in (("git", "Git"), ("codex", "Codex")):
+    git_executable = shutil.which("git")
+    if not git_executable:
+        failures.append("Git command not found")
+    else:
+        ok, output = run([git_executable, "--version"])
+        if ok:
+            passes.append(f"Git: {output}")
+        else:
+            failures.append(f"Git version check failed: {output}")
+
+    coding_agents = (("codex", "Codex"), ("claude", "Claude Code"))
+    available_agent = False
+    for command, label in coding_agents:
         executable = shutil.which(command)
         if not executable:
-            failures.append(f"{label} command not found")
             continue
         ok, output = run([executable, "--version"])
         if ok:
             passes.append(f"{label}: {output}")
+            available_agent = True
         else:
             failures.append(f"{label} version check failed: {output}")
+    if not available_agent:
+        failures.append("Codex or Claude Code command not found")
 
     git = shutil.which("git")
     if git:

@@ -70,7 +70,10 @@ AI, Telegram, GitHub에 입력하지 않습니다.
 VS Code: https://code.visualstudio.com/download
 Git: https://git-scm.com/downloads
 Python: https://www.python.org/downloads/
-Codex: https://github.com/openai/codex
+자료조사 Antigravity: https://antigravity.google/
+분석·제작은 아래 중 하나만 선택:
+Claude Code: https://code.claude.com/docs/en/setup
+Codex: https://learn.chatgpt.com/docs/codex/cli
 
 설치 후 터미널을 완전히 닫고 다시 여세요.
 Windows는 PowerShell, macOS는 Terminal을 사용합니다.
@@ -81,38 +84,46 @@ Windows는 PowerShell, macOS는 Terminal을 사용합니다.
 ## 메시지 05 — 버전 확인 · 30분
 
 ```text
-[실습 05/12] 버전 네 개를 확인하세요.
+[실습 05/12] 기본 도구와 선택한 Coding Agent를 확인하세요.
 
 Windows PowerShell:
 git --version
 py --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 
 macOS Terminal:
 git --version
 python3 --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 
-네 개가 보이면: 번호 + ✅ 버전 완료
+Git·Python·VS Code와 선택한 claude/codex 버전이 보이고
+Antigravity 앱 로그인이 되면: 번호 + ✅ 버전 완료
 안 되는 명령이 있으면: 번호 + 🟡 + 명령 이름만
 ```
 
 15명 완료 시 이동. `code`만 실패하면 VS Code 직접 실행으로 통과시킨다.
 
-## 메시지 06 — Codex 로그인·Git 설정 · 38분
+## 메시지 06 — Coding Agent 로그인·Git 설정 · 38분
 
 ```text
-[실습 06/12] 실행:
-codex login
+[실습 06/12] 선택한 하나만 실행:
 
-브라우저 로그인 후 확인:
+Claude Code:
+claude --version
+claude doctor
+claude
+
+Codex:
+codex login
 codex login status
 codex doctor
 
 API Key를 채팅이나 코드에 붙이지 마세요.
-진단 완료: 번호 + ✅ Codex
+진단 완료: 번호 + ✅ Coding Agent
 ```
 
 이어 따옴표 안을 본인 정보로 바꿔 실행한다.
@@ -174,7 +185,7 @@ macOS: python3 src/audit.py
 확인할 숫자:
 행·열 / 열별 결측 / 완전 중복 / 수치열 범위 / Tool·Lot 표본 수
 
-Codex를 실행하고 아래 프롬프트를 넣으세요.
+Claude Code 또는 Codex를 실행하고 아래 프롬프트를 넣으세요.
 
 AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 아직 수정하지 마라.
@@ -215,7 +226,7 @@ cmp_audit_gallery.png를 열고 결측 위치·Tool 차이·시간 Drift를 말�
 ## 메시지 11 — 최소 변경과 Push · 95분
 
 ```text
-[실습 11/12] Codex에 요청:
+[실습 11/12] 선택한 Coding Agent에 요청:
 화면 상단에 내 DATASET_ID를 표시하라.
 수정 전에 성공 기준과 변경 파일을 말하라.
 무관한 리팩터링은 하지 마라.
@@ -289,7 +300,7 @@ student/02_TOPIC_AND_PROJECT_GUIDE.md를 열고
 - 로컬 실습은 계속한다.
 - 쉬는 시간에 Git 인증을 복구한 뒤 새 저장소에 업로드한다.
 
-### Codex 로그인 실패
+### Coding Agent 로그인 실패
 
 - 파트너가 프롬프트를 실행하고 실패자는 결과를 검증·기록한다.
 - 브라우저 ChatGPT에서 파일을 통째로 올리지 않고, 공개 가능한 최소 코드만 사용한다.

@@ -48,12 +48,12 @@
 |---|---|---|
 | 0~8분 | 문제발견 질문 공유·결과물·보안 확인 | 문제 한 문장과 Telegram 번호 응답 |
 | 8~18분 | 결측·이상치가 판단을 바꾸는 사례 | 처리 전 질문 2개 |
-| 18~38분 | Git·Python·VS Code·Codex 설치 | 버전 4개 표시 |
+| 18~38분 | Git·Python·VS Code·Antigravity·Claude Code/Codex 선택 설치 | 앱 로그인과 선택 Agent 버전 |
 | 38~52분 | 로그인·Git 설정·Clone·자동점검 | `READY` 출력 |
 | 52~67분 | noisy CSV 통계 감사 | 결측·중복·이상치 숫자 |
 | 67~80분 | ggplot2·seaborn 갤러리 | 질문별 그래프 선택 |
 | 80~95분 | seaborn 감사 그래프 생성·해석 | PNG와 답변 6개 |
-| 95~106분 | Codex 최소 변경·테스트·Commit | GitHub Commit |
+| 95~106분 | 선택한 Coding Agent로 최소 변경·테스트·Commit | GitHub Commit |
 | 106~116분 | 로컬 웹앱·GitHub Pages | 공개 URL |
 | 116~120분 | 문제정의 재작성·프로젝트 가이드 | 후보 2개와 대안 설명 기록 |
 
@@ -77,7 +77,13 @@
 - 회사·학교 SSO 계정은 개인 공개 저장소 생성이 제한될 수 있으므로 개인 GitHub 계정을 사용합니다.
 - 비밀번호, API Key, 인증 화면을 Telegram에 올리지 않습니다.
 
-## 4. STEP 2 — 도구 설치
+## 4. STEP 2 — 조사 도구와 제작 도구 설치
+
+역할을 섞지 않습니다.
+
+- **Antigravity:** 웹·논문·공식문서 조사와 근거카드 작성
+- **Claude Code 또는 Codex 중 하나:** 저장소 이해, 데이터 분석, 보고서·웹페이지 제작
+- **GitHub·Pages:** 과정 기록, Push, 최종 포트폴리오 공개
 
 ### Windows 11 권장 경로
 
@@ -86,9 +92,18 @@
 1. [VS Code](https://code.visualstudio.com/download)
 2. [Git for Windows](https://git-scm.com/install/windows)
 3. [Python](https://www.python.org/downloads/windows/)
-4. [Codex CLI](https://github.com/openai/codex)
+4. [Google Antigravity](https://antigravity.google/)를 설치하고 Google 계정으로 로그인
+5. 다음 중 사용할 Coding Agent 하나를 선택
+   - [Claude Code](https://code.claude.com/docs/en/setup)
+   - [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
 
-Codex는 PowerShell을 열고 다음 공식 설치 명령을 실행합니다.
+Claude Code를 선택했다면 PowerShell에서 실행합니다.
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+Codex를 선택했다면 PowerShell에서 실행합니다.
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"
@@ -101,9 +116,18 @@ powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1
 1. [VS Code](https://code.visualstudio.com/download)
 2. [Git](https://git-scm.com/download/mac)
 3. [Python](https://www.python.org/downloads/macos/)
-4. [Codex CLI](https://github.com/openai/codex)
+4. [Google Antigravity](https://antigravity.google/)를 설치하고 Google 계정으로 로그인
+5. 다음 중 사용할 Coding Agent 하나를 선택
+   - [Claude Code](https://code.claude.com/docs/en/setup)
+   - [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
 
-Terminal에서 Codex를 설치합니다.
+Claude Code를 선택했다면 Terminal에서 실행합니다.
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+Codex를 선택했다면 Terminal에서 실행합니다.
 
 ```bash
 curl -fsSL https://chatgpt.com/codex/install.sh | sh
@@ -119,7 +143,8 @@ Windows PowerShell:
 git --version
 py --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 ```
 
 macOS Terminal:
@@ -128,28 +153,44 @@ macOS Terminal:
 git --version
 python3 --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 ```
 
 ### 성공 기준
 
-네 명령 모두 `command not found` 없이 버전을 표시합니다. Python은 **3.11 이상**을 사용합니다.
+- Git·Python·VS Code가 버전을 표시합니다.
+- `claude --version` 또는 `codex --version` 중 선택한 하나가 성공합니다.
+- Python은 **3.11 이상**을 사용합니다.
+- Antigravity 앱이 열리고 Google 로그인이 완료됩니다.
 
 ### 설치가 막힐 때 최소 복구
 
 - `code`만 인식되지 않음: VS Code를 직접 실행해 수업을 계속합니다.
 - Windows에서 `python`이 Microsoft Store를 엶: `py` 명령을 사용합니다.
-- Codex가 인식되지 않음: 새 터미널을 열고 다시 확인합니다.
+- Claude Code·Codex가 인식되지 않음: 새 터미널을 열고 다시 확인합니다.
 - 관리자 권한으로 설치할 수 없음: 강사가 제공한 ZIP과 GitHub 웹 편집 경로로 실습을 계속합니다.
 - Windows WSL 경험이 없는 수강생은 수업 중 새로 WSL을 구성하지 않습니다. 환경 분기와 복구 시간이 커집니다.
 
-## 5. STEP 3 — Codex 로그인과 진단
+## 5. STEP 3 — 선택한 Coding Agent 로그인과 진단
+
+### Claude Code 선택자
+
+```bash
+claude --version
+claude doctor
+claude
+```
+
+마지막 명령을 실행하고 브라우저 안내에 따라 로그인합니다.
+
+### Codex 선택자
 
 ```bash
 codex login
 ```
 
-브라우저가 열리면 자신의 ChatGPT 계정으로 로그인합니다. API Key를 Telegram이나 코드에 붙여넣지 않습니다.
+브라우저가 열리면 자신의 계정으로 로그인합니다. API Key를 Telegram이나 코드에 붙여넣지 않습니다.
 
 로그인 확인:
 
@@ -160,8 +201,8 @@ codex doctor
 
 ### 성공 기준
 
-- 로그인 상태가 표시된다.
-- `codex doctor`에서 실행을 막는 오류가 없다.
+- 선택한 Coding Agent의 버전과 로그인 상태가 확인된다.
+- `claude doctor` 또는 `codex doctor`에서 실행을 막는 오류가 없다.
 
 ## 6. STEP 4 — Git 사용자 설정
 
@@ -241,12 +282,13 @@ READY: core environment checks passed
 
 `FAIL`이 있으면 그 줄 전체만 Telegram에 올립니다. 계정정보나 토큰은 올리지 않습니다.
 
-## 9. STEP 7 — Codex에게 먼저 읽게 하기
+## 9. STEP 7 — 선택한 Coding Agent에게 먼저 읽게 하기
 
-프로젝트 폴더에서 Codex를 실행합니다.
+프로젝트 폴더에서 선택한 도구를 실행합니다.
 
 ```bash
-codex
+claude  # Claude Code 선택자
+codex   # Codex 선택자
 ```
 
 첫 프롬프트:
@@ -262,11 +304,52 @@ AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 
 ### 사람이 확인할 것
 
-- Codex가 실제 파일명을 근거로 설명했는가?
+- Coding Agent가 실제 파일명을 근거로 설명했는가?
 - 없는 파일이나 실행 명령을 지어내지 않았는가?
 - `data/raw/`를 수정하라고 하지 않았는가?
 
 틀린 내용은 `prompts/AI_USAGE.md`에 기록합니다.
+
+## 9A. STEP 7A — Antigravity 자료조사와 근거 인계
+
+Antigravity에서는 코드를 만들지 않고 주제의 근거를 조사합니다. 공식 문서·교재·논문을 우선하고, 검색 결과 요약문만 근거로 사용하지 않습니다.
+
+```text
+내 주제는 [주제]이고 사용자의 결정은 [결정]이다.
+관련 전공 원리, Governing equation·도메인 제약 후보,
+데이터 변수 정의, 대표적인 분석법과 한계를 조사하라.
+각 항목에 원문 URL, 문서명, 생산기관·저자, 발행일,
+직접 확인한 사실, 적용 범위, 말하지 않는 것을 구분하라.
+확인하지 못한 수치·수식·인과관계는 미확인으로 표시하라.
+```
+
+조사 결과를 `research/SOURCES.md`에 다음 형식으로 정리합니다.
+
+```text
+출처 ID:
+원문 URL:
+생산기관·저자 / 날짜:
+직접 확인한 사실:
+프로젝트에 적용할 범위:
+자료가 말하지 않는 것:
+내 데이터로 검증할 질문:
+```
+
+그다음 Claude Code 또는 Codex에서 다음과 같이 인계합니다.
+
+```text
+AGENTS.md, PLAN.md, research/SOURCES.md를 먼저 읽어라.
+자료조사의 사실·가설·한계를 구분하고 출처 없는 주장을 추가하지 마라.
+코드는 아직 수정하지 말고, 데이터 감사 → 기준모델 → Holdout 평가 →
+오차 사례 → 보고서 → GitHub Pages 순서의 실행계획을 작성하라.
+단계마다 성공 기준, 변경 파일, 실행 명령을 명시하라.
+```
+
+### 성공 기준
+
+- 원문을 직접 확인한 근거카드가 최소 3개 있다.
+- 출처가 설명하는 범위와 설명하지 못하는 범위가 구분된다.
+- Coding Agent가 근거 없이 공정 수치나 인과관계를 새로 만들지 않는다.
 
 ## 10. STEP 8 — 데이터 감사 실행
 
@@ -425,8 +508,8 @@ Telegram에는 URL 전체 대신 다음 형식으로 완료 여부만 남깁니�
 ## 15. 수업 종료 전 체크리스트
 
 - [ ] GitHub·ChatGPT 로그인
-- [ ] Git·Python·VS Code·Codex 실행
-- [ ] Codex 로그인과 진단
+- [ ] Git·Python·VS Code·Antigravity 실행
+- [ ] Claude Code 또는 Codex 중 하나의 로그인과 진단
 - [ ] 개인 저장소 Clone
 - [ ] 자동점검 `READY`
 - [ ] 데이터 감사 숫자 확인
@@ -439,7 +522,9 @@ Telegram에는 URL 전체 대신 다음 형식으로 완료 여부만 남깁니�
 
 ## 공식 설치·배포 근거
 
-- [OpenAI Codex 공식 저장소와 설치법](https://github.com/openai/codex)
+- [Google Antigravity 공식 사이트](https://antigravity.google/)
+- [Anthropic Claude Code 공식 설치법](https://code.claude.com/docs/en/setup)
+- [OpenAI Codex CLI 공식 설치법](https://learn.chatgpt.com/docs/codex/cli)
 - [GitHub: 원격 저장소 Clone](https://docs.github.com/en/get-started/using-git/getting-changes-from-a-remote-repository)
 - [GitHub Pages 사이트 생성](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
 - [VS Code 공식 다운로드](https://code.visualstudio.com/download)

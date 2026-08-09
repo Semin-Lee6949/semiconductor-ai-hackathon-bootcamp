@@ -4,17 +4,26 @@
 
 수강생은 반도체 문제를 사용자·KPI·제약조건으로 정의하고, 합성 데이터를 감사하며, 기준모델과 개선모델을 비교한 뒤 대화형 MVP로 배포하고 설명합니다.
 
+### 도구 역할 분담
+
+- **Antigravity:** 공식문서·논문·웹 원문 조사, 근거카드와 `research/SOURCES.md` 작성
+- **Claude Code 또는 Codex 중 하나:** 저장소 이해, 데이터 감사·분석, 보고서·웹페이지·테스트 제작
+- **GitHub:** 문제·근거·분석·AI 오류·사람의 수정 이력을 Commit으로 보존
+- **GitHub Pages:** 작동 데모와 한계를 공개 포트폴리오로 제시
+
+조사 결과는 사실로 자동 승인하지 않습니다. Coding Agent가 원문·데이터와 대조하고, 사람은 수식·수치·인과관계와 공개 범위를 최종 검증합니다.
+
 ## 1차 강의 — 8월 14일, 120분
 
 - 수업 전 10분: `student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md` 1차 작성
 - 0~8분: 문제발견 질문 공유·완료 증거·보안·Telegram 상태표시
 - 8~18분: 결측·이상치·표본 편중이 판단을 바꾸는 이유
-- 18~38분: Git·Python·VS Code·Codex 설치와 버전 확인
+- 18~38분: Git·Python·VS Code·Antigravity·Claude Code/Codex 선택 설치와 확인
 - 38~52분: 로그인·Git 설정·개인 저장소 Clone·자동점검
 - 52~67분: noisy CSV 통계 감사 — 스키마·결측·중복·단위·이상치
 - 67~80분: ggplot2·seaborn 갤러리 — 질문에 맞는 그래프 선택
 - 80~95분: seaborn 실습 — 분포·그룹·관계·시간·결측·상관
-- 95~106분: Codex로 최소 변경·테스트·Commit·Push
+- 95~106분: 선택한 Coding Agent로 최소 변경·테스트·Commit·Push
 - 106~116분: 로컬 웹앱 확인·GitHub Pages 배포·URL 제출
 - 116~120분: 데이터 감사 결과를 반영해 문제정의와 후보 주제 2개 재작성
 

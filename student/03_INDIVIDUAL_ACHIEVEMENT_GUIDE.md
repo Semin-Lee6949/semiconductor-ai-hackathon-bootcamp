@@ -30,43 +30,63 @@
 ### STEP 0 — 계정 준비
 
 - 개인 GitHub 계정을 만들고 이메일 인증을 완료합니다.
-- ChatGPT 계정으로 Codex를 사용할 수 있는지 확인합니다.
+- Google 계정으로 Antigravity를 사용할 수 있는지 확인합니다.
+- Claude Code 또는 Codex 중 사용할 Coding Agent 계정을 확인합니다.
 - 실제 회사 데이터·공정 Spec·장비 Log·개인정보를 공개 저장소에 올리지 않기로 확인합니다.
 
-### STEP 1 — 네 도구 설치
+### STEP 1 — 조사 도구와 제작 도구 설치
 
 #### Windows 11
 
 1. [VS Code](https://code.visualstudio.com/download)의 User Installer를 설치합니다.
 2. [Git for Windows](https://git-scm.com/install/windows)를 기본 옵션으로 설치합니다.
 3. [Python](https://www.python.org/downloads/windows/) 설치 첫 화면에서 `Add python.exe to PATH`를 선택합니다.
-4. PowerShell에서 Codex 공식 설치 명령을 실행합니다.
+4. [Google Antigravity](https://antigravity.google/)를 설치하고 로그인합니다.
+5. Claude Code 또는 Codex 중 하나를 설치합니다.
+
+Claude Code:
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+Codex:
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1 | iex"
 ```
 
-5. PowerShell을 닫고 새로 엽니다.
+6. PowerShell을 닫고 새로 엽니다.
 
 #### macOS
 
 1. [VS Code](https://code.visualstudio.com/download)를 Applications로 이동합니다.
 2. [Git](https://git-scm.com/download/mac)과 [Python](https://www.python.org/downloads/macos/)을 설치합니다.
 3. VS Code에서 Command Palette를 열고 `Shell Command: Install 'code' command in PATH`를 실행합니다.
-4. Terminal에서 Codex 공식 설치 명령을 실행합니다.
+4. [Google Antigravity](https://antigravity.google/)를 설치하고 로그인합니다.
+5. Claude Code 또는 Codex 중 하나를 설치합니다.
+
+Claude Code:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+Codex:
 
 ```bash
 curl -fsSL https://chatgpt.com/codex/install.sh | sh
 ```
 
-5. Terminal을 닫고 새로 엽니다.
+6. Terminal을 닫고 새로 엽니다.
 
 각 도구의 역할:
 
 - VS Code: 파일과 Terminal을 한 화면에서 관리
 - Git: 변경 이력과 사람의 판단을 기록
 - Python: 데이터 감사·그래프·모델 실행
-- Codex: 저장소를 읽고 계획·코드·테스트를 보조
+- Antigravity: 웹·논문·공식문서 조사와 근거카드 작성
+- Claude Code 또는 Codex: 저장소를 읽고 분석·보고서·웹페이지·테스트를 제작
 
 ### STEP 2 — 버전 확인
 
@@ -76,7 +96,8 @@ Windows PowerShell:
 git --version
 py --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 ```
 
 macOS Terminal:
@@ -85,12 +106,23 @@ macOS Terminal:
 git --version
 python3 --version
 code --version
-codex --version
+claude --version  # Claude Code 선택자
+codex --version   # Codex 선택자
 ```
 
-성공 기준은 네 명령이 모두 버전을 표시하고 Python이 3.11 이상인 것입니다.
+성공 기준은 Git·Python·VS Code와 선택한 `claude` 또는 `codex`가 버전을 표시하고, Antigravity 앱 로그인까지 완료되는 것입니다. Python은 3.11 이상을 사용합니다.
 
-### STEP 3 — Codex 로그인과 진단
+### STEP 3 — 선택한 Coding Agent 로그인과 진단
+
+Claude Code:
+
+```bash
+claude --version
+claude doctor
+claude
+```
+
+Codex:
 
 ```bash
 codex login
@@ -145,7 +177,55 @@ AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 
 사람은 없는 파일·명령을 만들지 않았는지, 원본 데이터를 수정하라고 하지 않았는지 확인합니다.
 
-## 4. 자신의 주제를 탐구하는 10단계
+## 4. 도구별 역할과 인계 규칙
+
+### Antigravity — 자료조사
+
+Antigravity에서는 웹·논문·공식문서를 찾아 전공 근거카드와 변수 정의를 만듭니다. 검색 결과 요약을 그대로 쓰지 않고 원문을 열어 확인합니다.
+
+```text
+주제: [내 주제]
+사용자 결정: [결정]
+
+관련 전공 원리, Governing equation·도메인 제약 후보,
+변수 정의, 대표 분석법, 알려진 한계를 조사하라.
+각 결과에 원문 URL, 문서명, 저자·기관, 날짜,
+직접 확인한 사실, 적용 범위, 미확인 사항을 붙여라.
+```
+
+조사 결과는 `research/SOURCES.md`로 저장합니다. 수식 하나마다 변수 정의·단위·적용 조건·원문 위치를 기록합니다.
+
+### Claude Code 또는 Codex — 분석·보고서 제작
+
+둘 중 하나만 선택합니다. Coding Agent는 조사 결과를 진실로 가정하지 않고 데이터와 원문으로 다시 검증합니다.
+
+```text
+AGENTS.md, PLAN.md, research/SOURCES.md를 먼저 읽어라.
+출처가 확인된 사실, 작업가설, 현재 데이터로 말할 수 없는 것을 구분하라.
+아직 수정하지 말고 데이터 감사 → 기준모델 → Holdout → 오차 분석 →
+보고서 → docs 웹페이지 → 테스트의 계획을 작성하라.
+```
+
+### GitHub와 Pages — 포트폴리오
+
+- GitHub: 질문, 조사, 분석, AI 오류, 사람의 수정, 테스트 이력을 Commit으로 보존
+- GitHub Pages: 문제·근거·작동 데모·성능·오차·한계를 한 주소에서 제시
+- 공개 금지: 실제 회사 데이터, 공정 Spec, 장비 Log, 고객·개인정보, API Key
+
+### 최소 인계 패킷
+
+```text
+문제 한 문장:
+사용자 결정:
+근거 출처 3개:
+데이터 한 행과 입력·출력:
+주가설 / 대안가설 / 반증조건:
+기준모델:
+성능 KPI / 위험 KPI:
+최종 Pages 화면:
+```
+
+## 5. 자신의 주제를 탐구하는 10단계
 
 ### 1단계 — 직무와 사용자 한 명
 
@@ -223,7 +303,7 @@ Tool·Lot·기간 편중:
 
 모든 주요 단계에서 작은 Commit을 남깁니다. 최종 발표는 문제 30초, 데이터·가설 30초, 데모 50초, 성능 30초, 인간 검증 20초, 효과·한계 20초로 구성합니다.
 
-## 5. 대표 탐구 — Plasma FDC
+## 6. 대표 탐구 — Plasma FDC
 
 ### 문제 정의
 
@@ -260,16 +340,16 @@ Tool·Lot·기간 편중:
 5. 계속 진행·점검·재측정 제안과 근거
 6. 대안 설명과 추가 측정 항목
 
-## 6. 설치 실패 시 수업을 멈추지 않는 법
+## 7. 설치 실패 시 수업을 멈추지 않는 법
 
 - `code`만 실패: VS Code를 직접 실행합니다.
 - Windows가 Python 대신 Store를 열면 `py`를 사용합니다.
-- Codex가 보이지 않으면 Terminal을 닫고 새로 엽니다.
+- Claude Code·Codex가 보이지 않으면 Terminal을 닫고 새로 엽니다.
 - 관리자 권한이 없으면 GitHub 웹 편집과 제공된 결과물로 수업을 계속합니다.
 - WSL을 처음 설치하는 작업은 수업 중 하지 않습니다.
 - 10분 이상 막히면 `🟡 번호/단계/오류 한 줄`만 Telegram에 보내고 다음 분석 단계로 이동합니다.
 
-## 7. 최종 완료 기준
+## 8. 최종 완료 기준
 
 - [ ] 문제와 사용자의 결정이 한 문장이다.
 - [ ] 데이터카드와 전공 근거카드가 있다.

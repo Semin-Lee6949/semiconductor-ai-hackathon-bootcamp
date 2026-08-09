@@ -77,14 +77,15 @@
 1. VS Code
 2. Git
 3. Python
-4. Codex
-5. 버전 확인
+4. Antigravity 설치·Google 로그인
+5. Claude Code 또는 Codex 중 하나 설치
+6. 버전 확인
 
 화면에는 현재 설치할 도구 하나만 띄웁니다. 다음 명령을 미리 보여주지 않습니다.
 
 통과:
 
-- 15명 이상 네 개 버전 표시
+- 15명 이상 기본 도구와 선택한 Coding Agent 버전 표시, Antigravity 로그인
 - `code` 명령만 실패하면 VS Code 직접 실행으로 통과
 
 연결 멘트:
@@ -95,7 +96,7 @@
 
 순서:
 
-1. Codex 로그인과 `doctor`
+1. 선택한 Claude Code 또는 Codex 로그인과 `doctor`
 2. Git 사용자 이름·이메일
 3. 개인 저장소 생성·Clone
 4. `student_preflight.py`
@@ -179,7 +180,7 @@ ggplot2와 seaborn의 문법 차이를 강의하지 않습니다. 둘 다 데이
 
 > “이제 AI에게 차트를 그려 달라고 하지 않고, 방금 정한 질문·검증·완료 기준을 전달합니다.”
 
-### 95~106분 — Codex 최소 변경과 Git 증거
+### 95~106분 — 선택한 Coding Agent의 최소 변경과 Git 증거
 
 순서:
 

@@ -29,7 +29,7 @@ AI 기능을 나열하지 않고 `문제 → 전공 원리·Governing equation �
 - 수업 전 문제발견 질문지를 10분 작성한다.
 - 수업 중 Telegram으로 설치 단계를 하나씩 전달한다.
 - 합성 데이터로 결측·이상치·편중을 감사하고 seaborn 그래프를 만든다.
-- Codex의 변경을 사람이 diff와 테스트로 검증한다.
+- Antigravity의 원문 조사 결과를 근거카드로 남기고, Claude Code 또는 Codex의 변경을 사람이 diff와 테스트로 검증한다.
 - 수업 말미에 문제정의를 다시 작성하고 GitHub Pages 결과를 제출한다.
 
 ## Capabilities and Constraints

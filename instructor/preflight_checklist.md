@@ -3,7 +3,8 @@
 ## 수강생
 
 - [ ] GitHub 이메일 인증 및 로그인
-- [ ] Codex 로그인과 파일 읽기·수정 테스트
+- [ ] Antigravity 설치·Google 로그인·공식 URL 조사 테스트
+- [ ] Claude Code 또는 Codex 중 하나의 로그인과 파일 읽기·수정 테스트
 - [ ] Git, Python 3.11+, VS Code 설치
 - [ ] 공용 테스트 저장소 Fork·Commit·Push
 - [ ] NotebookLM 접속
