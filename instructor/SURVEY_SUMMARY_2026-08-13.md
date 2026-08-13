@@ -24,9 +24,9 @@
 
 ## 운영 결정
 
-- 상세한 Windows 가이드를 미리 보내 GitHub 가입·Fork·Clone까지 완료하게 한다.
-- Claude Code 또는 Codex 한 개와 Antigravity를 미리 설치·로그인하게 한다.
-- 가상환경·패키지·Preflight READY·첫 그래프까지 수업 전 완료하게 한다.
+- 간단한 Windows 체크리스트로 GitHub·Streamlit 가입과 Fork·Clone을 완료하게 한다.
+- Antigravity·Claude Desktop·ChatGPT Desktop을 미리 설치·로그인하게 한다.
+- 가상환경·필수 패키지·`.env`·Preflight READY까지 수업 전 완료하게 한다.
 - 설치 경험 차이는 상세 오류 대응과 사전 확인으로 보완한다.
 - 2시간 안에는 문제 정의·데이터 감사·Agent 실행 흐름을 경험한다.
 - Streamlit·보고서·문서화·배포는 수업 후 같은 8단계로 완성한다.

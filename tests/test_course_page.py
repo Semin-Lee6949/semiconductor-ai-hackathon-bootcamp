@@ -47,9 +47,24 @@ class CoursePageTests(unittest.TestCase):
         self.assertIn('href="preclass_setup.html"', self.page)
 
     def test_preclass_matches_beginner_windows_survey(self):
-        for expected in ("WINDOWS", "GitHub 계정", "Claude Code 또는 Codex", "READY: core environment checks passed"):
+        for expected in (
+            "Windows",
+            "GitHub 가입",
+            "Streamlit 가입",
+            "Google Antigravity",
+            "Claude Desktop",
+            "ChatGPT Desktop",
+            "GITHUB_CLASS_TOKEN",
+            "READY: core environment checks passed",
+        ):
             self.assertIn(expected, self.preclass)
         self.assertNotIn("macOS", self.preclass)
+
+    def test_preclass_protects_token(self):
+        gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn(".env", gitignore)
+        self.assertIn("토큰은 제출하지 않습니다", self.preclass)
+        self.assertTrue((ROOT / ".env.example").exists())
 
     def test_student_templates_compile(self):
         for name in ("streamlit_app.py", "build_standalone_report.py"):

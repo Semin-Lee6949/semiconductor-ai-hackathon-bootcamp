@@ -28,12 +28,12 @@
 ## 저장소 안내
 
 - [`index.html`](index.html): 1차 강의용 반응형 GitHub Pages 자료
-- [`preclass_setup.html`](preclass_setup.html): 설문 결과를 반영한 Windows 45–60분 완전 사전 준비 페이지
+- [`preclass_setup.html`](preclass_setup.html): 계정·프로그램·패키지·토큰을 한 번에 확인하는 Windows 사전 준비 페이지
 - [`COURSE_PLAN.md`](COURSE_PLAN.md): 과정 범위·일정·완료 기준
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
 - [`student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`](student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md): 문제→전공→Governing equation·도메인 제약→상관·대안가설→의사결정으로 좁히는 1강 질문지
-- [`student/00_PRECLASS_SETUP_2026-08-14.md`](student/00_PRECLASS_SETUP_2026-08-14.md): 10명·120분 수업을 위한 Fork·Clone·도구 로그인·자동점검 사전 준비서
+- [`student/00_PRECLASS_SETUP_2026-08-14.md`](student/00_PRECLASS_SETUP_2026-08-14.md): 수강생에게 전달할 간단한 설치 체크리스트
 - [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표
