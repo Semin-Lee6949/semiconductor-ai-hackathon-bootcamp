@@ -49,26 +49,25 @@ class CoursePageTests(unittest.TestCase):
     def test_preclass_matches_beginner_windows_survey(self):
         for expected in (
             "Windows",
+            "프로젝트 폴더 만들기",
             "GitHub 가입",
             "Streamlit 가입",
-            "구독 중인 AI 하나 선택",
             "Claude 구독자",
             "GPT 구독자",
-            "Gemini 구독자",
+            "Claude Code 또는 Codex 설치",
             "Antigravity",
-            "Claude Desktop",
-            "ChatGPT Desktop",
-            "AI_PROVIDER",
+            "Google AI Studio",
             "GITHUB_CLASS_TOKEN",
-            "READY: core environment checks passed",
+            "GEMINI_API_KEY",
         ):
             self.assertIn(expected, self.preclass)
         self.assertNotIn("macOS", self.preclass)
+        self.assertNotIn("Fork", self.preclass)
 
     def test_preclass_protects_token(self):
         gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
         self.assertIn(".env", gitignore)
-        self.assertIn("토큰은 제출하지 않습니다", self.preclass)
+        self.assertIn("토큰 화면을 캡처하거나 공유하지 마세요", self.preclass)
         self.assertTrue((ROOT / ".env.example").exists())
 
     def test_provider_neutral_prompt_exists(self):

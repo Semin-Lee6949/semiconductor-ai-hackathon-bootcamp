@@ -3,34 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="SK하이닉스 지원 AI 프로젝트 특강 Windows 사전 준비">
-  <title>수업 전 사전 준비 | AI 프로젝트 특강</title>
+  <meta name="description" content="SK하이닉스 AI 프로젝트 특강 Windows 사전 준비">
+  <title>수업 전 준비 | SK하이닉스 AI 프로젝트 특강</title>
   <style>
-    :root{--ink:#101b2d;--paper:#f3f6f5;--line:#c7d0d5;--cyan:#007f87;--pink:#b51f63;--muted:#586779;--soft:#e1f1f1;--mono:ui-monospace,Consolas,monospace;--sans:Pretendard,"Noto Sans KR",system-ui,sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6}.shell{width:min(900px,calc(100% - 28px));margin:auto}header{padding:58px 0 38px;border-bottom:1px solid var(--ink)}.num{color:var(--pink);font:700 12px var(--mono)}h1{margin:0 0 10px;font-size:clamp(38px,7vw,66px);line-height:1.05;letter-spacing:-.04em}header p{margin:0;color:var(--muted);font-size:17px}main{padding:28px 0}.step{display:grid;grid-template-columns:70px 1fr;gap:20px;padding:28px 0;border-bottom:1px solid var(--line)}h2{margin:0 0 10px;font-size:25px}.links{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.links a{padding:9px 11px;border:1px solid var(--ink);background:#fff;color:var(--ink);font-weight:800;text-decoration:none}.links a:hover,.links a:focus-visible{background:var(--cyan);color:#fff}.links a:focus-visible,.back:focus-visible{outline:3px solid var(--pink);outline-offset:3px}ol,ul{padding-left:22px}li{margin:6px 0}pre{overflow:auto;padding:14px;background:var(--ink);color:#fff;font:13px/1.7 var(--mono)}.done,.warn{padding:12px 14px}.done{background:var(--soft);border:1px solid var(--cyan);font-weight:800}.warn{background:#fff;border:1px solid var(--pink);color:var(--muted)}code{font-family:var(--mono)}.tracks{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);background:#fff}.track{padding:14px;border-right:1px solid var(--line)}.track:last-child{border-right:0}.track b{display:block;margin-bottom:5px}.track a{color:var(--cyan);font-weight:800}.check{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0;list-style:none}.check li{margin:0;padding:12px;background:#fff;border:1px solid var(--line)}.back{display:inline-block;margin:28px 0;color:var(--cyan);font-weight:900}footer{padding:25px 0;border-top:1px solid var(--ink);font:11px var(--mono)}@media(max-width:620px){header{padding-top:38px}.step{grid-template-columns:1fr;gap:5px}.check,.tracks{grid-template-columns:1fr}.track{border-right:0;border-bottom:1px solid var(--line)}.track:last-child{border-bottom:0}h2{font-size:22px}}
+    :root{--ink:#101b2d;--paper:#f3f6f5;--line:#c7d0d5;--cyan:#006f77;--pink:#a91f60;--muted:#526273;--soft:#e1f1f1;--mono:ui-monospace,Consolas,monospace;--sans:Pretendard,"Noto Sans KR",system-ui,sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65}.shell{width:min(900px,calc(100% - 28px));margin:auto}header{padding:54px 0 34px;border-bottom:1px solid var(--ink)}h1{max-width:12ch;margin:0 0 12px;font-size:clamp(38px,7vw,64px);line-height:1.04;letter-spacing:-.035em}header p{max-width:66ch;margin:0;color:var(--muted);font-size:17px}main{padding:14px 0 34px}.step{display:grid;grid-template-columns:58px minmax(0,1fr);gap:18px;padding:26px 0;border-bottom:1px solid var(--line)}.num{color:var(--pink);font:700 12px/2 var(--mono)}h2{margin:0 0 10px;font-size:24px;letter-spacing:-.02em}h3{margin:20px 0 8px;font-size:17px}p{margin:8px 0}ol,ul{padding-left:22px}li{margin:5px 0}a{color:var(--cyan);font-weight:800;text-underline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.actions a{display:inline-flex;min-height:44px;align-items:center;padding:8px 12px;border:1px solid var(--ink);background:#fff;color:var(--ink);text-decoration:none}.actions a:hover{background:var(--cyan);color:#fff}.actions a:focus-visible,.back:focus-visible{outline:3px solid var(--pink);outline-offset:3px}pre{overflow:auto;margin:10px 0;padding:13px 15px;background:var(--ink);color:#fff;font:13px/1.7 var(--mono);tab-size:2}code{font-family:var(--mono)}.note{margin:12px 0;padding:12px 14px;background:#fff;border:1px solid var(--pink);color:var(--muted)}.check{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0;list-style:none}.check li{margin:0;padding:10px 12px;background:#fff;border:1px solid var(--line)}.ready{margin:26px 0;padding:16px;background:var(--soft);border:1px solid var(--cyan);font-weight:800}.back{display:inline-block;margin:0 0 18px}.source{color:var(--muted);font-size:13px}footer{padding:24px 0;border-top:1px solid var(--ink);font:11px var(--mono)}
+    @media(max-width:620px){header{padding-top:34px}.step{grid-template-columns:1fr;gap:2px;padding:22px 0}.num{line-height:1}.check{grid-template-columns:1fr}h2{font-size:21px}pre{font-size:12px}.actions a{width:100%;justify-content:center}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
-  <header><div class="shell"><h1>설치는 미리,<br>수업은 바로 실습.</h1><p>Windows 기준 약 45분. 아래 순서대로 설치하고 마지막 READY 결과만 확인합니다.</p></div></header>
+  <header><div class="shell"><h1>설치는 미리.<br>수업은 바로 실습.</h1><p>Windows 기준 30~45분. PowerShell에서 아래 명령을 한 줄씩 실행합니다. 토큰·API 키·비밀번호는 누구에게도 보내지 않습니다.</p></div></header>
   <main class="shell">
-    <section class="step"><span class="num">01</span><div><h2>계정 가입</h2><div class="links"><a href="https://github.com/signup">GitHub 가입</a><a href="https://share.streamlit.io/">Streamlit 가입</a></div><p>GitHub는 이메일 인증을 완료하고, Streamlit은 <b>Continue with GitHub</b>로 가입합니다.</p></div></section>
-    <section class="step"><span class="num">02</span><div><h2>기본 프로그램 설치</h2><div class="links"><a href="https://git-scm.com/download/win">Git</a><a href="https://code.visualstudio.com/download">VS Code</a><a href="https://www.python.org/downloads/windows/">Python</a></div><p>Python 설치 화면에서 <b>Add Python to PATH</b>를 선택합니다.</p><pre>git --version
-py --version
-code --version</pre><div class="done">완료: 세 명령 모두 버전 번호가 보입니다.</div></div></section>
-    <section class="step"><span class="num">03</span><div><h2>구독 중인 AI 하나 선택</h2><div class="tracks"><div class="track"><b>Claude 구독자</b><a href="https://claude.com/download">Claude Desktop</a><br>또는 Claude Code</div><div class="track"><b>GPT 구독자</b><a href="https://chatgpt.com/download">ChatGPT Desktop</a><br>또는 Codex</div><div class="track"><b>Gemini 구독자</b><a href="https://antigravity.google/download">Antigravity</a><br>또는 Gemini</div></div><p><b>하나만 주 AI로 사용합니다.</b> Claude·GPT 사용자는 한도 발생에 대비해 Gemini 또는 Antigravity 로그인도 준비합니다.</p><div class="links"><a href="templates/UNIVERSAL_AI_PROJECT_PROMPT.md">공통 프로젝트 프롬프트</a><a href="student/AI_QUOTA_SAFETY_PLAN.md">사용량 보호 계획</a></div></div></section>
-    <section class="step"><span class="num">04</span><div><h2>강의 당일 AI 사용 보존</h2><ul><li><b>14:00 이후</b> Claude·ChatGPT·Codex 긴 작업 중지</li><li><b>18:30</b> 로그인·사용량 화면만 확인</li><li>테스트 질문·파일 업로드·Deep Research 금지</li><li>수업 중 AI 사용은 계획·구현·검수 3회</li></ul><div class="warn">추가 크레딧 구매와 자동 충전은 필수가 아닙니다. 주 AI가 막히면 Gemini → 페어 → 로컬 스크립트 순서로 전환합니다.</div><div class="links"><a href="templates/COMPACT_AI_PROMPTS.md">3회용 압축 프롬프트</a></div></div></section>
-    <section class="step"><span class="num">05</span><div><h2>프로젝트 폴더 만들기</h2><p><a href="https://github.com/waterfirst/semiconductor-ai-hackathon-bootcamp">강의 저장소</a>를 먼저 Fork하고 <code>YOUR_GITHUB_ID</code>를 바꿉니다.</p><pre>cd $HOME\Documents
-git clone https://github.com/YOUR_GITHUB_ID/semiconductor-ai-hackathon-bootcamp.git semiconductor-ai-project
-cd semiconductor-ai-project
+    <section class="step"><span class="num">00</span><div><h2>프로젝트 폴더 만들기</h2><pre>cd $HOME\Documents
+mkdir sk-ai-project
+cd sk-ai-project
+New-Item .env -ItemType File -Force
+Set-Content .gitignore ".env`n.venv/`n__pycache__/"</pre></div></section>
+
+    <section class="step"><span class="num">01</span><div><h2>GitHub 가입 · Class Token</h2><div class="actions"><a href="https://github.com/signup">GitHub 가입</a><a href="https://github.com/new">빈 저장소 만들기</a><a href="https://github.com/settings/personal-access-tokens/new">Token 발급</a></div><ol><li>가입 후 이메일 인증</li><li>빈 저장소 <code>sk-ai-project</code> 생성</li><li>이름 <code>SK-AI-Class</code>, 만료 <code>7일</code></li><li><code>Only select repositories</code>에서 방금 만든 저장소만 선택</li><li><code>Contents: Read and write</code></li></ol><pre>cd $HOME\Documents\sk-ai-project
+notepad .env</pre><pre>GITHUB_CLASS_TOKEN=여기에_발급받은_토큰</pre><div class="note"><b>.env는 GitHub에 올리지 않습니다.</b> 토큰 화면을 캡처하거나 공유하지 마세요.</div></div></section>
+
+    <section class="step"><span class="num">02</span><div><h2>Git 설치 · 사용자 설정</h2><pre>winget install -e --id Git.Git</pre><p>PowerShell을 다시 연 뒤 실행합니다.</p><pre>git config --global user.name "본인 영문 이름"
+git config --global user.email "GitHub 가입 이메일"
+git --version
+git config --global --list</pre></div></section>
+
+    <section class="step"><span class="num">03</span><div><h2>Python 설치</h2><pre>winget install -e --id Python.Python.3.13</pre><p>PowerShell을 다시 연 뒤 확인합니다.</p><pre>py --version</pre></div></section>
+
+    <section class="step"><span class="num">04</span><div><h2>VS Code 설치</h2><pre>winget install -e --id Microsoft.VisualStudioCode</pre><p>프로젝트 폴더를 열고, Extensions에서 <b>Python</b>과 <b>Jupyter</b>를 설치합니다.</p><pre>cd $HOME\Documents\sk-ai-project
 code .</pre></div></section>
-    <section class="step"><span class="num">06</span><div><h2>필수 패키지 설치</h2><p>프로젝트 폴더의 PowerShell에서 실행합니다.</p><pre>py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements-class.txt</pre></div></section>
-    <section class="step"><span class="num">07</span><div><h2>GitHub Class Token 저장</h2><ol><li>GitHub → Settings → Developer settings</li><li>Personal access tokens → Fine-grained tokens</li><li>이름 <code>SK-AI-Class</code>, 만료 7일</li><li>개인 Fork 하나만 선택</li><li><code>Contents: Read and write</code></li></ol><pre>Copy-Item .env.example .env
-code .env</pre><pre>AI_PROVIDER=claude
-GITHUB_CLASS_TOKEN=YOUR_FINE_GRAINED_TOKEN</pre><p><code>AI_PROVIDER</code>는 Claude=<code>claude</code>, GPT=<code>openai</code>, Gemini=<code>gemini</code> 중 하나를 씁니다.</p><div class="warn"><b>토큰은 제출하지 않습니다.</b> <code>.env</code>는 GitHub에 올리지 말고, 일반 <code>git push</code>는 브라우저 로그인을 우선 사용합니다.</div></div></section>
-    <section class="step"><span class="num">08</span><div><h2>최종 확인</h2><pre>.\.venv\Scripts\python.exe tools\student_preflight.py</pre><div class="done">완료: READY: core environment checks passed</div></div></section>
-    <section class="step"><span class="num">09</span><div><h2>준비 체크</h2><ul class="check"><li>□ GitHub 가입</li><li>□ Streamlit 가입</li><li>□ Git·VS Code·Python</li><li>□ 주 AI 하나 로그인</li><li>□ 비상 Gemini 로그인</li><li>□ 개인 Fork</li><li>□ .env와 READY</li><li>□ 14시 이후 AI 보존</li></ul></div></section>
-    <section class="warn"><b>추가 준비:</b> Chrome 또는 Edge 최신 버전, 충전기, 저장공간 5GB. 실제 회사·연구실 데이터는 사용하지 않습니다.</section>
+
+    <section class="step"><span class="num">05</span><div><h2>Claude Code 또는 Codex 설치</h2><p><b>구독 중인 서비스 하나만 설치합니다.</b></p><h3>Claude 구독자</h3><pre>irm https://claude.ai/install.ps1 | iex
+claude --version
+claude</pre><p>브라우저가 열리면 Claude 계정으로 로그인합니다.</p><h3>GPT 구독자</h3><pre>winget install -e --id OpenJS.NodeJS.LTS</pre><p>PowerShell을 다시 연 뒤 실행합니다.</p><pre>npm install -g @openai/codex
+codex --version
+codex</pre><p>첫 실행에서 <b>Sign in with ChatGPT</b>를 선택합니다.</p></div></section>
+
+    <section class="step"><span class="num">06</span><div><h2>Antigravity 설치 · 조사 테스트</h2><div class="actions"><a href="https://antigravity.google/download">Antigravity 다운로드</a></div><ol><li>Google 계정 로그인</li><li><code>sk-ai-project</code> 폴더 열기</li><li>아래 문장으로 한 번만 테스트</li></ol><pre>반도체 Photo 공정에서 CD에 영향을 주는 주요 변수를 조사하고,
+공식 문서나 논문 URL과 함께 5개 이내로 정리해 줘.
+파일은 수정하지 마.</pre></div></section>
+
+    <section class="step"><span class="num">07</span><div><h2>Google AI Studio · API 키</h2><div class="actions"><a href="https://aistudio.google.com/">AI Studio 로그인</a><a href="https://aistudio.google.com/apikey">API Key 생성</a></div><pre>cd $HOME\Documents\sk-ai-project
+code .env</pre><p>기존 토큰 아래에 API 키를 추가합니다.</p><pre>GITHUB_CLASS_TOKEN=여기에_발급받은_토큰
+GEMINI_API_KEY=여기에_Gemini_API_키</pre><div class="note">결제 등록은 필수가 아닙니다. API 키도 화면·메일·메신저·GitHub에 공개하지 않습니다.</div></div></section>
+
+    <section class="step"><span class="num">08</span><div><h2>Streamlit Community Cloud 가입</h2><div class="actions"><a href="https://share.streamlit.io/">Streamlit 가입</a></div><p><b>Continue with GitHub</b>를 선택하고 GitHub 연결을 승인합니다.</p></div></section>
+
+    <section><div class="ready">최종 확인: 아래 7개 항목이 끝나면 준비 완료입니다.</div><ul class="check"><li>□ 프로젝트 폴더와 .env</li><li>□ GitHub·Class Token</li><li>□ Git·Python·VS Code</li><li>□ Claude Code 또는 Codex</li><li>□ Antigravity 조사 테스트</li><li>□ Gemini API 키</li><li>□ Streamlit 가입</li></ul><p class="source">준비가 안 된 항목만 강사에게 알려 주세요. 토큰과 API 키 값은 보내지 않습니다.</p></section>
     <a class="back" href="./">← 실전 강의 페이지로 돌아가기</a>
   </main>
   <footer><div class="shell">SEMICONDUCTOR AI PROJECT SHORT CLASS · PRECLASS</div></footer>
