@@ -24,12 +24,13 @@
 
 ## 운영 결정
 
-- 사전 준비는 GitHub 가입, LLM 로그인, Git·Python·VS Code, CSV 열기로 제한한다.
-- Claude Code·Codex·Antigravity 설치는 선택으로 둔다.
-- 초보자는 브라우저 LLM, 경험자는 Coding Agent를 사용해 페어로 진행한다.
+- 상세한 Windows 가이드를 미리 보내 GitHub 가입·Fork·Clone까지 완료하게 한다.
+- Claude Code 또는 Codex 한 개와 Antigravity를 미리 설치·로그인하게 한다.
+- 가상환경·패키지·Preflight READY·첫 그래프까지 수업 전 완료하게 한다.
+- 설치 경험 차이는 상세 오류 대응과 사전 확인으로 보완한다.
 - 2시간 안에는 문제 정의·데이터 감사·Agent 실행 흐름을 경험한다.
 - Streamlit·보고서·문서화·배포는 수업 후 같은 8단계로 완성한다.
-- 설치 실패자는 오류 해결에 매달리지 않고 강사 ZIP과 페어 실습으로 전환한다.
+- 준비 중 오류는 FAIL 한 줄과 화면 캡처로 수업 전에 공유하게 한다.
 
 ## 권장 페어 구성
 

@@ -28,7 +28,7 @@
 ## 저장소 안내
 
 - [`index.html`](index.html): 1차 강의용 반응형 GitHub Pages 자료
-- [`preclass_setup.html`](preclass_setup.html): 설문 결과를 반영한 Windows 20분 사전 준비 페이지
+- [`preclass_setup.html`](preclass_setup.html): 설문 결과를 반영한 Windows 45–60분 완전 사전 준비 페이지
 - [`COURSE_PLAN.md`](COURSE_PLAN.md): 과정 범위·일정·완료 기준
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검

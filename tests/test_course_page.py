@@ -47,7 +47,7 @@ class CoursePageTests(unittest.TestCase):
         self.assertIn('href="preclass_setup.html"', self.page)
 
     def test_preclass_matches_beginner_windows_survey(self):
-        for expected in ("WINDOWS", "GitHub 가입", "새 유료 가입은 하지 않습니다", "Agent 설치는 선택입니다"):
+        for expected in ("WINDOWS", "GitHub 계정", "Claude Code 또는 Codex", "READY: core environment checks passed"):
             self.assertIn(expected, self.preclass)
         self.assertNotIn("macOS", self.preclass)
 
