@@ -19,7 +19,7 @@ class CoursePageTests(unittest.TestCase):
         for step in range(1, 9):
             self.assertIn(f"STEP {step}", self.page)
         self.assertIn("1회 · 2시간", self.page)
-        self.assertIn("8월 20일부터", self.page)
+        self.assertIn("8월 20일까지 가능한 한 많이 연습해 봅니다", self.page)
 
     def test_every_student_download_pack_exists(self):
         for slug, challenge in self.schema.items():
