@@ -11,7 +11,7 @@
 - 1차: 2026-08-14, 오프라인 2시간
 - 개인 프로젝트: 2026-08-14~20
 - 2차: 2026-08-21, 발표·질의응답·피드백 2시간 30분 권장
-- 대상: 반도체 소자·R&D 공정·양산기술·설비기술 지원자 약 20명
+- 대상: 반도체 소자·R&D 공정·양산기술·설비기술 지원자 10명
 - 결과물: 개인 저장소, 작동형 MVP, Live Page, AI 활용기록, 3분 발표
 
 ## 첫날 성공 기준
@@ -31,6 +31,7 @@
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
 - [`student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`](student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md): 문제→전공→Governing equation·도메인 제약→상관·대안가설→의사결정으로 좁히는 1강 질문지
+- [`student/00_PRECLASS_SETUP_2026-08-14.md`](student/00_PRECLASS_SETUP_2026-08-14.md): 10명·120분 수업을 위한 Fork·Clone·도구 로그인·자동점검 사전 준비서
 - [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표
