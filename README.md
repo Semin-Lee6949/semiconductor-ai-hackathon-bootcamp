@@ -16,13 +16,15 @@
 
 ## 첫날 성공 기준
 
-수업이 끝날 때 모든 수강생이 다음 다섯 가지를 완료해야 합니다.
+수업이 끝날 때 모든 수강생이 다음 다섯 가지를 이해하고, 최소 한 단계는 직접 수행해야 합니다.
 
-1. Starter Repository Fork/Clone 및 첫 Commit
-2. `AGENTS.md`·`PLAN.md`에 문제·가설·완료조건 기록
-3. 완성 예제 로컬 실행
-4. GitHub Pages 초기 URL 생성
-5. 배정 과제의 첫 데이터 감사 결과 제출
+1. 사용자·데이터·결정을 포함한 문제정의
+2. Antigravity 근거 조사와 근거카드
+3. Claude Code/Codex가 저장소를 읽고 계획하는 과정
+4. AI 결과를 데이터·전공 원리·반례로 검증하는 방법
+5. Git diff·Commit·Pages로 과정의 증거를 남기는 방법
+
+개인 Fork·Commit·Pages는 사전 준비 상태에 따라 수업 중 또는 수업 후 완성합니다.
 
 ## 저장소 안내
 
@@ -35,6 +37,7 @@
 - [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표
+- [`instructor/SESSION1_AGENT_WORKFLOW_10_BEGINNERS.md`](instructor/SESSION1_AGENT_WORKFLOW_10_BEGINNERS.md): GitHub 미가입자가 포함된 10명 초급반용 Agent 시연·페어 실습·시간 부족 대응안
 - [`student/02_TOPIC_AND_PROJECT_GUIDE.md`](student/02_TOPIC_AND_PROJECT_GUIDE.md): 주제선정·범위축소·7일 프로젝트 가이드
 - [`student/03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md`](student/03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md): 설치→데이터카드→근거카드→주장감사→MVP→발표의 개인 성과 집중 가이드
 - [`lessons/01_DATA_QUALITY_AND_VISUALIZATION.md`](lessons/01_DATA_QUALITY_AND_VISUALIZATION.md): 결측·이상치·편중 처리와 ggplot2·seaborn 그래프 선택 실습

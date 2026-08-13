@@ -2,23 +2,23 @@
 
 ## 수강생
 
-- [ ] GitHub 이메일 인증 및 로그인
+- [ ] GitHub 계정 생성·이메일 인증·로그인 완료
 - [ ] Antigravity 설치·Google 로그인·공식 URL 조사 테스트
 - [ ] Claude Code 또는 Codex 중 하나의 로그인과 파일 읽기·수정 테스트
 - [ ] Git, Python 3.11+, VS Code 설치
-- [ ] 공용 테스트 저장소 Fork·Commit·Push
+- [ ] 준비된 수강생은 공용 테스트 저장소 Fork·Commit·Push
 - [ ] NotebookLM 접속
 - [ ] `requirements-class.txt` 설치와 seaborn 차트 생성
 - [ ] 실제 회사자료 사용 금지 동의
 
 ## 교육장
 
-- [ ] 20명 동시 Wi-Fi와 전원
+- [ ] 10명 동시 Wi-Fi와 전원
 - [ ] GitHub·OpenAI·Google 차단 여부
 - [ ] seaborn·ggplot2 공식 Gallery 접속
 - [ ] 프로젝터·마이크·발표 타이머
 - [ ] URL 명단과 QR 백업
-- [ ] 실습 보조인력 1명
+- [ ] 5개 페어 좌석 배치와 실습 보조인력 1명
 
 ## 강사
 
@@ -27,5 +27,6 @@
 - [ ] 비공개 Answer Key
 - [ ] Starter Repository
 - [ ] 설치 실패자용 ZIP과 Screenshot
+- [ ] GitHub 미가입·설치 실패자용 페어 배정표
 - [ ] 네트워크 실패 대비 Python wheel cache 또는 생성된 감사 PNG
 - [ ] 중간 제출·발표·평가 양식
