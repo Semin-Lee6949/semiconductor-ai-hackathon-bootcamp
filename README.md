@@ -35,6 +35,8 @@
 - [`student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`](student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md): 문제→전공→Governing equation·도메인 제약→상관·대안가설→의사결정으로 좁히는 1강 질문지
 - [`student/00_PRECLASS_SETUP_2026-08-14.md`](student/00_PRECLASS_SETUP_2026-08-14.md): 수강생에게 전달할 간단한 설치 체크리스트
 - [`templates/UNIVERSAL_AI_PROJECT_PROMPT.md`](templates/UNIVERSAL_AI_PROJECT_PROMPT.md): Claude·GPT·Gemini 공통 프로젝트 프롬프트
+- [`templates/COMPACT_AI_PROMPTS.md`](templates/COMPACT_AI_PROMPTS.md): 수업 중 계획·구현·검수 3회용 압축 프롬프트
+- [`student/AI_QUOTA_SAFETY_PLAN.md`](student/AI_QUOTA_SAFETY_PLAN.md): Claude·GPT 한도 보호와 Gemini·로컬 대체 경로
 - [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표

@@ -78,6 +78,16 @@ class CoursePageTests(unittest.TestCase):
         for expected in ("Claude", "ChatGPT", "Gemini", "PLAN.md", "Holdout"):
             self.assertIn(expected, prompt)
 
+    def test_quota_fallback_plan_exists(self):
+        plan = (ROOT / "student" / "AI_QUOTA_SAFETY_PLAN.md").read_text(encoding="utf-8")
+        compact = (ROOT / "templates" / "COMPACT_AI_PROMPTS.md").read_text(
+            encoding="utf-8"
+        )
+        for expected in ("14:00 이후", "Gemini", "로컬 스크립트", "추가 크레딧 구매는 필수가 아닙니다"):
+            self.assertIn(expected, plan)
+        for expected in ("1회 — 계획", "2회 — 구현", "3회 — 검수"):
+            self.assertIn(expected, compact)
+
     def test_student_templates_compile(self):
         for name in ("streamlit_app.py", "build_standalone_report.py"):
             py_compile.compile(str(ROOT / "templates" / name), doraise=True)

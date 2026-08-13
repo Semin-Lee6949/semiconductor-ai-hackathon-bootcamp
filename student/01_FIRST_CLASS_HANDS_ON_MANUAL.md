@@ -18,6 +18,8 @@
 
 세 경로 모두 [`UNIVERSAL_AI_PROJECT_PROMPT.md`](../templates/UNIVERSAL_AI_PROJECT_PROMPT.md)를 사용합니다. 결과는 AI 이름이 아니라 `PLAN.md`, 실행 가능한 코드, Holdout 검증, `git diff`, 테스트와 보고서로 평가합니다.
 
+강의 당일에는 [`AI_QUOTA_SAFETY_PLAN.md`](AI_QUOTA_SAFETY_PLAN.md)를 적용합니다. Claude·GPT 사용자는 14:00 이후 긴 작업을 멈추고, 수업 중에는 [`COMPACT_AI_PROMPTS.md`](../templates/COMPACT_AI_PROMPTS.md)의 계획·구현·검수 3회만 사용합니다. 한도 발생 시 Gemini·페어·로컬 스크립트 순서로 전환합니다.
+
 1강 이후 자신의 주제를 일주일 동안 집중 탐구하는 전체 절차는 [`03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md`](03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md)를 따릅니다. 역사학 연구의 연구질문·사료카드·주장감사처럼, 데이터카드·전공 근거카드·가설 반증·GitHub 증거를 단계별로 남깁니다.
 
 ## 0. 수업을 시작하기 전에 준비할 것

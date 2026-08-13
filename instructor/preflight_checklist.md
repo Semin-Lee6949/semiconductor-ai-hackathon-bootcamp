@@ -3,8 +3,10 @@
 ## 수강생
 
 - [ ] GitHub 계정 생성·이메일 인증·로그인 완료
-- [ ] Antigravity 설치·Google 로그인·공식 URL 조사 테스트
-- [ ] Claude Code 또는 Codex 중 하나의 로그인과 파일 읽기·수정 테스트
+- [ ] Claude·GPT·Gemini 중 주 AI 하나 로그인
+- [ ] Claude·GPT 사용자는 비상 Gemini 또는 Antigravity 로그인
+- [ ] 강의 당일 14:00 이후 Claude·GPT 사용 중지 공지
+- [ ] 사전 준비 중 AI 파일 분석·코드 생성 금지
 - [ ] Git, Python 3.11+, VS Code 설치
 - [ ] 준비된 수강생은 공용 테스트 저장소 Fork·Commit·Push
 - [ ] NotebookLM 접속
@@ -27,6 +29,7 @@
 - [ ] 비공개 Answer Key
 - [ ] Starter Repository
 - [ ] 설치 실패자용 ZIP과 Screenshot
+- [ ] AI 한도 발생자용 로컬 실행 결과·그래프·보고서 골격
 - [ ] GitHub 미가입·설치 실패자용 페어 배정표
 - [ ] 네트워크 실패 대비 Python wheel cache 또는 생성된 감사 PNG
 - [ ] 중간 제출·발표·평가 양식

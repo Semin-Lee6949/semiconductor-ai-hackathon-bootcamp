@@ -10,7 +10,9 @@
 
 20명이 설치부터 시작하면서 120분 안에 배포까지 가려면 다음은 수업 전에 끝나 있어야 합니다.
 
-- GitHub·ChatGPT 계정 생성과 이메일 인증
+- GitHub 계정과 Claude·GPT·Gemini 중 주 AI 하나의 로그인
+- Claude·GPT 사용자의 비상용 Gemini 또는 Antigravity 로그인
+- 14:00 이후 Claude·GPT 사용량 보존 공지
 - Windows/macOS 인원 조사
 - 설치파일 또는 공식 설치 URL 준비
 - Python 패키지 wheel cache 또는 완성 PNG 백업
@@ -77,15 +79,15 @@
 1. VS Code
 2. Git
 3. Python
-4. Antigravity 설치·Google 로그인
-5. Claude Code 또는 Codex 중 하나 설치
-6. 버전 확인
+4. Claude·GPT·Gemini 중 주 AI 하나 확인
+5. 비상 Gemini 또는 Antigravity 로그인
+6. 버전과 READY 확인
 
 화면에는 현재 설치할 도구 하나만 띄웁니다. 다음 명령을 미리 보여주지 않습니다.
 
 통과:
 
-- 15명 이상 기본 도구와 선택한 Coding Agent 버전 표시, Antigravity 로그인
+- 15명 이상 기본 도구와 선택한 AI 로그인, 비상 Gemini 준비
 - `code` 명령만 실패하면 VS Code 직접 실행으로 통과
 
 연결 멘트:
@@ -96,7 +98,7 @@
 
 순서:
 
-1. 선택한 Claude Code 또는 Codex 로그인과 `doctor`
+1. 선택한 AI 로그인과 사용 가능 여부 확인
 2. Git 사용자 이름·이메일
 3. 개인 저장소 생성·Clone
 4. `student_preflight.py`
@@ -106,6 +108,8 @@
 - `READY: core environment checks passed`
 
 15명 완료 후 다음 단계로 이동하고 미완료자는 보조강사가 복구합니다.
+
+Claude·GPT에서 한도 메시지가 나오면 원인 분석에 시간을 쓰지 않고 `🟣 한도`를 남긴 뒤 Gemini → 페어 → 로컬 스크립트 순으로 즉시 전환합니다.
 
 연결 멘트:
 

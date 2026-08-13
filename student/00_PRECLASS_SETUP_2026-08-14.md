@@ -26,6 +26,14 @@
 
 세 서비스를 모두 설치할 필요가 없습니다. 수업에서는 같은 [공통 프로젝트 프롬프트](../templates/UNIVERSAL_AI_PROJECT_PROMPT.md)를 사용합니다.
 
+### 강의 당일 사용량 보호
+
+- Claude·GPT 구독자는 **14:00 이후 긴 대화와 Agent 작업을 중지**합니다.
+- 18:30에는 로그인과 사용량 화면만 확인하고 테스트 질문은 보내지 않습니다.
+- Claude·GPT 사용자는 비상용 Gemini 또는 Antigravity 로그인도 준비합니다.
+- 수업에서는 [3회용 압축 프롬프트](../templates/COMPACT_AI_PROMPTS.md)만 사용합니다.
+- 추가 크레딧 구매나 자동 충전은 필수가 아닙니다.
+
 설치 후 PowerShell을 새로 열고 확인합니다.
 
 ```powershell
@@ -107,6 +115,8 @@ GitHub ID: ______
 Streamlit 가입: 완료 / 미완료
 선택 AI: Claude / GPT / Gemini
 선택 AI 로그인: 완료 / 미완료
+비상 Gemini 로그인: 완료 / 미완료
+14시 이후 AI 사용 중지: 확인
 Preflight: READY / FAIL
 ```
 
