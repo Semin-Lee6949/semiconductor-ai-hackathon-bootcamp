@@ -9,8 +9,7 @@
 ## 운영 구조
 
 - 1차: 2026-08-14, 오프라인 2시간
-- 개인 프로젝트: 2026-08-14~20
-- 2차: 2026-08-21, 발표·질의응답·피드백 2시간 30분 권장
+- 자율 프로젝트: 2026-08-20 이후, 같은 8단계를 개인 데이터로 반복
 - 대상: 반도체 소자·R&D 공정·양산기술·설비기술 지원자 10명
 - 결과물: 개인 저장소, 작동형 MVP, Live Page, AI 활용기록, 3분 발표
 
@@ -29,6 +28,7 @@
 ## 저장소 안내
 
 - [`index.html`](index.html): 1차 강의용 반응형 GitHub Pages 자료
+- [`preclass_setup.html`](preclass_setup.html): 설문 결과를 반영한 Windows 20분 사전 준비 페이지
 - [`COURSE_PLAN.md`](COURSE_PLAN.md): 과정 범위·일정·완료 기준
 - [`STATUS.md`](STATUS.md): 현재 준비상태와 남은 우선순위
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검

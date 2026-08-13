@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="SK하이닉스 지원 AI 프로젝트 특강 Windows 사전 준비">
+  <title>수업 전 20분 준비 | AI 프로젝트 특강</title>
+  <style>
+    :root{--ink:#101b2d;--paper:#f2f5f4;--line:#c9d1d6;--cyan:#007e87;--magenta:#b51f63;--muted:#566476;--mono:ui-monospace,Consolas,monospace;--sans:Pretendard,"Noto Sans KR",system-ui,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.65}.shell{width:min(980px,calc(100% - 28px));margin:auto}header{padding:64px 0 46px;border-bottom:1px solid var(--ink)}.label{color:var(--magenta);font:700 12px var(--mono)}h1{margin:14px 0;font-size:clamp(42px,8vw,76px);line-height:1.05;letter-spacing:-.05em}header p{max-width:760px;color:var(--muted);font-size:18px}.status{display:grid;grid-template-columns:repeat(4,1fr);margin-top:34px;border:1px solid var(--ink);background:#fff}.status div{padding:18px;border-right:1px solid var(--line)}.status div:last-child{border:0}.status b{display:block;color:var(--cyan);font:11px var(--mono)}main{padding:56px 0}.step{display:grid;grid-template-columns:110px 1fr;gap:26px;padding:34px 0;border-top:1px solid var(--ink)}.step-no{color:var(--magenta);font:700 13px var(--mono)}h2{margin:0 0 12px;font-size:28px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.actions a{padding:11px 14px;border:1px solid var(--ink);background:#fff;color:var(--ink);text-decoration:none;font-weight:800}.actions a:hover{background:var(--cyan);color:#fff}pre{overflow:auto;padding:16px;background:var(--ink);color:#fff;font:14px/1.7 var(--mono)}.pass{padding:13px 16px;background:#d9eff0;border-left:4px solid var(--cyan);font-weight:800}.optional{padding:22px;background:#fff;border:1px solid var(--ink)}.warning{padding:22px;background:var(--ink);color:#fff}.warning strong{color:#77dadd}.back{display:inline-block;margin:30px 0;color:var(--cyan);font-weight:900}footer{padding:30px 0;border-top:1px solid var(--ink);font:11px var(--mono)}
+    @media(max-width:640px){header{padding-top:40px}.status{grid-template-columns:1fr 1fr}.status div:nth-child(2){border-right:0}.status div:nth-child(-n+2){border-bottom:1px solid var(--line)}.step{grid-template-columns:1fr;gap:8px}.step-no{margin-top:8px}}
+  </style>
+</head>
+<body>
+  <header><div class="shell"><span class="label">PRECLASS · WINDOWS · 20–30 MIN</span><h1>수업 전에는<br>네 가지만 준비합니다.</h1><p>설문 응답자 9명 모두 Windows 사용자이고 7명은 GitHub 계정이 없습니다. Agent를 모두 설치하지 말고 계정과 기본 도구부터 준비합니다.</p><div class="status"><div><b>01</b>GitHub 가입</div><div><b>02</b>LLM 로그인</div><div><b>03</b>기본 프로그램</div><div><b>04</b>CSV 열기</div></div></div></header>
+  <main class="shell">
+    <section class="step"><span class="step-no">STEP 01</span><div><h2>GitHub 계정과 이메일 인증</h2><p>개인 이메일 또는 Google 계정으로 가입하고 공개 가능한 영문 사용자명을 정합니다.</p><div class="actions"><a href="https://github.com/signup">GitHub 가입</a><a href="https://github.com/login">로그인 확인</a></div><div class="pass">완료: github.com/내_ID 프로필이 열립니다.</div></div></section>
+    <section class="step"><span class="step-no">STEP 02</span><div><h2>사용 중인 LLM 하나에 로그인</h2><p>새 유료 가입은 하지 않습니다. ChatGPT·Claude·Gemini 중 이미 사용하는 하나만 준비합니다.</p><div class="actions"><a href="https://chatgpt.com/">ChatGPT</a><a href="https://claude.ai/">Claude</a><a href="https://gemini.google.com/">Gemini</a></div><div class="pass">완료: 새 대화에서 질문을 보낼 수 있습니다.</div></div></section>
+    <section class="step"><span class="step-no">STEP 03</span><div><h2>Git·Python·VS Code 설치</h2><p>공식 Windows 설치 파일만 사용합니다. 설치 후 PowerShell을 새로 엽니다.</p><div class="actions"><a href="https://git-scm.com/download/win">Git</a><a href="https://www.python.org/downloads/windows/">Python</a><a href="https://code.visualstudio.com/docs/setup/windows">VS Code</a></div><pre>git --version
+py --version
+code --version</pre><div class="pass">완료: 두 개 이상에서 버전 번호가 보입니다.</div></div></section>
+    <section class="step"><span class="step-no">STEP 04</span><div><h2>강의 데이터 하나 열기</h2><p>실전 페이지에서 관심 주제를 고르고 A 학습 데이터를 내려받습니다.</p><div class="actions"><a href="./#topics">주제와 데이터 고르기</a></div><div class="pass">완료: CSV의 열 이름과 숫자가 보입니다.</div></div></section>
+    <section class="optional"><span class="label">OPTIONAL</span><h2>Agent 설치는 선택입니다</h2><p>Claude Code·Codex·Antigravity를 이미 쓰는 사람만 로그인 상태를 확인합니다. 처음 사용하는 사람은 강사 시연과 페어 실습으로 진행합니다.</p><div class="actions"><a href="https://code.claude.com/docs/en/setup">Claude Code</a><a href="https://developers.openai.com/codex/">Codex</a><a href="https://antigravity.google/">Antigravity</a></div></section>
+    <section class="warning"><strong>사용 금지</strong><p>실제 Fab 데이터, Recipe, 내부 Spec, 장비 Log, 고객정보, 개인정보, API Key는 가져오지 않습니다. 교육용 합성 데이터만 사용합니다.</p></section>
+    <a class="back" href="./">← 실전 강의 페이지로 돌아가기</a>
+  </main>
+  <footer><div class="shell">SEMICONDUCTOR AI PROJECT SHORT CLASS · PRECLASS CHECK</div></footer>
+</body>
+</html>
