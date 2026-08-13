@@ -34,6 +34,12 @@ class CoursePageTests(unittest.TestCase):
         for forbidden in ("2026.08.13", "FIELD BRIEFING", "채용설명회 정리"):
             self.assertNotIn(forbidden, self.page)
 
+    def test_key_explanations_use_one_sentence_per_line(self):
+        self.assertIn(".sentence-line{display:block;white-space:nowrap}", self.page)
+        self.assertIn('class="lead sentence-lines"', self.page)
+        self.assertIn('class="recruit-lead sentence-lines"', self.page)
+        self.assertIn(".section-head p:not(.sentence-lines)", self.page)
+
     def test_student_templates_compile(self):
         for name in ("streamlit_app.py", "build_standalone_report.py"):
             py_compile.compile(str(ROOT / "templates" / name), doraise=True)

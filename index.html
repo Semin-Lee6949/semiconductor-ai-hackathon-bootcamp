@@ -42,8 +42,10 @@
     .autonomy-step h3{font-size:19px}
     .autonomy-step p{color:#bdc7d4;font-size:13px}
     .autonomy-step .proof{display:block;margin-top:18px;color:#fff;font:10px/1.5 var(--mono)}
+    .sentence-lines{max-width:none!important}
+    .sentence-line{display:block;white-space:nowrap}
     @media(max-width:900px){.workflow,.autonomy-grid{grid-template-columns:1fr 1fr}.flow:nth-child(odd),.autonomy-step:nth-child(odd){border-right:1px solid var(--line)}.flow:nth-child(even),.autonomy-step:nth-child(even){border-right:0}.flow:nth-child(-n+6),.autonomy-step:nth-child(-n+6){border-bottom:1px solid var(--line)}}
-    @media(max-width:560px){.workflow,.autonomy-grid{grid-template-columns:1fr}.flow,.autonomy-step{min-height:auto;border-right:0!important;border-bottom:1px solid var(--line)!important}.flow:last-child,.autonomy-step:last-child{border-bottom:0!important}}
+    @media(max-width:560px){.workflow,.autonomy-grid{grid-template-columns:1fr}.flow,.autonomy-step{min-height:auto;border-right:0!important;border-bottom:1px solid var(--line)!important}.flow:last-child,.autonomy-step:last-child{border-bottom:0!important}.sentence-lines{font-size:12px!important;line-height:1.8}.sentence-line{white-space:nowrap}}
   </style>
 </head>
 <body>
@@ -59,14 +61,14 @@
   <header class="topbar"><nav class="nav" aria-label="강의 목차"><a class="brand" href="#top">SK하이닉스 지원 준비 <small>AI PROJECT SHORT CLASS</small></a><button class="menubtn" type="button" aria-expanded="false" aria-controls="navlinks">목차</button><div class="navlinks" id="navlinks"><a href="#intro">채용·직무</a><a href="#map">120분</a><a href="#method">8단계</a><a href="#finder">문제발견</a><a href="#topics">주제·데이터</a><a href="#autonomy">자율 프로젝트</a><a href="#lab">실행 가이드</a></div></nav></header>
   <main id="main">
     <div class="shell hero" id="top">
-      <div><p class="eyebrow">SK하이닉스 지원 준비생 · AI 프로젝트 단기 특강</p><h1>반도체 문제를<br><em>AI 프로젝트로<br>증명하라</em></h1><p class="lead">1회 2시간 동안 문제를 찾고 데이터를 탐색한 뒤 Agent로 분석·시각화·머신러닝을 실행합니다. 이후 새 데이터로 반복 가능한 Streamlit 앱과 독립형 HTML 보고서를 만들어 지원서의 증거로 연결합니다.</p><div class="actions"><a class="action" href="#map">120분 시작하기</a><a class="action secondary" href="#topics">주제와 데이터 고르기</a></div><div class="meta"><span><b>INSTRUCTOR</b> 최 Pro</span><span><b>CLASS</b> 1회 · 2시간</span><span><b>AUTONOMY</b> 8월 20일 이후</span><span><b>OUTPUT</b> App + Report + GitHub Pages</span></div><p class="hero-disclaimer">SK하이닉스 공식 교육과정이 아닌 지원 준비생 대상 독립 특강입니다.</p></div>
-      <figure class="hero-visual"><img src="assets/sk-hynix-ai-project-hero.webp" width="900" height="1499" alt="네 명의 수강생이 웨이퍼 공정 데이터와 AI 분석 결과를 함께 검토하는 교육 장면" fetchpriority="high"><figcaption>SEMICONDUCTOR PROBLEM → TEAM DEBATE → AI ASSIST → HUMAN VALIDATION → PORTFOLIO</figcaption></figure>
+      <div><p class="eyebrow">SK하이닉스 지원 준비생 · AI 프로젝트 단기 특강</p><h1>반도체 문제를<br><em>AI 프로젝트로<br>증명하라</em></h1><p class="lead sentence-lines"><span class="sentence-line">2시간 동안 문제를 찾고 데이터를 탐색합니다.</span><span class="sentence-line">Agent로 분석과 시각화를 실행합니다.</span><span class="sentence-line">머신러닝 결과를 Holdout으로 검증합니다.</span><span class="sentence-line">앱과 보고서로 경험을 증명합니다.</span></p><div class="actions"><a class="action" href="#map">120분 시작하기</a><a class="action secondary" href="#topics">주제와 데이터 고르기</a></div><div class="meta"><span><b>INSTRUCTOR</b> 최 Pro</span><span><b>CLASS</b> 1회 · 2시간</span><span><b>AUTONOMY</b> 8월 20일 이후</span><span><b>OUTPUT</b> App + Report + GitHub Pages</span></div><p class="hero-disclaimer">SK하이닉스 공식 교육과정이 아닌 지원 준비생 대상 독립 특강입니다.</p></div>
+      <figure class="hero-visual"><img src="assets/sk-hynix-ai-project-hero.webp" width="900" height="1499" alt="네 명의 수강생이 웨이퍼 공정 데이터와 AI 분석 결과를 함께 검토하는 교육 장면" fetchpriority="high"><figcaption>PROBLEM → DEBATE → AI → VALIDATE → PORTFOLIO</figcaption></figure>
     </div>
-    <div class="band"><div class="shell principles"><div class="principle"><b>01 / USER</b><span>모델보다 사용자의 결정을 먼저</span></div><div class="principle"><b>02 / DATA</b><span>평균보다 데이터 품질을 먼저</span></div><div class="principle"><b>03 / PHYSICS</b><span>AI 수식보다 검증된 원리를 먼저</span></div><div class="principle"><b>04 / CAUSALITY</b><span>상관과 인과, 대안 설명을 분리</span></div><div class="principle"><b>05 / EVIDENCE</b><span>말보다 diff·test·page로 증명</span></div></div></div>
+    <div class="band"><div class="shell principles"><div class="principle"><b>01 / USER</b><span>모델보다 사용자의 결정을 먼저</span></div><div class="principle"><b>02 / DATA</b><span>평균보다 데이터 품질을 먼저</span></div><div class="principle"><b>03 / PHYSICS</b><span>AI보다 검증된 원리를 먼저</span></div><div class="principle"><b>04 / CAUSALITY</b><span>상관과 인과, 대안 설명을 분리</span></div><div class="principle"><b>05 / EVIDENCE</b><span>말보다 diff·test·page로 증명</span></div></div></div>
 
     <section class="recruit-intro" id="intro"><div class="shell">
       <h2>회사와 직무를 이해해야<br>AI 경험도 설득력을 얻습니다</h2>
-      <p class="recruit-lead">SK하이닉스 Talent Hub는 정형화된 스펙보다 실제 직무 역량과 성장 가능성을 강조합니다. 이 강의는 본질을 질문하는 생각 근육, 새로운 기술에 대응하는 적응 근육, 타인의 관점을 결합하는 공감 근육을 데이터 기반 문제해결 과정으로 연습합니다.</p>
+      <p class="recruit-lead sentence-lines"><span class="sentence-line">실제 직무 역량과 성장 가능성이 중요합니다.</span><span class="sentence-line">본질을 질문하는 생각 근육을 기릅니다.</span><span class="sentence-line">기술 변화에 대응하는 적응 근육을 기릅니다.</span><span class="sentence-line">타인의 관점을 잇는 공감 근육을 기릅니다.</span></p>
       <div class="recruit-grid">
         <article class="recruit-point"><span class="source-label">THINK · ADAPT · EMPATHIZE</span><strong>AI 시대의 3대 근육</strong><p>문제의 본질을 질문하고, 기술 변화에 적응하며, 다른 관점과 유연하게 협업하는 힘을 프로젝트 과정에서 보여줍니다.</p><a href="https://talent.skhynix.com/hub/ko/company/story/138" target="_blank" rel="noopener">공식 채용 방향 확인</a></article>
         <article class="recruit-point"><span class="source-label">JOB FIRST</span><strong>현직자의 언어로 직무 이해</strong><p>Tech R&amp;D·제조·Infra 등 관심 직무의 인터뷰를 읽고, 제품·공정·사용자 결정과 자신의 전공지식을 연결합니다.</p><a href="https://talent.skhynix.com/hub/ko/job/interview" target="_blank" rel="noopener">직무 인터뷰 탐색</a></article>
@@ -76,7 +78,7 @@
       <div class="intro-question"><strong>지원서와 면접에 남길 증거</strong><ol><li>어떤 직무 문제를 왜 선택했는지 한 문장으로 설명한다.</li><li>AI가 맡은 탐색·코드·검수와 사람이 맡은 판단을 구분한다.</li><li>전공지식·원자료·Holdout으로 AI 결과를 검증한 과정을 남긴다.</li><li>실패한 접근과 수정 이유를 Commit·그래프·오차 사례로 제시한다.</li><li>Streamlit 앱과 GitHub Pages 보고서로 다른 사람이 결과를 재현하게 한다.</li></ol></div>
     </div></section>
 
-    <section id="map"><div class="shell"><div class="section-head"><span class="index">01 / LECTURE MAP</span><div><h2>1회 120분의 압축 실습</h2><p>설치와 계정 생성은 수업 전에 끝냅니다. 수업에서는 하나의 데이터를 선택해 문제 정의부터 분석·앱·보고서 골격까지 전체 흐름을 한 번 경험하고, 8월 20일 이후 다른 데이터로 스스로 반복합니다.</p></div></div><div class="lecture-map">
+    <section id="map"><div class="shell"><div class="section-head"><span class="index">01 / LECTURE MAP</span><div><h2>1회 120분의 압축 실습</h2><p class="sentence-lines"><span class="sentence-line">설치와 계정 생성은 수업 전에 끝냅니다.</span><span class="sentence-line">수업에서는 전체 흐름을 한 번 경험합니다.</span><span class="sentence-line">8월 20일부터 새 데이터로 반복합니다.</span></p></div></div><div class="lecture-map">
       <a class="phase w1" href="#intro"><small>00—15</small><strong>채용·전체 시연</strong><span class="duration">15′</span></a><a class="phase w1" href="#finder"><small>15—30</small><strong>문제 파악</strong><span class="duration">15′</span></a><a class="phase w1" href="#quality"><small>30—45</small><strong>데이터 탐색</strong><span class="duration">15′</span></a><a class="phase w1" href="#method"><small>45—60</small><strong>AI 계획 수립</strong><span class="duration">15′</span></a><a class="phase w2" href="#lab"><small>60—90</small><strong>Agent 분석</strong><span class="duration">30′</span></a><a class="phase w1" href="#autonomy"><small>90—105</small><strong>Streamlit 재현</strong><span class="duration">15′</span></a><a class="phase w1" href="#autonomy"><small>105—115</small><strong>보고·Discussion</strong><span class="duration">10′</span></a><a class="phase w1" href="#finish"><small>115—120</small><strong>자율 실행 인계</strong><span class="duration">05′</span></a>
     </div></div></section>
 
@@ -170,6 +172,13 @@ git push</code><button class="copy" type="button">복사</button></pre><div clas
   </main>
   <footer><div class="shell footer-row"><span>SEMICONDUCTOR AI HACKATHON BOOTCAMP · EDUCATIONAL MATERIAL</span><a href="https://github.com/waterfirst/semiconductor-ai-hackathon-bootcamp">GitHub repository</a></div></footer>
   <script>
+    document.querySelectorAll('.section-head p:not(.sentence-lines)').forEach(paragraph=>{
+      const sentences=paragraph.textContent.match(/[^.!?]+[.!?]?/g)?.map(text=>text.trim()).filter(Boolean)||[];
+      if(sentences.length){
+        paragraph.classList.add('sentence-lines');
+        paragraph.replaceChildren(...sentences.map(text=>{const line=document.createElement('span');line.className='sentence-line';line.textContent=text;return line}));
+      }
+    });
     const menu=document.querySelector('.menubtn'),nav=document.querySelector('.navlinks');
     menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',String(!open));nav.classList.toggle('open',!open)});
     nav.addEventListener('click',e=>{if(e.target.matches('a')){nav.classList.remove('open');menu.setAttribute('aria-expanded','false')}});
