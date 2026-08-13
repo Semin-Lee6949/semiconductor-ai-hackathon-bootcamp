@@ -51,9 +51,14 @@ class CoursePageTests(unittest.TestCase):
             "Windows",
             "GitHub 가입",
             "Streamlit 가입",
-            "Google Antigravity",
+            "구독 중인 AI 하나 선택",
+            "Claude 구독자",
+            "GPT 구독자",
+            "Gemini 구독자",
+            "Antigravity",
             "Claude Desktop",
             "ChatGPT Desktop",
+            "AI_PROVIDER",
             "GITHUB_CLASS_TOKEN",
             "READY: core environment checks passed",
         ):
@@ -65,6 +70,13 @@ class CoursePageTests(unittest.TestCase):
         self.assertIn(".env", gitignore)
         self.assertIn("토큰은 제출하지 않습니다", self.preclass)
         self.assertTrue((ROOT / ".env.example").exists())
+
+    def test_provider_neutral_prompt_exists(self):
+        prompt = (ROOT / "templates" / "UNIVERSAL_AI_PROJECT_PROMPT.md").read_text(
+            encoding="utf-8"
+        )
+        for expected in ("Claude", "ChatGPT", "Gemini", "PLAN.md", "Holdout"):
+            self.assertIn(expected, prompt)
 
     def test_student_templates_compile(self):
         for name in ("streamlit_app.py", "build_standalone_report.py"):

@@ -25,7 +25,8 @@
 ## 운영 결정
 
 - 간단한 Windows 체크리스트로 GitHub·Streamlit 가입과 Fork·Clone을 완료하게 한다.
-- Antigravity·Claude Desktop·ChatGPT Desktop을 미리 설치·로그인하게 한다.
+- Claude·GPT·Gemini 중 현재 구독 중인 한 트랙만 설치·로그인하게 한다.
+- 세 트랙에 동일한 공통 프롬프트와 완료 기준을 적용한다.
 - 가상환경·필수 패키지·`.env`·Preflight READY까지 수업 전 완료하게 한다.
 - 설치 경험 차이는 상세 오류 대응과 사전 확인으로 보완한다.
 - 2시간 안에는 문제 정의·데이터 감사·Agent 실행 흐름을 경험한다.

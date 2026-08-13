@@ -6,7 +6,17 @@
 
 시간: 120분
 
-> 오늘의 목표는 도구 설명을 듣는 것이 아닙니다. 내 PC에서 저장소를 내려받고, 데이터를 검사하고, Codex와 함께 최소 변경을 수행하고, 테스트한 뒤 GitHub에 기록하는 것입니다.
+> 오늘의 목표는 도구 설명을 듣는 것이 아닙니다. 내 PC에서 저장소를 내려받고, 데이터를 검사하고, 구독 중인 AI와 함께 최소 변경을 수행하고, 테스트한 뒤 GitHub에 기록하는 것입니다.
+
+## AI 구독별 공통 운영
+
+| 구독 | 직접 작업 도구 | 대화형 대체 경로 |
+|---|---|---|
+| Claude | Claude Desktop 또는 Claude Code | 파일 첨부 → VS Code·PowerShell 실행 |
+| GPT | ChatGPT Desktop 또는 Codex | 파일 첨부 → VS Code·PowerShell 실행 |
+| Gemini | Gemini 또는 Antigravity | 파일 첨부 → VS Code·PowerShell 실행 |
+
+세 경로 모두 [`UNIVERSAL_AI_PROJECT_PROMPT.md`](../templates/UNIVERSAL_AI_PROJECT_PROMPT.md)를 사용합니다. 결과는 AI 이름이 아니라 `PLAN.md`, 실행 가능한 코드, Holdout 검증, `git diff`, 테스트와 보고서로 평가합니다.
 
 1강 이후 자신의 주제를 일주일 동안 집중 탐구하는 전체 절차는 [`03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md`](03_INDIVIDUAL_ACHIEVEMENT_GUIDE.md)를 따릅니다. 역사학 연구의 연구질문·사료카드·주장감사처럼, 데이터카드·전공 근거카드·가설 반증·GitHub 증거를 단계별로 남깁니다.
 
@@ -15,7 +25,7 @@
 - 노트북과 충전기
 - Chrome 또는 Edge
 - GitHub 계정과 이메일 인증
-- ChatGPT 계정 또는 별도로 안내받은 Codex 접근 방법
+- Claude·GPT·Gemini 중 구독 중인 AI 계정 하나
 - 휴대전화 Telegram
 - 회사 내부자료가 아닌 교육용 합성 데이터만 사용한다는 동의
 - [`00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`](00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md) 10분 1차 작성
@@ -48,12 +58,12 @@
 |---|---|---|
 | 0~8분 | 문제발견 질문 공유·결과물·보안 확인 | 문제 한 문장과 Telegram 번호 응답 |
 | 8~18분 | 결측·이상치가 판단을 바꾸는 사례 | 처리 전 질문 2개 |
-| 18~38분 | Git·Python·VS Code·Antigravity·Claude Code/Codex 선택 설치 | 앱 로그인과 선택 Agent 버전 |
+| 18~38분 | Git·Python·VS Code와 구독 중인 AI 하나 확인 | 앱 로그인과 공통 프롬프트 |
 | 38~52분 | 로그인·Git 설정·Clone·자동점검 | `READY` 출력 |
 | 52~67분 | noisy CSV 통계 감사 | 결측·중복·이상치 숫자 |
 | 67~80분 | ggplot2·seaborn 갤러리 | 질문별 그래프 선택 |
 | 80~95분 | seaborn 감사 그래프 생성·해석 | PNG와 답변 6개 |
-| 95~106분 | 선택한 Coding Agent로 최소 변경·테스트·Commit | GitHub Commit |
+| 95~106분 | 선택한 AI로 최소 변경·테스트·Commit | GitHub Commit |
 | 106~116분 | 로컬 웹앱·GitHub Pages | 공개 URL |
 | 116~120분 | 문제정의 재작성·프로젝트 가이드 | 후보 2개와 대안 설명 기록 |
 
@@ -62,13 +72,13 @@
 브라우저에서 다음 사이트를 각각 새 탭으로 엽니다.
 
 1. [GitHub](https://github.com/login)
-2. [ChatGPT](https://chatgpt.com/)
+2. Claude·ChatGPT·Gemini 중 본인이 선택한 AI
 3. 강사가 Telegram에 공유한 Starter Repository
 
 ### 성공 기준
 
 - GitHub 오른쪽 위에 내 프로필 아이콘이 보인다.
-- ChatGPT에서 내 계정 또는 교육용 Workspace가 확인된다.
+- 선택한 AI에서 새 대화를 시작할 수 있다.
 - Starter Repository의 `README.md`가 보인다.
 
 ### 실패하면
@@ -77,13 +87,9 @@
 - 회사·학교 SSO 계정은 개인 공개 저장소 생성이 제한될 수 있으므로 개인 GitHub 계정을 사용합니다.
 - 비밀번호, API Key, 인증 화면을 Telegram에 올리지 않습니다.
 
-## 4. STEP 2 — 조사 도구와 제작 도구 설치
+## 4. STEP 2 — 공통 도구와 선택 AI 준비
 
-역할을 섞지 않습니다.
-
-- **Antigravity:** 웹·논문·공식문서 조사와 근거카드 작성
-- **Claude Code 또는 Codex 중 하나:** 저장소 이해, 데이터 분석, 보고서·웹페이지 제작
-- **GitHub·Pages:** 과정 기록, Push, 최종 포트폴리오 공개
+공통 도구는 Git·Python·VS Code입니다. AI는 Claude·GPT·Gemini 중 하나만 사용합니다. 폴더를 직접 다루지 못하는 대화형 화면에서는 파일을 첨부하고, 제시된 코드를 VS Code·PowerShell에서 직접 실행합니다.
 
 ### Windows 11 권장 경로
 
@@ -92,10 +98,10 @@
 1. [VS Code](https://code.visualstudio.com/download)
 2. [Git for Windows](https://git-scm.com/install/windows)
 3. [Python](https://www.python.org/downloads/windows/)
-4. [Google Antigravity](https://antigravity.google/)를 설치하고 Google 계정으로 로그인
-5. 다음 중 사용할 Coding Agent 하나를 선택
-   - [Claude Code](https://code.claude.com/docs/en/setup)
-   - [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
+4. 다음 중 구독 중인 AI 하나를 선택
+   - [Claude Desktop](https://claude.com/download) 또는 [Claude Code](https://code.claude.com/docs/en/setup)
+   - [ChatGPT Desktop](https://chatgpt.com/download) 또는 [Codex](https://learn.chatgpt.com/docs/codex/cli)
+   - [Google Antigravity](https://antigravity.google/download) 또는 Gemini
 
 Claude Code를 선택했다면 PowerShell에서 실행합니다.
 
@@ -111,30 +117,6 @@ powershell -ExecutionPolicy ByPass -c "irm https://chatgpt.com/codex/install.ps1
 
 설치가 끝나면 **PowerShell을 닫고 새로 열어야** PATH가 반영됩니다.
 
-### macOS 권장 경로
-
-1. [VS Code](https://code.visualstudio.com/download)
-2. [Git](https://git-scm.com/download/mac)
-3. [Python](https://www.python.org/downloads/macos/)
-4. [Google Antigravity](https://antigravity.google/)를 설치하고 Google 계정으로 로그인
-5. 다음 중 사용할 Coding Agent 하나를 선택
-   - [Claude Code](https://code.claude.com/docs/en/setup)
-   - [Codex CLI](https://learn.chatgpt.com/docs/codex/cli)
-
-Claude Code를 선택했다면 Terminal에서 실행합니다.
-
-```bash
-curl -fsSL https://claude.ai/install.sh | bash
-```
-
-Codex를 선택했다면 Terminal에서 실행합니다.
-
-```bash
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
-```
-
-설치 후 Terminal을 닫고 새로 엽니다.
-
 ### 버전 확인
 
 Windows PowerShell:
@@ -147,22 +129,12 @@ claude --version  # Claude Code 선택자
 codex --version   # Codex 선택자
 ```
 
-macOS Terminal:
-
-```bash
-git --version
-python3 --version
-code --version
-claude --version  # Claude Code 선택자
-codex --version   # Codex 선택자
-```
-
 ### 성공 기준
 
 - Git·Python·VS Code가 버전을 표시합니다.
-- `claude --version` 또는 `codex --version` 중 선택한 하나가 성공합니다.
 - Python은 **3.11 이상**을 사용합니다.
-- Antigravity 앱이 열리고 Google 로그인이 완료됩니다.
+- 선택한 AI에서 새 대화 또는 프로젝트를 시작할 수 있습니다.
+- `.env`의 `AI_PROVIDER`가 `claude`, `openai`, `gemini` 중 하나입니다.
 
 ### 설치가 막힐 때 최소 복구
 
@@ -172,7 +144,9 @@ codex --version   # Codex 선택자
 - 관리자 권한으로 설치할 수 없음: 강사가 제공한 ZIP과 GitHub 웹 편집 경로로 실습을 계속합니다.
 - Windows WSL 경험이 없는 수강생은 수업 중 새로 WSL을 구성하지 않습니다. 환경 분기와 복구 시간이 커집니다.
 
-## 5. STEP 3 — 선택한 Coding Agent 로그인과 진단
+## 5. STEP 3 — 선택한 AI 로그인과 공통 프롬프트
+
+Claude·GPT·Gemini 중 선택한 화면을 열고 [`공통 프로젝트 프롬프트`](../templates/UNIVERSAL_AI_PROJECT_PROMPT.md)를 사용합니다. 아래 CLI 진단은 Claude Code 또는 Codex를 선택한 사람만 실행합니다.
 
 ### Claude Code 선택자
 
@@ -201,8 +175,9 @@ codex doctor
 
 ### 성공 기준
 
-- 선택한 Coding Agent의 버전과 로그인 상태가 확인된다.
-- `claude doctor` 또는 `codex doctor`에서 실행을 막는 오류가 없다.
+- 선택한 AI에서 공통 프롬프트를 입력할 수 있다.
+- 직접 작업 도구를 선택했다면 프로젝트 폴더를 열 수 있다.
+- 대화형 도구라면 파일 첨부와 PowerShell 대체 경로를 이해했다.
 
 ## 6. STEP 4 — Git 사용자 설정
 
@@ -282,9 +257,9 @@ READY: core environment checks passed
 
 `FAIL`이 있으면 그 줄 전체만 Telegram에 올립니다. 계정정보나 토큰은 올리지 않습니다.
 
-## 9. STEP 7 — 선택한 Coding Agent에게 먼저 읽게 하기
+## 9. STEP 7 — 선택한 AI에게 먼저 읽게 하기
 
-프로젝트 폴더에서 선택한 도구를 실행합니다.
+직접 작업형 도구는 프로젝트 폴더에서 실행합니다. 대화형 도구는 `AGENTS.md`, `README.md`, `PLAN.md`를 첨부합니다.
 
 ```bash
 claude  # Claude Code 선택자
@@ -304,15 +279,15 @@ AGENTS.md, README.md, PLAN.md를 먼저 읽어라.
 
 ### 사람이 확인할 것
 
-- Coding Agent가 실제 파일명을 근거로 설명했는가?
+- 선택한 AI가 실제 파일명을 근거로 설명했는가?
 - 없는 파일이나 실행 명령을 지어내지 않았는가?
 - `data/raw/`를 수정하라고 하지 않았는가?
 
 틀린 내용은 `prompts/AI_USAGE.md`에 기록합니다.
 
-## 9A. STEP 7A — Antigravity 자료조사와 근거 인계
+## 9A. STEP 7A — 선택한 AI로 자료조사와 근거 인계
 
-Antigravity에서는 코드를 만들지 않고 주제의 근거를 조사합니다. 공식 문서·교재·논문을 우선하고, 검색 결과 요약문만 근거로 사용하지 않습니다.
+선택한 AI에서 주제의 근거를 조사합니다. 공식 문서·교재·논문을 우선하고, 검색 결과 요약문만 근거로 사용하지 않습니다.
 
 ```text
 내 주제는 [주제]이고 사용자의 결정은 [결정]이다.
@@ -335,7 +310,7 @@ Antigravity에서는 코드를 만들지 않고 주제의 근거를 조사합니
 내 데이터로 검증할 질문:
 ```
 
-그다음 Claude Code 또는 Codex에서 다음과 같이 인계합니다.
+그다음 같은 AI의 코드 작업 화면이나 대화에서 다음과 같이 인계합니다.
 
 ```text
 AGENTS.md, PLAN.md, research/SOURCES.md를 먼저 읽어라.
@@ -349,7 +324,7 @@ AGENTS.md, PLAN.md, research/SOURCES.md를 먼저 읽어라.
 
 - 원문을 직접 확인한 근거카드가 최소 3개 있다.
 - 출처가 설명하는 범위와 설명하지 못하는 범위가 구분된다.
-- Coding Agent가 근거 없이 공정 수치나 인과관계를 새로 만들지 않는다.
+- 선택한 AI가 근거 없이 공정 수치나 인과관계를 새로 만들지 않는다.
 
 ## 10. STEP 8 — 데이터 감사 실행
 
@@ -441,7 +416,7 @@ python3 -m http.server 8000 --directory docs
 
 ## 12. STEP 10 — 최소 변경, 테스트, 첫 Commit
 
-Codex에 다음을 입력합니다.
+선택한 AI에 다음을 입력합니다.
 
 ```text
 현재 화면 상단에 내 DATASET_ID를 표시하라.
@@ -507,9 +482,9 @@ Telegram에는 URL 전체 대신 다음 형식으로 완료 여부만 남깁니�
 
 ## 15. 수업 종료 전 체크리스트
 
-- [ ] GitHub·ChatGPT 로그인
-- [ ] Git·Python·VS Code·Antigravity 실행
-- [ ] Claude Code 또는 Codex 중 하나의 로그인과 진단
+- [ ] GitHub·선택 AI 로그인
+- [ ] Git·Python·VS Code 실행
+- [ ] Claude·GPT·Gemini 중 한 트랙 준비
 - [ ] 개인 저장소 Clone
 - [ ] 자동점검 `READY`
 - [ ] 데이터 감사 숫자 확인

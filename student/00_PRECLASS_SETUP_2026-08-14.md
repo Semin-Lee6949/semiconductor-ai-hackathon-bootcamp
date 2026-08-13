@@ -16,9 +16,15 @@
 1. [Git](https://git-scm.com/download/win)
 2. [VS Code](https://code.visualstudio.com/download)
 3. [Python](https://www.python.org/downloads/windows/) — 설치 화면에서 **Add Python to PATH** 선택
-4. [Google Antigravity](https://antigravity.google/download) — Google 계정 로그인
-5. [Claude Desktop](https://claude.com/download) — Claude 계정 로그인
-6. [ChatGPT Desktop](https://chatgpt.com/download) — ChatGPT 계정 로그인
+4. 아래 **AI 트랙 중 구독 중인 하나만** 준비
+
+| 구독 | 설치·로그인 | 프로젝트 실행 |
+|---|---|---|
+| Claude | [Claude Desktop](https://claude.com/download) | Claude Desktop 또는 Claude Code |
+| GPT | [ChatGPT Desktop](https://chatgpt.com/download) | ChatGPT Desktop 또는 Codex |
+| Gemini | [Google Antigravity](https://antigravity.google/download) | Gemini 또는 Antigravity |
+
+세 서비스를 모두 설치할 필요가 없습니다. 수업에서는 같은 [공통 프로젝트 프롬프트](../templates/UNIVERSAL_AI_PROJECT_PROMPT.md)를 사용합니다.
 
 설치 후 PowerShell을 새로 열고 확인합니다.
 
@@ -70,8 +76,15 @@ code .env
 `.env`에 붙여 넣고 저장합니다.
 
 ```text
+AI_PROVIDER=claude
 GITHUB_CLASS_TOKEN=YOUR_FINE_GRAINED_TOKEN
 ```
+
+`AI_PROVIDER`는 자신의 구독에 따라 하나만 입력합니다.
+
+- Claude: `claude`
+- GPT·ChatGPT: `openai`
+- Gemini: `gemini`
 
 > `.env`는 이미 `.gitignore`에 등록되어 있습니다. 토큰을 GitHub·메일·텔레그램·화면 캡처에 노출하지 않습니다. 일반 `git push`는 브라우저 로그인을 우선 사용합니다.
 
@@ -92,9 +105,8 @@ READY: core environment checks passed
 ```text
 GitHub ID: ______
 Streamlit 가입: 완료 / 미완료
-Antigravity: 완료 / 미완료
-Claude Desktop: 완료 / 미완료
-ChatGPT Desktop: 완료 / 미완료
+선택 AI: Claude / GPT / Gemini
+선택 AI 로그인: 완료 / 미완료
 Preflight: READY / FAIL
 ```
 

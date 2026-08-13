@@ -2,7 +2,7 @@
 
 반도체 공정 문제를 **데이터 감사 → 기준모델 → What-if 시뮬레이션 → 의사결정 → GitHub Pages → 3분 발표**로 연결하는 단기 특강 준비 저장소입니다.
 
-도구 흐름은 **Antigravity 자료조사 → Claude Code 또는 Codex 데이터 분석·보고서 제작 → GitHub Push → GitHub Pages 포트폴리오**입니다.
+도구 흐름은 **Claude·GPT·Gemini 중 하나로 계획·분석 → 같은 로컬 테스트와 Holdout 검증 → GitHub Push → GitHub Pages 포트폴리오**입니다.
 
 > 교육용 합성 데이터만 사용합니다. 특정 회사의 공식 교육과정·실제 공정 조건·기술 노드·내부 Spec을 나타내지 않습니다.
 
@@ -18,8 +18,8 @@
 수업이 끝날 때 모든 수강생이 다음 다섯 가지를 이해하고, 최소 한 단계는 직접 수행해야 합니다.
 
 1. 사용자·데이터·결정을 포함한 문제정의
-2. Antigravity 근거 조사와 근거카드
-3. Claude Code/Codex가 저장소를 읽고 계획하는 과정
+2. 선택한 AI를 이용한 근거 조사와 근거카드
+3. Claude·GPT·Gemini 공통 프롬프트로 저장소를 읽고 계획하는 과정
 4. AI 결과를 데이터·전공 원리·반례로 검증하는 방법
 5. Git diff·Commit·Pages로 과정의 증거를 남기는 방법
 
@@ -34,6 +34,7 @@
 - [`instructor/`](instructor/): 1·2차 진행표, 사전점검
 - [`student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md`](student/00_PROBLEM_DISCOVERY_QUESTIONNAIRE.md): 문제→전공→Governing equation·도메인 제약→상관·대안가설→의사결정으로 좁히는 1강 질문지
 - [`student/00_PRECLASS_SETUP_2026-08-14.md`](student/00_PRECLASS_SETUP_2026-08-14.md): 수강생에게 전달할 간단한 설치 체크리스트
+- [`templates/UNIVERSAL_AI_PROJECT_PROMPT.md`](templates/UNIVERSAL_AI_PROJECT_PROMPT.md): Claude·GPT·Gemini 공통 프로젝트 프롬프트
 - [`student/01_FIRST_CLASS_HANDS_ON_MANUAL.md`](student/01_FIRST_CLASS_HANDS_ON_MANUAL.md): 설치부터 첫 Pages 배포까지 수강생 실습서
 - [`instructor/01_TELEGRAM_DELIVERY_SCRIPT.md`](instructor/01_TELEGRAM_DELIVERY_SCRIPT.md): 20명 동시 진행용 Telegram 메시지 대본
 - [`instructor/SESSION1_SMOOTH_FLOW.md`](instructor/SESSION1_SMOOTH_FLOW.md): 통계·시각화·AI·배포가 이어지는 120분 강사 진행표

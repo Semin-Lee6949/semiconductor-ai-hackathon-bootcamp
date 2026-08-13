@@ -9,6 +9,22 @@ import sys
 from pathlib import Path
 
 
+AI_PROVIDERS = {"claude", "openai", "gemini"}
+
+
+def read_env_value(path: Path, key: str) -> str | None:
+    if not path.is_file():
+        return None
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        if name.strip() == key:
+            return value.strip().strip('"').strip("'")
+    return None
+
+
 def run(command: list[str], timeout: int = 10) -> tuple[bool, str]:
     try:
         result = subprocess.run(
@@ -43,8 +59,13 @@ def check_environment(root: Path) -> tuple[list[str], list[str]]:
         else:
             failures.append(f"Git version check failed: {output}")
 
-    coding_agents = (("codex", "Codex"), ("claude", "Claude Code"))
-    available_agent = False
+    provider = read_env_value(root / ".env", "AI_PROVIDER")
+    if provider in AI_PROVIDERS:
+        passes.append(f"AI provider selected: {provider}")
+    else:
+        failures.append("Set AI_PROVIDER in .env: claude, openai, or gemini")
+
+    coding_agents = (("codex", "Codex CLI"), ("claude", "Claude Code"))
     for command, label in coding_agents:
         executable = shutil.which(command)
         if not executable:
@@ -52,11 +73,8 @@ def check_environment(root: Path) -> tuple[list[str], list[str]]:
         ok, output = run([executable, "--version"])
         if ok:
             passes.append(f"{label}: {output}")
-            available_agent = True
         else:
-            failures.append(f"{label} version check failed: {output}")
-    if not available_agent:
-        failures.append("Codex or Claude Code command not found")
+            passes.append(f"{label} detected; version check unavailable: {output}")
 
     git = shutil.which("git")
     if git:
