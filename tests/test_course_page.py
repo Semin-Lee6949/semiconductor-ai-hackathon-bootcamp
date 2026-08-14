@@ -46,6 +46,27 @@ class CoursePageTests(unittest.TestCase):
         self.assertIn("지원서가 면접의 출발점", self.page)
         self.assertIn('href="preclass_setup.html"', self.page)
 
+    def test_live_photo_route_links_reference_and_guides(self):
+        self.assertIn('id="demo"', self.page)
+        self.assertIn("Photo 공정 문제 이해", self.page)
+        self.assertIn(
+            "https://waterfirst.github.io/letuin_special_lecture_claude/",
+            self.page,
+        )
+        self.assertIn(
+            "https://github.com/waterfirst/letuin_special_lecture_claude/blob/main/guide_1.html",
+            self.page,
+        )
+        self.assertIn(
+            "https://github.com/waterfirst/letuin_special_lecture_claude/blob/main/guide.html",
+            self.page,
+        )
+        for provider in ("CLAUDE", "CODEX", "ANTIGRAVITY"):
+            self.assertIn(f">{provider}<", self.page)
+        for checkpoint in ("10명을 현재 구독에 따라", "20분 · CHECK", "45분 · SHARE"):
+            self.assertIn(checkpoint, self.page)
+        self.assertIn(".sentence-line{white-space:normal}", self.page)
+
     def test_preclass_matches_beginner_windows_survey(self):
         for expected in (
             "Windows",
