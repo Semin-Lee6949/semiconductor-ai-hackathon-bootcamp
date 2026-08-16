@@ -28,19 +28,39 @@ def decide(session_id: str, stage: str, choice: str, payload=None):
 
 
 def investigation_payload():
+    questions = [
+        "CD CSV의 결측과 열·단위를 어떤 순서로 확인해야 하는지 알려줘.",
+        "CD의 CENTER·EDGE와 Tool·Lot 평균 차이를 어떻게 해석해야 하는지 알려줘.",
+        "CD와 Dose 관점의 독립적인 경쟁 가설 세 개를 제안해줘.",
+        "CD 경쟁 가설별로 예상되는 wafer zone·Tool 패턴을 비교해줘.",
+        "CD와 Dose 가설을 기각할 최소 반증 증거를 제안해줘.",
+        "CD 데이터의 계측 편향과 누락 교란변수를 비판해줘.",
+        "CD 분석을 바탕으로 우선 가설과 Screening 판정 기준을 정리해줘.",
+        "CD 데이터·가설·반증·사람의 판단을 PT 구조로 요약해줘.",
+    ]
+    responses = [
+        "결측 플래그와 단위를 확인한 뒤 유효 행만 별도 집계하고 원본 행은 보존하세요.",
+        "CENTER와 EDGE 평균 차이를 먼저 계산하고 Tool·Lot 층화 후에도 유지되는지 비교하세요.",
+        "Dose 변화, Focus 변화, 계측 편향을 독립 가설로 두고 예상 분포를 분리하세요.",
+        "각 가설이 맞을 때 나타날 위치·Tool·Lot 패턴을 표로 비교해 중복 가설을 제거하세요.",
+        "대조군과 교차 계측을 사용해 각 가설이 틀렸다고 판단할 최소 증거를 고정하세요.",
+        "표본 위치 선택과 Metrology bias, Lot 순서 효과가 인과 추론을 왜곡할 수 있습니다.",
+        "우선 가설과 보류 가설을 나누고 Screening DOE의 대조군과 판정 기준을 먼저 고정하세요.",
+        "실제 데이터 수치, 경쟁 가설, 반증 결과, 사람의 최종 판단과 한계를 연결해 발표하세요.",
+    ]
     return {
-        "prompt": "CD CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
+        "prompt": questions[-1],
         "human_check": "CSV의 결측 플래그와 Lot·Tool·위치별 분포를 직접 계산해 AI 답변과 대조한다.",
-        "llm_response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
+        "llm_response": responses[-1],
         "llm_model": "Gemini",
         "ai_conversation": [{
-            "turn_no": 1,
-            "question": "CD CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
-            "response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
+            "turn_no": index + 1,
+            "question": question,
+            "response": responses[index],
             "provider_label": "Google Gemini",
             "model": "gemini-3.5-flash",
             "usage": {"prompt_tokens": 20, "completion_tokens": 20, "total_tokens": 40},
-        }],
+        } for index, question in enumerate(questions)],
     }
 
 
@@ -66,11 +86,14 @@ def test_controlled_path_solves_scenario():
     assert "data:image/svg+xml;base64" in report.text
     assert "테스트 지원자" in report.text
     assert "Gemini" in report.text
-    assert "CD CSV의 결측과 위치별 분포" in report.text
-    assert "CENTER·EDGE 분포" in report.text
+    assert "CD CSV의 결측과 열·단위" in report.text
+    assert "CENTER와 EDGE 평균 차이" in report.text
     assert "PROCESS KEYWORD MAP" in report.text
+    assert "DATA EVIDENCE · SYNTHETIC CSV" in report.text
+    assert "AI DEEP DIALOGUE · Q7–Q8" in report.text
+    assert "EDGE−CENTER" in report.text
     assert "CD" in report.text
-    assert "id='total'>11" in report.text
+    assert report.text.count("<section class='slide") == 15
 
 
 def test_catalog_and_all_scenarios_create_independent_sessions():
@@ -104,6 +127,17 @@ def test_out_of_order_decision_is_rejected():
     session_id = new_session()
     response = decide(session_id, "investigation", "distribution", investigation_payload())
     assert response.status_code == 409
+
+
+def test_investigation_requires_eight_deep_dialogue_turns():
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    client.get(f"/api/sessions/{session_id}/dataset.csv")
+    payload = investigation_payload()
+    payload["ai_conversation"] = payload["ai_conversation"][:1]
+    response = decide(session_id, "investigation", "distribution", payload)
+    assert response.status_code == 422
+    assert "최소 8회" in response.json()["detail"]
 
 
 def test_deepseek_response_includes_model_and_usage(monkeypatch):

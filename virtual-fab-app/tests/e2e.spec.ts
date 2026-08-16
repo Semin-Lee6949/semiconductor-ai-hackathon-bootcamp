@@ -69,13 +69,19 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '합성 데이터 CSV 다운로드' }).click()
   expect((await datasetDownload).suggestedFilename()).toContain('virtual-fab-photo-cd-drift')
   await expect(page.getByRole('button', { name: '개인 키 없이 외부 AI용 질문 복사' })).toBeVisible()
-  await page.getByLabel('외부 AI 분석 답변 붙여넣기').fill('가설 1은 Dose 변화, 가설 2는 현상 균일도, 가설 3은 측정 편향입니다. 각각을 대조군과 위치별 분포로 반증합니다.')
+  const manualAnswer = '가설 1은 Dose 변화, 가설 2는 Focus 변화, 가설 3은 측정 편향입니다. 합성 CSV의 CENTER·EDGE와 Tool·Lot 분포를 대조해 반증합니다.'
+  for (let turn = 1; turn <= 8; turn += 1) {
+    await page.getByLabel('외부 AI 분석 답변 붙여넣기').fill(`${manualAnswer} 현재는 ${turn}회차 분석입니다.`)
+    await page.getByRole('button', { name: '현재 질문·답변을 문답 기록에 추가' }).click()
+  }
+  await expect(page.getByText('심층 분석 완료 조건 충족')).toBeVisible()
+  await expect(page.getByText('8/8 필수 · 7회 추가 사용 가능')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('external-ai-stage.png'), fullPage: true })
   await page.getByRole('button', { name: '분포·품질 근거로 판단' }).click()
   await page.getByRole('button', { name: /데이터·AI 문답·내 판단을 저장하고/ }).click()
   await expect(page.getByText('SCREENING DOE', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /EVIDENCE/ }).click()
-  await page.getByText('데이터 다운로드 · AI 문답 1회').click()
+  await page.getByText('데이터 다운로드 · AI 문답 8회').click()
   await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('[핵심 키워드] CD, Dose')
   await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('KEYWORDS · CD · Dose')
   await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('가설 1은 Dose 변화')

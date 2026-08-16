@@ -18,19 +18,36 @@ const CHOICE_LABELS: Record<string, string> = {
 }
 
 const QUESTION_PHASES = [
-  { id: 'understand', range: '1–3', label: '용어·데이터 이해', goal: '용어 정의와 데이터 열·단위·결측을 확인' },
-  { id: 'hypothesize', range: '4–7', label: '경쟁 가설', goal: '서로 다른 원인과 예상 데이터 패턴 비교' },
-  { id: 'falsify', range: '8–11', label: '반증·누락 점검', goal: '틀린 가설을 제거할 최소 증거 확인' },
-  { id: 'decide', range: '12–14', label: '판단 압축', goal: '실험 우선순위·리스크·적용 한계 정리' },
-  { id: 'synthesize', range: '15', label: 'PT 최종 요약', goal: '상황·근거·판단·한계를 면접 구조로 압축' },
+  { id: 'understand', range: '1–2', label: '용어·데이터 이해', goal: '용어 정의와 데이터 열·단위·결측을 확인' },
+  { id: 'hypothesize', range: '3–4', label: '경쟁 가설', goal: '서로 다른 원인과 예상 데이터 패턴 비교' },
+  { id: 'falsify', range: '5–6', label: '반증·누락 점검', goal: '틀린 가설을 제거할 최소 증거 확인' },
+  { id: 'decide', range: '7–8', label: '판단 압축', goal: '실험 우선순위·리스크·적용 한계 정리' },
+  { id: 'synthesize', range: '9–15', label: 'PT 심화', goal: '반론·한계·면접 질문까지 선택적으로 보강' },
 ]
+const MIN_DEEP_DIALOGUE_TURNS = 8
 
 function phaseForTurn(turn: number) {
-  if (turn <= 3) return QUESTION_PHASES[0]
-  if (turn <= 7) return QUESTION_PHASES[1]
-  if (turn <= 11) return QUESTION_PHASES[2]
-  if (turn <= 14) return QUESTION_PHASES[3]
+  if (turn <= 2) return QUESTION_PHASES[0]
+  if (turn <= 4) return QUESTION_PHASES[1]
+  if (turn <= 6) return QUESTION_PHASES[2]
+  if (turn <= 8) return QUESTION_PHASES[3]
   return QUESTION_PHASES[4]
+}
+
+function deepQuestionForTurn(turn: number, scenario: Scenario, terms: string[]) {
+  const keywords = terms.length > 0 ? terms.join(', ') : scenario.keywords.slice(0, 2).map((item) => item.term).join(', ')
+  const requests = [
+    '다운로드한 합성 CSV의 열·단위·결측 행을 먼저 점검하고, 분석에서 제외하거나 보존할 기준을 설명해줘.',
+    '합성 CSV의 Lot·Tool·wafer zone별 평균과 범위를 비교하고, CENTER와 EDGE 차이가 의미하는 공간 패턴을 수치로 해석해줘.',
+    '앞서 확인한 데이터 패턴을 설명할 수 있는 서로 독립적인 경쟁 가설 3개를 만들고, 각 가설의 공정 메커니즘을 설명해줘.',
+    '세 경쟁 가설이 맞다면 Lot·Tool·wafer zone 데이터에서 각각 어떤 패턴이 나와야 하는지 예측표처럼 비교해줘.',
+    '각 경쟁 가설을 기각할 최소 증거와 가장 정보가치가 높은 추가 측정 또는 대조군을 우선순위로 정리해줘.',
+    '지금까지 놓친 교란변수·계측 편향·인과관계 비약을 비판하고, 현재 데이터만으로 말할 수 없는 것을 분리해줘.',
+    '현재까지의 데이터와 반증 결과를 바탕으로 우선 가설, 보류 가설, 실험 조건, 판정 기준을 하나의 의사결정안으로 압축해줘.',
+    '면접 PT에 넣을 수 있도록 상황, 실제 데이터 수치, 경쟁 가설, 반증 과정, 사람의 최종 판단과 한계를 연결해 요약해줘.',
+  ]
+  const request = requests[turn - 1] ?? '이 결론에 대한 가장 강한 반론과 추가 검증 한계를 제시하고 면접관의 예상 질문에 답해줘.'
+  return `[문답 ${turn}/15 · ${phaseForTurn(turn).label}]\n[핵심 키워드] ${keywords}\n[데이터 조건] 다운로드한 교육용 합성 CSV의 실제 행 수·결측·Lot·Tool·wafer zone 통계를 근거로 사용할 것\n[질문] ${request}\n[출력 형식] 데이터 근거 / 해석 / 가설 또는 판단 / 반증 기준 / 남은 불확실성 / 추천 후속 질문`
 }
 
 function SignalPlot({ scenario }: { scenario: Scenario }) {
@@ -73,7 +90,7 @@ function ResourceMeter({ label, value, limit, unit }: { label: string; value: nu
 function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario; state: SessionState; onSubmit: (decision: Decision) => Promise<void>; busy: boolean }) {
   const stage = scenario.stages[state.stage_index]
   const [choice, setChoice] = useState('')
-  const [prompt, setPrompt] = useState(scenario.coach_prompt)
+  const [prompt, setPrompt] = useState(() => deepQuestionForTurn(1, scenario, scenario.keywords.slice(0, 2).map((item) => item.term)))
   const [humanCheck, setHumanCheck] = useState('AI 제안은 공정 교재와 합성 데이터 분포, 측정 원리 및 대안 가설을 대조해 사람이 검증한다.')
   const [repeats, setRepeats] = useState(3)
   const [tools, setTools] = useState<string[]>(['optical', 'sem'])
@@ -88,6 +105,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [copyStatus, setCopyStatus] = useState('')
   const [responseCopyStatus, setResponseCopyStatus] = useState('')
   const [tokenUsage, setTokenUsage] = useState<number | null>(restoredLast?.usage.total_tokens ?? null)
+  const [manualDraft, setManualDraft] = useState(restoredConversation.length === 0)
   const [datasetDownloaded, setDatasetDownloaded] = useState(state.dataset_downloaded)
   const [datasetBusy, setDatasetBusy] = useState(false)
   const [datasetError, setDatasetError] = useState('')
@@ -166,12 +184,34 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     setExternalResponse(result.response)
     setExternalModel(`${result.provider_label} · ${result.model}`)
     setTokenUsage(result.usage.total_tokens)
+    setManualDraft(false)
+    const nextTurn = Math.min(exchange.turn_no + 1, 15)
+    if (exchange.turn_no < 15) setPrompt(deepQuestionForTurn(nextTurn, scenario, selectedTerms))
   }
 
   const editExternalResponse = (value: string) => {
     setExternalResponse(value)
     setResponseCopyStatus('')
-    setConversation((current) => current.map((exchange, index) => index === current.length - 1 ? { ...exchange, response: value } : exchange))
+    if (!manualDraft) setConversation((current) => current.map((exchange, index) => index === current.length - 1 ? { ...exchange, response: value } : exchange))
+  }
+
+  const startManualDraft = () => {
+    setManualDraft(true)
+    setExternalResponse('')
+    setExternalModel('외부 AI · 수동 기록')
+    setTokenUsage(null)
+    setResponseCopyStatus('새 후속 질문의 외부 AI 답변을 붙여넣어.')
+  }
+
+  const recordManualExchange = () => {
+    if (externalResponse.trim().length < 20 || matchedTerms.length === 0 || conversation.length >= 15) return
+    const turn = conversation.length + 1
+    const phase = phaseForTurn(turn)
+    const exchange: AIExchange = { turn_no: turn, question: prompt, response: externalResponse.trim(), provider_label: '외부 AI · 수동', model: 'copy-and-paste', usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, keywords: matchedTerms, phase: { id: phase.id, label: phase.label, goal: phase.goal } }
+    setConversation((current) => [...current, exchange].slice(-15))
+    setExternalResponse('')
+    setResponseCopyStatus(`Q${turn} 문답을 기록했어. 다음 질문의 답변을 붙여넣어.`)
+    if (turn < 15) setPrompt(deepQuestionForTurn(turn + 1, scenario, selectedTerms))
   }
 
   return (
@@ -189,8 +229,9 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         </section>
         <div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div>
         <section className="question-strategy" aria-labelledby="question-strategy-title">
-          <header><div><b id="question-strategy-title">15회 문답 전략</b><p>남은 {Math.max(0, 15 - conversation.length)}회를 단계별 목표에 집중해 사용해.</p></div><strong>{currentTurn}/15 · {currentPhase.label}</strong></header>
+          <header><div><b id="question-strategy-title">심층 문답 · 최소 8회, 최대 15회</b><p>데이터 수치부터 반증과 판단까지 단계별로 연결해.</p></div><strong>{currentTurn}/15 · {currentPhase.label}</strong></header>
           <ol>{QUESTION_PHASES.map((phase) => <li key={phase.id} className={phase.id === currentPhase.id ? 'active' : QUESTION_PHASES.indexOf(phase) < QUESTION_PHASES.indexOf(currentPhase) ? 'done' : ''}><span>{phase.range}회</span><b>{phase.label}</b><small>{phase.goal}</small></li>)}</ol>
+          <div className={`deep-dialogue-gate ${conversation.length >= MIN_DEEP_DIALOGUE_TURNS ? 'ready' : ''}`}><b>{conversation.length >= MIN_DEEP_DIALOGUE_TURNS ? '심층 분석 완료 조건 충족' : `심층 분석까지 ${MIN_DEEP_DIALOGUE_TURNS - conversation.length}회 남음`}</b><span>{conversation.length}/8 필수 · {Math.max(0, 15 - conversation.length)}회 추가 사용 가능</span></div>
           <div className="keyword-library"><div><b>{scenario.process} 핵심 키워드</b><span>뜻을 읽고 이번 질문에 사용할 용어를 선택해.</span></div>{scenario.keywords.map((keyword) => <button type="button" key={keyword.id} className={selectedKeywordIds.includes(keyword.id) ? 'selected' : ''} aria-pressed={selectedKeywordIds.includes(keyword.id)} onClick={() => setSelectedKeywordIds((current) => current.includes(keyword.id) ? current.filter((id) => id !== keyword.id) : [...current, keyword.id])}><b>{keyword.term}</b><span>{keyword.meaning}</span><small>{keyword.relevance}</small></button>)}</div>
           <div className="question-composer"><label>이번 질문의 목표<select value={questionGoal} onChange={(event) => setQuestionGoal(event.target.value)}>{QUESTION_PHASES.map((phase) => <option key={phase.id} value={phase.id}>{phase.label} · {phase.goal}</option>)}</select></label><button type="button" onClick={composeQuestion} disabled={selectedTerms.length === 0}>선택 키워드로 질문 초안 만들기</button></div>
           <p className={`prompt-quality ${matchedTerms.length > 0 ? 'ready' : ''}`}>{matchedTerms.length > 0 ? `전송 준비 · 포함 키워드: ${matchedTerms.join(', ')}` : '질문에 공정 핵심 키워드를 1개 이상 포함해야 해.'}</p>
@@ -200,8 +241,9 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         <label>AI에게 물어볼 다음 질문<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: CSV의 결측을 처리한 뒤 Lot·Tool·위치 효과를 어떤 순서로 비교해야 해?" /></label>
         <PersonalAIConnector sessionId={state.id} prompt={prompt} promptReady={matchedTerms.length > 0} callsUsed={state.llm_call_count} conversation={conversation} onPromptChange={setPrompt} onResult={receiveAIResult}/>
         <section className={`ai-response-editor ${externalResponse ? 'has-response' : ''}`} aria-labelledby="ai-response-title">
-          <header><div><b id="ai-response-title">최근 AI 응답</b><span>확인 · 수정 · 외부 답변 직접 붙여넣기 가능</span></div><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button></header>
+          <header><div><b id="ai-response-title">최근 AI 응답</b><span>{manualDraft ? '외부 AI 답변을 붙여넣고 회차별로 기록' : '연결 AI 응답 확인·수정 가능'}</span></div><div className="response-actions"><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button>{!manualDraft && <button type="button" onClick={startManualDraft}>수동 문답 시작</button>}</div></header>
           <textarea aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => editExternalResponse(event.target.value)} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
+          {manualDraft && <button type="button" className="record-manual-turn" onClick={recordManualExchange} disabled={externalResponse.trim().length < 20 || matchedTerms.length === 0 || conversation.length >= 15}>현재 질문·답변을 문답 기록에 추가</button>}
           {tokenUsage !== null && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · 총 {tokenUsage.toLocaleString()} tokens</p>}
           {responseCopyStatus && <p className="copy-status" role="status">{responseCopyStatus}</p>}
         </section>
@@ -209,7 +251,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         {copyStatus && <p className="copy-status" role="status">{copyStatus}</p>}
         <label>AI 문답을 검증한 내 판단<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} placeholder="데이터의 어떤 열·분포·결측과 대조했고 무엇을 채택·수정·기각했는지 적어." /></label>
         <div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포·품질 근거로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>전체 평균으로 판단</ChoiceButton></div>
-        <p className="field-note">CSV·최대 15회 질문·응답·모델·사람의 검증 판단이 Evidence와 최종 PT에 기록돼. 실제 회사 Recipe·Spec·기밀자료는 입력하지 마.</p>
+        <p className="field-note">최소 8회의 CSV 수치 분석·가설·반증·판단 문답을 완료해야 다음 단계로 갈 수 있어. 전체 질문·응답은 최종 PT에서 2회당 한 장으로 보존돼.</p>
       </>}
       {stage.id === 'experiment' && <>
         <div className="choice-list"><ChoiceButton value="screening" selected={choice} onClick={setChoice}>대조군 + {scenario.experiment_label}</ChoiceButton><ChoiceButton value="ofat" selected={choice} onClick={setChoice}>한 변수씩 변경</ChoiceButton><ChoiceButton value="immediate" selected={choice} onClick={setChoice}>검증 없이 Recipe 변경</ChoiceButton></div>
@@ -226,7 +268,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         {validationPreview && <div className={`validation-preview ${validationPreview.improved ? 'improved' : 'degraded'}`} role="status"><span>LIVE HOLDOUT PREVIEW</span><b>{validationPreview.delta >= 0 ? '+' : ''}{validationPreview.delta.toFixed(3)}</b><p>{validationPreview.improved ? '설정한 개선 방향과 일치해. 적용 범위를 선택해.' : '개선 방향과 불일치해. 조치보다 가설·실험을 다시 의심해야 해.'}</p></div>}
         <div className="choice-list"><ChoiceButton value="controlled" selected={choice} onClick={setChoice}>한정 적용 + 모니터링</ChoiceButton><ChoiceButton value="direct" selected={choice} onClick={setChoice}>전체 Lot 즉시 적용</ChoiceButton><ChoiceButton value="release" selected={choice} onClick={setChoice}>검증 없이 해제</ChoiceButton></div>
       </>}
-      <button className="commit" disabled={!choice || busy || (stage.id === 'investigation' && (!datasetDownloaded || (conversation.length === 0 && (externalResponse.trim().length < 20 || matchedTerms.length === 0)) || humanCheck.trim().length < 20))}>
+      <button className="commit" disabled={!choice || busy || (stage.id === 'investigation' && (!datasetDownloaded || conversation.length < MIN_DEEP_DIALOGUE_TURNS || humanCheck.trim().length < 20))}>
         {busy ? '판단 기록 중…' : stage.id === 'investigation' ? '데이터·AI 문답·내 판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
       </button>
     </form>
@@ -268,7 +310,7 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
       <div className="identity-grid"><label>발표자<input value={presenter} onChange={(event) => setPresenter(event.target.value)} /></label><label>지원 직무<input value={targetRole} onChange={(event) => setTargetRole(event.target.value)} /></label></div>
       <label>내 판단·배운 점·한계<textarea value={opinion} onChange={(event) => setOpinion(event.target.value)} placeholder="왜 이 경로를 선택했는지, AI 의견 중 무엇을 수정했는지, 추가 검증할 한계를 10자 이상 적어봐." /></label>
       <p className={`report-requirement ${opinion.trim().length >= 10 ? 'ready' : ''}`}>{opinion.trim().length >= 10 ? '다운로드 준비 완료' : `의견을 ${10 - opinion.trim().length}자 더 입력하면 다운로드할 수 있어.`}</p>
-      <p className="field-note">데이터 다운로드·공정 키워드·AI 문답·판단 근거와 SVG를 내장한 11장 독립형 HTML 슬라이드를 생성한다. 다운로드 후 인터넷 없이 실행하고 PDF 인쇄도 가능해.</p>
+      <p className="field-note">실제 합성 데이터 통계와 전체 AI 문답을 2회당 한 장으로 나누는 심층 HTML PT를 생성한다. 문답 횟수에 따라 슬라이드 수가 자동으로 늘어나며 인터넷 없이 실행하고 PDF 인쇄도 가능해.</p>
       <button className="download-report" onClick={downloadReport} disabled={reportBusy || opinion.trim().length < 10}>{reportBusy ? 'STAR 면접 자료 생성 중…' : 'HTML 면접 PT 슬라이드 다운로드'}</button>
       {reportError && <p className="inline-error">{reportError}</p>}
     </section>

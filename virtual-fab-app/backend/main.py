@@ -35,6 +35,7 @@ RATE_LOCK = Lock()
 LLM_RATE_WINDOW: dict[str, list[float]] = {}
 VERIFIED_BYOK: dict[str, tuple[str, str, str]] = {}
 STAGES = ["incident", "investigation", "experiment", "analysis", "validation"]
+MIN_DEEP_DIALOGUE_TURNS = 8
 AI_PROVIDERS = {"openai": "OpenAI", "anthropic": "Anthropic", "gemini": "Google Gemini", "deepseek": "DeepSeek"}
 MODEL_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$")
 
@@ -70,7 +71,7 @@ PHOTO_SCENARIO = {
     "tagline": "평균 CD는 정상인데 Edge 결함이 급증했다.",
     "skills": ["공간 분포", "DOE", "CD 계측"],
     "badge": "LIVE · 검증 완료",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
     "coach_prompt": "Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.",
     "experiment_label": "Dose·Focus·PEB Screening",
@@ -96,7 +97,7 @@ PHOTO_SCENARIO = {
 
 DRY_ETCH_SCENARIO = {
     "id": "dry-etch-profile", "module_no": "02", "process": "DRY ETCH", "title": "기울어진 Sidewall", "tagline": "식각 깊이는 맞지만 Sidewall 각도가 무너졌다.",
-    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.7.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Dry Etch 깊이는 정상인데 Sidewall angle과 edge residue가 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·RF Bias·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · edge residue index", "aria": "웨이퍼 중심에서 가장자리로 갈수록 잔류물 지수가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 56, "risk_from": 9, "bars": [27, 28, 29, 31, 33, 35, 39, 43, 49, 57, 63, 70, 78, 86]},
     "incident": {"case_id": "VF-DE-02", "role": "Dry Etch 공정기술 엔지니어", "deadline": "후속 세정·계측 판정까지 75분",
@@ -108,7 +109,7 @@ DRY_ETCH_SCENARIO = {
 
 SPUTTER_SCENARIO = {
     "id": "sputter-sheet-resistance", "module_no": "03", "process": "SPUTTER", "title": "같은 두께, 다른 저항", "tagline": "막 두께는 정상인데 Sheet resistance가 흔들린다.",
-    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.7.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Sputter 막 두께는 정상인데 sheet resistance가 edge에서 상승한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Power·Pressure·Ar Flow Screening",
     "signal": {"title": "합성 Train 데이터 · sheet resistance", "aria": "웨이퍼 중심에서 가장자리로 갈수록 면저항이 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 58, "risk_from": 10, "bars": [34, 35, 34, 36, 37, 39, 42, 44, 47, 51, 59, 65, 73, 80]},
     "incident": {"case_id": "VF-SP-03", "role": "Sputter 박막 공정 엔지니어", "deadline": "후속 Patterning 투입까지 70분",
@@ -120,7 +121,7 @@ SPUTTER_SCENARIO = {
 
 CVD_SCENARIO = {
     "id": "cvd-film-uniformity", "module_no": "04", "process": "CVD", "title": "막은 쌓였지만 같지 않다", "tagline": "평균 두께 뒤에 균일도와 막질 이상이 숨어 있다.",
-    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.7.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CVD 평균 두께는 정상인데 wafer 균일도와 굴절률이 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Temperature·Pressure·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · thickness non-uniformity", "aria": "웨이퍼 중심에서 가장자리로 갈수록 두께 불균일도가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 53, "risk_from": 8, "bars": [24, 26, 29, 30, 33, 37, 42, 48, 55, 61, 68, 74, 81, 88]},
     "incident": {"case_id": "VF-CV-04", "role": "CVD 박막 공정기술 엔지니어", "deadline": "후속 Lithography 투입까지 90분",
@@ -132,7 +133,7 @@ CVD_SCENARIO = {
 
 CMP_SCENARIO = {
     "id": "cmp-dishing", "module_no": "05", "process": "CMP", "title": "평탄화 뒤의 함몰", "tagline": "평균 제거량은 맞지만 Dense pattern이 꺼졌다.",
-    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.7.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CMP 평균 제거량은 정상인데 dense pattern dishing과 edge 잔막이 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·Platen Speed·Slurry Flow Screening",
     "signal": {"title": "합성 Train 데이터 · pattern dishing", "aria": "패턴 밀도가 높아질수록 디싱 값이 증가하는 막대그래프", "start": "ISO", "end": "DENSE", "warning": 55, "risk_from": 9, "bars": [22, 25, 28, 31, 34, 38, 41, 46, 51, 58, 66, 73, 80, 87]},
     "incident": {"case_id": "VF-CM-05", "role": "CMP 공정기술 엔지니어", "deadline": "세정·후속 계측까지 65분",
@@ -144,7 +145,7 @@ CMP_SCENARIO = {
 
 DEVICE_SCENARIO = {
     "id": "device-vth-shift", "module_no": "06", "process": "DEVICE", "title": "오른쪽으로 밀린 I–V", "tagline": "On-current는 통과했지만 Vth와 Off-current가 변했다.",
-    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.7.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "소자 On-current는 정상인데 Vth shift와 Off-current가 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Stress Voltage·Time·Temperature Screening",
     "signal": {"title": "합성 Train 데이터 · Vth shift after stress", "aria": "스트레스 시간이 증가할수록 문턱전압 이동이 증가하는 막대그래프", "start": "INITIAL", "end": "STRESS", "warning": 57, "risk_from": 9, "bars": [20, 23, 26, 29, 33, 37, 41, 46, 52, 59, 66, 72, 79, 85]},
     "incident": {"case_id": "VF-DV-06", "role": "소자·신뢰성 평가 엔지니어", "deadline": "Reliability review까지 80분",
@@ -308,7 +309,7 @@ def load_session(session_id: str) -> SessionState | None:
 
 init_db()
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.6.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.7.0")
 
 
 CHOICE_LABELS = {
@@ -437,26 +438,58 @@ def dataset_rows(state: SessionState, scenario: dict[str, Any]) -> list[dict[str
 
 
 def dataset_context(state: SessionState, scenario: dict[str, Any]) -> str:
-    rows = dataset_rows(state, scenario)
-    valid = [row for row in rows if row["missing_flag"] == "N"]
-    zones = {zone: [float(row["metric_value"]) for row in valid if row["wafer_zone"] == zone] for zone in ("CENTER", "MIDDLE", "EDGE")}
-    means = {zone: round(sum(values) / len(values), 2) if values else None for zone, values in zones.items()}
-    missing = sum(row["missing_flag"] == "Y" for row in rows)
+    stats = dataset_statistics(state, scenario)
     return (
-        f"다운로드 데이터는 {len(rows)}행이며 결측 {missing}행이다. "
-        f"영역별 유효 평균은 CENTER {means['CENTER']}, MIDDLE {means['MIDDLE']}, EDGE {means['EDGE']}이다. "
+        f"다운로드 데이터는 {stats['rows']}행이며 결측 {stats['missing']}행이다. "
+        f"영역별 유효 평균은 CENTER {stats['zones']['CENTER']['mean']}, MIDDLE {stats['zones']['MIDDLE']['mean']}, EDGE {stats['zones']['EDGE']['mean']}이고 "
+        f"EDGE-CENTER 차이는 {stats['edge_center_delta']}이다. Tool별 평균은 {stats['tool_summary']}이다. "
         "열은 lot_id, tool_id, wafer_zone, position_index, metric_value, unit, missing_flag로 구성된다."
     )
 
 
+def dataset_statistics(state: SessionState, scenario: dict[str, Any]) -> dict[str, Any]:
+    rows = dataset_rows(state, scenario)
+    valid = [row for row in rows if row["missing_flag"] == "N"]
+
+    def grouped(field: str, ordered: list[str] | None = None) -> dict[str, dict[str, float | int | None]]:
+        keys = ordered or sorted({str(row[field]) for row in valid})
+        result: dict[str, dict[str, float | int | None]] = {}
+        for key in keys:
+            values = [float(row["metric_value"]) for row in valid if str(row[field]) == key]
+            result[key] = {
+                "count": len(values),
+                "mean": round(sum(values) / len(values), 2) if values else None,
+                "min": round(min(values), 2) if values else None,
+                "max": round(max(values), 2) if values else None,
+            }
+        return result
+
+    zones = grouped("wafer_zone", ["CENTER", "MIDDLE", "EDGE"])
+    tools = grouped("tool_id")
+    lots = grouped("lot_id")
+    center_mean = zones["CENTER"]["mean"]
+    edge_mean = zones["EDGE"]["mean"]
+    delta = round(float(edge_mean) - float(center_mean), 2) if center_mean is not None and edge_mean is not None else None
+    return {
+        "rows": len(rows),
+        "valid": len(valid),
+        "missing": len(rows) - len(valid),
+        "zones": zones,
+        "tools": tools,
+        "lots": lots,
+        "edge_center_delta": delta,
+        "tool_summary": ", ".join(f"{key} {value['mean']}" for key, value in tools.items()),
+    }
+
+
 def question_phase(turn_no: int) -> dict[str, str]:
-    if turn_no <= 3:
+    if turn_no <= 2:
         return {"id": "understand", "label": "용어·데이터 이해", "goal": "용어 정의, 열 의미, 단위와 결측을 확인한다."}
-    if turn_no <= 7:
+    if turn_no <= 4:
         return {"id": "hypothesize", "label": "경쟁 가설", "goal": "서로 다른 원인 가설과 각 가설의 예상 데이터 패턴을 만든다."}
-    if turn_no <= 11:
+    if turn_no <= 6:
         return {"id": "falsify", "label": "반증·누락 점검", "goal": "가설을 틀렸다고 판정할 최소 증거와 누락 변수를 찾는다."}
-    if turn_no <= 14:
+    if turn_no <= 8:
         return {"id": "decide", "label": "판단 압축", "goal": "데이터 근거, 실험 우선순위, 리스크와 적용 한계를 정리한다."}
     return {"id": "synthesize", "label": "PT 최종 요약", "goal": "상황·데이터·AI 활용·사람의 판단·한계를 면접 PT 구조로 요약한다."}
 
@@ -474,7 +507,9 @@ def coach_messages(prompt: str, scenario: dict[str, Any], state: SessionState | 
         f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
         "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
         "정답을 단정하지 말고 학습자가 다운로드한 합성 데이터의 품질·분포·누락 변수를 먼저 점검하게 한다. "
-        "경쟁 가설과 반증 증거를 구분하고, 앞선 대화의 불확실성을 이어받아 한국어로 간결하게 답한다. "
+        "경쟁 가설과 반증 증거를 구분하고 앞선 대화에서 확정된 것·기각된 것·남은 불확실성을 반드시 이어받는다. "
+        "반드시 한국어로 답하고, 매 답변을 '데이터 근거 / 해석 / 가설 또는 판단 / 반증 기준 / 남은 불확실성 / 추천 후속 질문'으로 나눈다. "
+        "데이터 근거에는 제공된 합성 데이터의 행 수·결측·영역별 평균·Tool별 평균 중 관련 수치를 직접 인용하고, 관찰되지 않은 수치를 만들지 않는다. "
         f"현재 {turn_no}/15회 단계는 '{phase['label']}'이며 목표는 {phase['goal']} "
         f"공정 용어 사전은 {glossary}이다. 용어를 사용할 때 질문 맥락에 맞춰 짧게 풀어 쓴다."
     )
@@ -638,18 +673,36 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     if not isinstance(conversation, list):
         conversation = []
     last_exchange = conversation[-1] if conversation else {}
-    mentor_text = str(last_exchange.get("response") or investigation.get("payload", {}).get("llm_response", "기록 없음"))[:1500]
-    prompt_text = str(last_exchange.get("question") or investigation.get("payload", {}).get("prompt", "기록 없음"))[:1200]
     model_name = str(last_exchange.get("model") or investigation.get("payload", {}).get("llm_model", "외부 AI"))
     provider_name = str(last_exchange.get("provider_label", ""))
     model_text = f"{provider_name} · {model_name}"[:120] if provider_name else model_name[:120]
-    safe_mentor = html.escape(mentor_text).replace("\n", "<br>")
-    safe_prompt = html.escape(prompt_text).replace("\n", "<br>")
     safe_model = html.escape(model_text)
-    conversation_rows = "".join(
-        f"<li><b>Q{exchange.get('turn_no', len(conversation) - len(conversation[-5:]) + index + 1)} · {html.escape(str(exchange.get('phase', {}).get('label', '문답')))}</b><span>{html.escape(str(exchange.get('question', ''))[:260])}<br><em>{html.escape(str(exchange.get('response', ''))[:420])}</em></span></li>"
-        for index, exchange in enumerate(conversation[-5:])
-    ) or "<li><b>대화</b><span>기록 없음</span></li>"
+    total_tokens = sum(int(exchange.get("usage", {}).get("total_tokens", 0) or 0) for exchange in conversation)
+    phase_labels = list(dict.fromkeys(str(exchange.get("phase", {}).get("label", "문답")) for exchange in conversation))
+    safe_human_check = html.escape(str(investigation.get("payload", {}).get("human_check", "기록 없음"))).replace("\n", "<br>")
+    dialogue_groups = [conversation[index:index + 2] for index in range(0, len(conversation), 2)]
+    dialogue_slides = "".join(
+        "<section class='slide dialogue-slide'><span class='label'>AI DEEP DIALOGUE · "
+        + f"Q{group[0].get('turn_no', group_index * 2 + 1)}–Q{group[-1].get('turn_no', group_index * 2 + len(group))}</span>"
+        + f"<div><h2>{html.escape(' → '.join(dict.fromkeys(str(item.get('phase', {}).get('label', '문답')) for item in group)))}</h2><ol class='dialogue-list'>"
+        + "".join(
+            f"<li><div class='turn-head'><b>Q{exchange.get('turn_no', group_index * 2 + index + 1)}</b><em>{html.escape(' · '.join(exchange.get('keywords', [])))}</em></div>"
+            f"<p class='question'>{html.escape(str(exchange.get('question', ''))[:320])}</p>"
+            f"<p class='answer'>{html.escape(str(exchange.get('response', ''))[:850]).replace(chr(10), '<br>')}</p></li>"
+            for index, exchange in enumerate(group)
+        )
+        + "</ol></div></section>"
+        for group_index, group in enumerate(dialogue_groups)
+    )
+    stats = dataset_statistics(state, scenario)
+    zone_rows = "".join(
+        f"<tr><th>{zone}</th><td>{values['count']}</td><td>{values['mean']}</td><td>{values['min']}–{values['max']}</td></tr>"
+        for zone, values in stats["zones"].items()
+    )
+    tool_rows = "".join(
+        f"<li><b>{html.escape(tool)}</b><span>유효 {values['count']}행 · 평균 {values['mean']} · 범위 {values['min']}–{values['max']}</span></li>"
+        for tool, values in stats["tools"].items()
+    )
     used_terms = list(dict.fromkeys(term for exchange in conversation for term in exchange.get("keywords", []) if isinstance(term, str)))
     keyword_rows = "".join(
         f"<li><b>{html.escape(item['term'])}</b><span>{html.escape(item['meaning'])}<br><em>{html.escape(item['relevance'])}</em></span></li>"
@@ -682,20 +735,21 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     return f"""<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>Virtual Fab 면접 PT · {safe_presenter}</title><style>
 *{{box-sizing:border-box}}:root{{--ink:#071d24;--cyan:#00a8b5;--amber:#ffb21d;--paper:#f6f9f8}}body{{margin:0;background:var(--ink);font-family:'Malgun Gothic',sans-serif;color:var(--ink);overflow:hidden}}
-.slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
+.slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}.stat-grid{{display:grid;grid-template-columns:.9fr 1.1fr;gap:4vw;align-items:start}}.data-callout{{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-bottom:3vh;background:#9fb7ba}}.data-callout span{{padding:2vh;background:#e6f1ef}}.data-callout b{{display:block;color:#007c86;font-size:clamp(26px,3vw,52px)}}table{{width:100%;border-collapse:collapse;font-size:clamp(15px,1.35vw,22px)}}th,td{{padding:1.25vh 1vw;border-top:1px solid #9fb7ba;text-align:right}}th:first-child,td:first-child{{text-align:left}}.dialogue-slide h2{{font-size:clamp(28px,3vw,48px);margin-bottom:2vh}}.dialogue-list{{margin:0;padding:0;list-style:none}}.dialogue-list li{{display:block;padding:1.7vh 0;border-top:1px solid #9fb7ba}}.turn-head{{display:flex;align-items:center;justify-content:space-between;gap:2vw}}.turn-head b{{color:#007c86;font-size:clamp(18px,1.5vw,26px)}}.turn-head em{{color:#6a7f83;font-size:clamp(12px,1vw,17px)}}.dialogue-list p{{margin:.6vh 0 0;font-size:clamp(14px,1.15vw,20px);line-height:1.45}}.dialogue-list .question{{font-weight:700}}.dialogue-list .answer{{padding:1.1vh 1vw;color:#244950;background:#e3f1ec}}@media(max-width:760px){{.grid,.stat-grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}.data-callout{{grid-template-columns:1fr}}.turn-head{{align-items:flex-start;flex-direction:column;gap:3px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
 </style></head><body>
 <section class='slide dark active'><span class='label'>VIRTUAL FAB · {safe_process} · INTERVIEW BRIEF</span><div><h1>{safe_title}</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p><p>scenario v{html.escape(state.scenario_version)} · seed {state.seed}</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
 <section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>{safe_tagline}</h2><p>{situation_facts}</p><p><b>제한:</b> {html.escape(scenario['incident']['deadline'])}</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 공정 이상 신호 도식'></section>
+<section class='slide'><span class='label'>DATA EVIDENCE · SYNTHETIC CSV</span><div><h2>평균보다 먼저 분포를 확인했다</h2><div class='data-callout'><span><b>{stats['rows']}</b>전체 행</span><span><b>{stats['missing']}</b>결측 행</span><span><b>{stats['edge_center_delta']}</b>EDGE−CENTER</span></div><div class='stat-grid'><table><thead><tr><th>영역</th><th>유효행</th><th>평균</th><th>범위</th></tr></thead><tbody>{zone_rows}</tbody></table><ul>{tool_rows}</ul></div></div><small>scenario v{html.escape(state.scenario_version)} · seed {state.seed}에서 재현되는 교육용 합성 통계</small></section>
 <section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·설비 편중과 조건별 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
-<section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
-<section class='slide'><span class='label'>DATA · AI COLLABORATION · {safe_model}</span><div><h2>데이터를 내려받고 AI와 {len(conversation)}회 검토했다</h2><p><b>마지막 질문</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 합성 데이터 품질·분포·측정 한계와 대조하고 사람이 최종 판단했다.</p></div></section>
-<section class='slide'><span class='label'>AI DIALOGUE TRACE · LAST 5</span><div><h2>질문이 판단으로 좁혀진 과정</h2><ul>{conversation_rows}</ul></div></section>
+<section class='slide'><span class='label'>DATA · AI COLLABORATION · {safe_model}</span><div><h2>AI와 {len(conversation)}회 심층 검토했다</h2><div class='data-callout'><span><b>{len(phase_labels)}</b>사고 단계</span><span><b>{len(used_terms)}</b>공정 키워드</span><span><b>{total_tokens:,}</b>누적 tokens</span></div><p><b>진행 단계</b> · {html.escape(' → '.join(phase_labels))}</p><p><b>사람의 검증</b><br>{safe_human_check}</p><p>다음 슬라이드에서 질문·응답을 생략하지 않고 단계별로 추적한다.</p></div></section>
+{dialogue_slides}
 <section class='slide'><span class='label'>PROCESS KEYWORD MAP</span><div><h2>전문용어를 데이터 판단 언어로 바꿨다</h2><ul>{keyword_rows}</ul></div></section>
+<section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
 <section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
 <section class='slide dark'><span class='label'>R · RESULT</span><div><h2>{verdict}</h2><div class='metric'><span><b>{state.score}</b>점수</span><span><b>{state.budget}</b>남은 예산</span><span><b>{state.time_left}</b>남은 시간</span></div><p>Baseline {html.escape(str(metrics.get('baseline','-')))} → Holdout {html.escape(str(metrics.get('holdout','-')))}</p></div><small>이 수치는 교육용 합성 입력에 대한 시나리오 결과다.</small></section>
 <section class='slide'><span class='label'>MY DISCUSSION</span><div><h2>내 판단과 한계</h2><blockquote>{safe_opinion}</blockquote></div></section>
 <section class='slide dark'><span class='label'>INTERVIEW CLOSE</span><div><h2>제가 증명한 것은<br><span class='accent'>정답이 아니라 과정</span>입니다</h2><p>문제 정의 → 데이터 다운로드 → AI 문답 → 사람의 판단 → 실험 → 분석 선택 → Holdout 검증</p><p>질문을 받겠습니다.</p></div></section>
-<div class='counter'><span id='current'>1</span> / <span id='total'>11</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
+<div class='counter'><span id='current'>1</span> / <span id='total'>–</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
 <script>const s=[...document.querySelectorAll('.slide')];let i=0;function show(n){{i=(n+s.length)%s.length;s.forEach((x,j)=>x.classList.toggle('active',j===i));document.getElementById('current').textContent=i+1}}function move(n){{show(i+n)}}document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')move(1);if(e.key==='ArrowLeft')move(-1)}});document.getElementById('total').textContent=s.length;</script>
 </body></html>"""
 
@@ -769,6 +823,8 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
             raise HTTPException(422, "AI와 최소 1회 질문·응답을 기록하세요.")
         if any(not exchange.get("keywords") for exchange in state.ai_conversation):
             raise HTTPException(422, "각 AI 질문에 공정 핵심 키워드를 1개 이상 포함하세요.")
+        if len(state.ai_conversation) < MIN_DEEP_DIALOGUE_TURNS:
+            raise HTTPException(422, f"데이터 분석·가설·반증·판단을 위해 AI 문답을 최소 {MIN_DEEP_DIALOGUE_TURNS}회 기록하세요.")
         if len(str(request.payload.get("human_check", ""))) < 20:
             raise HTTPException(422, "AI 답변을 어떻게 검증했는지 20자 이상 기록하세요.")
         request.payload["ai_conversation"] = state.ai_conversation

@@ -124,7 +124,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
     <div className="ai-chat-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setChatOpen(false) }}>
       <section className="ai-chat-modal" role="dialog" aria-modal="true" aria-labelledby="ai-chat-title">
         <header className="ai-chat-header">
-          <div><span>PROCESS COACH · LIVE DIALOGUE</span><h2 id="ai-chat-title">AI와 공정 문제 좁히기</h2><p>{PROVIDERS[provider].label} · {model} · {conversation.length}/15회</p></div>
+          <div><span>PROCESS COACH · LIVE DIALOGUE</span><h2 id="ai-chat-title">AI와 공정 문제 좁히기</h2><p>{PROVIDERS[provider].label} · {model} · 필수 {Math.min(conversation.length, 8)}/8 · 전체 {conversation.length}/15회</p></div>
           <button type="button" onClick={() => setChatOpen(false)} aria-label="AI 대화창 닫기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
         </header>
         <div className="ai-chat-layout">
@@ -138,7 +138,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
           <aside className="ai-chat-composer">
             <div><span>NEXT TURN</span><b>응답을 읽고 후속 질문</b><p>동의·반박·누락된 증거를 짚고 다음 질문을 수정해. 공정 키워드를 최소 1개 포함해야 해.</p></div>
             <label>다음 질문<textarea ref={followUpRef} value={prompt} onChange={(event) => onPromptChange(event.target.value)} placeholder="방금 답변에서 검증이 필요한 가설과 공정 키워드를 넣어 후속 질문을 작성해." /></label>
-            <p className={`chat-prompt-status ${promptReady ? 'ready' : ''}`}>{promptReady ? `전송 가능 · ${15 - callsMade}회 남음` : '공정 핵심 키워드를 추가해야 해.'}</p>
+            <p className={`chat-prompt-status ${promptReady ? 'ready' : ''}`}>{promptReady ? conversation.length < 8 ? `심층 분석까지 ${8 - conversation.length}회 · 전체 ${15 - callsMade}회 남음` : `필수 문답 완료 · ${15 - callsMade}회 추가 가능` : '공정 핵심 키워드를 추가해야 해.'}</p>
             <button type="button" className="chat-send" onClick={runPrompt} disabled={status !== 'connected' || prompt.trim().length < 10 || !promptReady || exhausted}>{status === 'running' ? 'AI 답변 기다리는 중…' : exhausted ? '15회 문답 완료' : '후속 질문 보내기'}</button>
             <button type="button" className="chat-copy" onClick={copyLatestResponse} disabled={!latestResponse}>최근 응답 복사</button>
             {copyStatus && <p className="chat-copy-status" role="status">{copyStatus}</p>}
