@@ -4,6 +4,7 @@ import base64
 import html
 import json
 import os
+import secrets
 import sqlite3
 import time
 from pathlib import Path
@@ -166,6 +167,8 @@ class ReportRequest(BaseModel):
 class SessionState(BaseModel):
     id: str
     scenario_id: str = "photo-cd-drift"
+    scenario_version: str = ""
+    seed: int = Field(default=0, ge=0, le=2_147_483_647)
     stage_index: int = 0
     budget: int = 80
     time_left: int = 60
@@ -204,8 +207,14 @@ def load_session(session_id: str) -> SessionState | None:
     if not row:
         return None
     try:
-        return SessionState.model_validate_json(row[0])
-    except ValueError:
+        raw_state = json.loads(row[0])
+        scenario = SCENARIOS.get(raw_state.get("scenario_id", "photo-cd-drift"))
+        if scenario:
+            raw_state.setdefault("scenario_version", scenario["version"])
+        legacy_seed = int.from_bytes(session_id.encode("utf-8"), "little") % 2_147_483_648
+        raw_state.setdefault("seed", legacy_seed)
+        return SessionState.model_validate(raw_state)
+    except (json.JSONDecodeError, TypeError, ValueError):
         with DB_LOCK, sqlite3.connect(DB_PATH, timeout=5) as connection:
             connection.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
         return None
@@ -230,6 +239,8 @@ def scenario_for(state: SessionState) -> dict[str, Any]:
     scenario = SCENARIOS.get(state.scenario_id)
     if not scenario:
         raise HTTPException(409, "이 세션의 시나리오를 더 이상 찾을 수 없습니다.")
+    if state.scenario_version != scenario["version"]:
+        raise HTTPException(409, "시나리오 버전이 갱신되었습니다. 같은 seed를 유지한 채 실험을 다시 시작하세요.")
     return scenario
 
 
@@ -346,7 +357,7 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
 *{{box-sizing:border-box}}:root{{--ink:#071d24;--cyan:#00a8b5;--amber:#ffb21d;--paper:#f6f9f8}}body{{margin:0;background:var(--ink);font-family:'Malgun Gothic',sans-serif;color:var(--ink);overflow:hidden}}
 .slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
 </style></head><body>
-<section class='slide dark active'><span class='label'>VIRTUAL FAB · {safe_process} · INTERVIEW BRIEF</span><div><h1>{safe_title}</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
+<section class='slide dark active'><span class='label'>VIRTUAL FAB · {safe_process} · INTERVIEW BRIEF</span><div><h1>{safe_title}</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p><p>scenario v{html.escape(state.scenario_version)} · seed {state.seed}</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
 <section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>{safe_tagline}</h2><p>{situation_facts}</p><p><b>제한:</b> {html.escape(scenario['incident']['deadline'])}</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 공정 이상 신호 도식'></section>
 <section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·설비 편중과 조건별 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
@@ -388,7 +399,14 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
     if request.stage != expected:
         raise HTTPException(409, f"현재 단계는 {expected}입니다.")
 
-    record: dict[str, Any] = {"stage": request.stage, "choice": request.choice, "payload": request.payload}
+    record: dict[str, Any] = {
+        "decision_no": len(state.history) + 1,
+        "stage": request.stage,
+        "choice": request.choice,
+        "payload": request.payload,
+        "scenario_version": state.scenario_version,
+        "seed": state.seed,
+    }
     feedback = "판단이 기록되었습니다."
 
     if request.stage == "incident":
@@ -484,11 +502,20 @@ def get_scenario(scenario_id: str) -> dict[str, Any]:
 
 
 @app.post("/api/sessions", response_model=SessionState)
-def create_session(scenario_id: str = "photo-cd-drift") -> SessionState:
+def create_session(scenario_id: str = "photo-cd-drift", seed: int | None = None) -> SessionState:
     scenario = SCENARIOS.get(scenario_id)
     if not scenario:
         raise HTTPException(404, "시나리오를 찾을 수 없습니다.")
-    state = SessionState(id=str(uuid4()), scenario_id=scenario_id, budget=scenario["limits"]["budget"], time_left=scenario["limits"]["time"])
+    if seed is not None and not 0 <= seed <= 2_147_483_647:
+        raise HTTPException(422, "seed는 0 이상 2147483647 이하의 정수여야 합니다.")
+    state = SessionState(
+        id=str(uuid4()),
+        scenario_id=scenario_id,
+        scenario_version=scenario["version"],
+        seed=seed if seed is not None else secrets.randbelow(2_147_483_648),
+        budget=scenario["limits"]["budget"],
+        time_left=scenario["limits"]["time"],
+    )
     save_session(state)
     return state
 
@@ -526,8 +553,17 @@ def restart(session_id: str) -> SessionState:
     previous = load_session(session_id)
     if not previous:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    scenario = scenario_for(previous)
-    state = SessionState(id=session_id, scenario_id=previous.scenario_id, budget=scenario["limits"]["budget"], time_left=scenario["limits"]["time"])
+    scenario = SCENARIOS.get(previous.scenario_id)
+    if not scenario:
+        raise HTTPException(409, "이 세션의 시나리오를 더 이상 찾을 수 없습니다.")
+    state = SessionState(
+        id=session_id,
+        scenario_id=previous.scenario_id,
+        scenario_version=scenario["version"],
+        seed=previous.seed,
+        budget=scenario["limits"]["budget"],
+        time_left=scenario["limits"]["time"],
+    )
     save_session(state)
     return state
 

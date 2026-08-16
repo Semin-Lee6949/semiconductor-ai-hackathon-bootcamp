@@ -21,6 +21,7 @@ export function EvidenceDrawer({ open, scenario, session, onClose }: { open: boo
   return <div className="drawer-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
     <aside className="evidence-drawer" role="dialog" aria-modal="true" aria-labelledby="evidence-title">
       <header><div><span>REACT LIVE STATE</span><h2 id="evidence-title">Evidence trail</h2></div><button type="button" onClick={onClose} aria-label="Evidence 닫기">×</button></header>
+      <p className="run-metadata">scenario v{session.scenario_version} · seed {session.seed}</p>
       <div className="drawer-summary"><span>점수 <b>{session.score}</b></span><span>예산 <b>{session.budget}</b></span><span>시간 <b>{session.time_left}m</b></span></div>
       {session.history.length === 0 ? <p className="drawer-empty">첫 판단을 기록하면 이곳에 근거가 누적돼.</p> : <ol>
         {session.history.map((item, index) => {
@@ -29,7 +30,7 @@ export function EvidenceDrawer({ open, scenario, session, onClose }: { open: boo
           const prompt = String(item.payload?.prompt ?? '')
           const response = String(item.payload?.llm_response ?? '')
           const model = String(item.payload?.llm_model ?? '')
-          return <li key={`${item.stage}-${index}`}><span>{String(index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'coach' && <details><summary>{model} 질문·답변</summary><strong>PROMPT</strong><p>{prompt}</p><strong>RESPONSE</strong><p>{response}</p></details>}</div></li>
+          return <li key={`${item.stage}-${index}`}><span>{String(item.decision_no ?? index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'coach' && <details><summary>{model} 질문·답변</summary><strong>PROMPT</strong><p>{prompt}</p><strong>RESPONSE</strong><p>{response}</p></details>}</div></li>
         })}
       </ol>}
       <p className="drawer-note">현재 단계의 입력을 바꾸지 않고 완료된 판단만 보여줘.</p>

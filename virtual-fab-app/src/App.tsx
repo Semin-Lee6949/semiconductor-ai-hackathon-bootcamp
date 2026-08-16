@@ -169,6 +169,7 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
   return <div className="result-panel">
     <h1>{session.verdict}</h1>
     <p>점수 {session.score}/100 · 남은 예산 {session.budget} · 남은 시간 {session.time_left}분</p>
+    <p className="run-metadata">scenario v{session.scenario_version} · seed {session.seed}</p>
     <h2>Evidence trail</h2>
     <ol>{session.history.map((item, index) => (
       <li key={`${item.stage}-${index}`}>
@@ -220,7 +221,7 @@ function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack
         </aside>
       </section>
       <EvidenceDrawer open={drawerOpen} scenario={scenario} session={session} onClose={() => setDrawerOpen(false)}/>
-      <footer><p>{scenario.notice}</p><p>React · Three.js · FastAPI / scenario v{scenario.version}</p></footer>
+      <footer><p>{scenario.notice}</p><p>scenario v{session.scenario_version} · seed {session.seed}</p></footer>
     </main>
   )
 }

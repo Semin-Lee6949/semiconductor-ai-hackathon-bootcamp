@@ -54,9 +54,12 @@ export type Scenario = {
 export type ScenarioSummary = Pick<Scenario, 'id' | 'module_no' | 'process' | 'title' | 'tagline' | 'skills' | 'badge' | 'version'>
 
 export type HistoryItem = {
+  decision_no?: number
   stage: StageId
   choice: string
   payload: Record<string, unknown>
+  scenario_version?: string
+  seed?: number
   tools?: string[]
   cost?: number
   time?: number
@@ -66,6 +69,8 @@ export type HistoryItem = {
 export type SessionState = {
   id: string
   scenario_id: string
+  scenario_version: string
+  seed: number
   stage_index: number
   budget: number
   time_left: number

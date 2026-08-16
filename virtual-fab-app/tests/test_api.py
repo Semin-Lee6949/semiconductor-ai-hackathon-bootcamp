@@ -1,3 +1,6 @@
+import json
+import sqlite3
+
 from fastapi.testclient import TestClient
 
 import backend.main as main
@@ -9,6 +12,12 @@ def new_session(scenario_id: str = "photo-cd-drift") -> str:
     response = client.post("/api/sessions", params={"scenario_id": scenario_id})
     assert response.status_code == 200
     return response.json()["id"]
+
+
+def new_seeded_session(seed: int, scenario_id: str = "photo-cd-drift") -> dict:
+    response = client.post("/api/sessions", params={"scenario_id": scenario_id, "seed": seed})
+    assert response.status_code == 200
+    return response.json()
 
 
 def decide(session_id: str, stage: str, choice: str, payload=None):
@@ -98,3 +107,47 @@ def test_session_is_persisted_in_sqlite():
     assert restored is not None
     assert restored.stage_index == 1
     assert restored.history[0]["choice"] == "hold"
+
+
+def test_seeded_runs_are_reproducible_and_auditable():
+    first = new_seeded_session(20260816)
+    second = new_seeded_session(20260816)
+
+    assert first["id"] != second["id"]
+    assert first["scenario_version"] == main.PHOTO_SCENARIO["version"]
+    assert first["seed"] == second["seed"] == 20260816
+
+    first_result = decide(first["id"], "incident", "hold").json()["state"]
+    second_result = decide(second["id"], "incident", "hold").json()["state"]
+    assert first_result["score"] == second_result["score"] == 10
+    assert first_result["evidence"] == second_result["evidence"]
+    assert first_result["history"] == second_result["history"]
+    assert first_result["history"][0]["decision_no"] == 1
+    assert first_result["history"][0]["scenario_version"] == main.PHOTO_SCENARIO["version"]
+    assert first_result["history"][0]["seed"] == 20260816
+
+
+def test_restart_keeps_seed_for_path_comparison():
+    state = new_seeded_session(77)
+    decide(state["id"], "incident", "hold")
+    restarted = client.post(f"/api/sessions/{state['id']}/restart")
+    assert restarted.status_code == 200
+    assert restarted.json()["seed"] == 77
+    assert restarted.json()["scenario_version"] == main.PHOTO_SCENARIO["version"]
+    assert restarted.json()["history"] == []
+
+
+def test_legacy_session_gets_a_stable_seed_and_current_version():
+    session_id = "00000000-0000-0000-0000-000000000123"
+    legacy_state = {"id": session_id, "scenario_id": "photo-cd-drift", "budget": 80, "time_left": 60}
+    with sqlite3.connect(main.DB_PATH) as connection:
+        connection.execute(
+            "INSERT OR REPLACE INTO sessions(id, state_json, updated_at) VALUES(?, ?, ?)",
+            (session_id, json.dumps(legacy_state), 2_000_000_000),
+        )
+
+    first = main.load_session(session_id)
+    second = main.load_session(session_id)
+    assert first is not None and second is not None
+    assert first.seed == second.seed
+    assert first.scenario_version == main.PHOTO_SCENARIO["version"]
