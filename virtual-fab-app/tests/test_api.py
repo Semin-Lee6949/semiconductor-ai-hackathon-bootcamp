@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from backend.main import app
+import backend.main as main
 
-client = TestClient(app)
+client = TestClient(main.app)
 
 
 def new_session() -> str:
@@ -58,3 +58,20 @@ def test_out_of_order_decision_is_rejected():
     session_id = new_session()
     response = decide(session_id, "data", "distribution")
     assert response.status_code == 409
+
+
+def test_deepseek_response_includes_model_and_usage(monkeypatch):
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    monkeypatch.setattr(main, "deepseek_generate", lambda prompt, user_id: {
+        "response": "Dose, 현상 균일도, 계측 편향 가설을 위치별 분포와 교차 측정으로 반증하세요.",
+        "model": "deepseek-v4-flash",
+        "usage": {"prompt_tokens": 120, "completion_tokens": 80, "total_tokens": 200},
+    })
+    response = client.post(
+        f"/api/sessions/{session_id}/deepseek",
+        json={"prompt": "Photo CD edge 산포의 경쟁 가설과 최소 반증 증거를 제안해줘."},
+    )
+    assert response.status_code == 200
+    assert response.json()["model"] == "deepseek-v4-flash"
+    assert response.json()["usage"]["total_tokens"] == 200

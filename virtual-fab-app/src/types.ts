@@ -57,6 +57,12 @@ export type Decision = {
 
 export type DecisionResult = { state: SessionState; feedback: string }
 
+export type DeepSeekResponse = {
+  response: string
+  model: string
+  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+}
+
 export type ReportPayload = {
   opinion: string
   presenter: string

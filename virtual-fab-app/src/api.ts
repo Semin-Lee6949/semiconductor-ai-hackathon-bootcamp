@@ -1,4 +1,4 @@
-import type { Decision, DecisionResult, ReportPayload, Scenario, SessionState } from './types'
+import type { Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenario, SessionState } from './types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -20,6 +20,11 @@ export const api = {
     request<DecisionResult>(`sessions/${sessionId}/decisions`, {
       method: 'POST',
       body: JSON.stringify({ ...decision, payload: decision.payload ?? {} }),
+    }),
+  deepseek: (sessionId: string, prompt: string) =>
+    request<DeepSeekResponse>(`sessions/${sessionId}/deepseek`, {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
     }),
   report: async (sessionId: string, payload: ReportPayload) => {
     const response = await fetch(`${BASE}api/sessions/${sessionId}/report`, {

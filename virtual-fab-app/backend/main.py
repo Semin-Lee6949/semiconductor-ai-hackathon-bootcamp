@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import base64
 import html
+import json
+import os
 from pathlib import Path
 from typing import Any, Literal
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +17,9 @@ from pydantic import BaseModel, Field
 
 APP_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = APP_DIR / "dist"
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
+DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
 
 TOOLS: dict[str, dict[str, Any]] = {
@@ -51,6 +58,10 @@ class DecisionRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
+class DeepSeekRequest(BaseModel):
+    prompt: str = Field(min_length=20, max_length=2000)
+
+
 class ReportRequest(BaseModel):
     opinion: str = Field(min_length=40, max_length=3000)
     presenter: str = Field(default="지원자", max_length=80)
@@ -83,6 +94,63 @@ CHOICE_LABELS = {
     "select": "정보가치 기반 분석 툴 선택",
     "controlled": "한정 적용 후 모니터링", "direct": "전체 Lot 즉시 적용", "release": "검증 없이 해제",
 }
+
+
+def deepseek_generate(prompt: str, user_id: str) -> dict[str, Any]:
+    if not DEEPSEEK_API_KEY:
+        raise HTTPException(503, "DeepSeek API 키가 아직 설정되지 않았습니다. 외부 AI 복사·붙여넣기를 이용하세요.")
+    body = json.dumps({
+        "model": DEEPSEEK_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "당신은 반도체 Photo 공정 학습자의 소크라테스식 멘토다. "
+                    "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
+                    "정답을 단정하지 말고 경쟁 가설 3개, 각 가설을 반증할 최소 증거, "
+                    "가장 먼저 할 저비용 측정을 한국어로 간결하게 제안한다."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "교육용 관찰: 현상 후 wafer edge CD 산포와 결함률이 증가했지만 평균 CD는 규격 안이다.\n"
+                    f"학습자 질문: {prompt}"
+                ),
+            },
+        ],
+        "thinking": {"type": "disabled"},
+        "temperature": 0.2,
+        "max_tokens": 500,
+        "user_id": user_id,
+    }).encode("utf-8")
+    request = Request(
+        DEEPSEEK_URL,
+        data=body,
+        headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
+    )
+    try:
+        with urlopen(request, timeout=90) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = "인증 또는 잔액을 확인하세요." if exc.code in {401, 402, 403} else "잠시 후 다시 시도하세요."
+        raise HTTPException(502, f"DeepSeek API 호출 실패 ({exc.code}). {detail}") from exc
+    except (URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise HTTPException(502, "DeepSeek API 응답을 받지 못했습니다. 복사·붙여넣기 방식으로 계속할 수 있습니다.") from exc
+    choices = result.get("choices", [])
+    content = str(choices[0].get("message", {}).get("content", "")).strip() if choices else ""
+    if not content:
+        raise HTTPException(502, "DeepSeek API가 빈 답변을 반환했습니다.")
+    usage = result.get("usage", {})
+    return {
+        "response": content,
+        "model": str(result.get("model") or DEEPSEEK_MODEL),
+        "usage": {
+            "prompt_tokens": int(usage.get("prompt_tokens", 0) or 0),
+            "completion_tokens": int(usage.get("completion_tokens", 0) or 0),
+            "total_tokens": int(usage.get("total_tokens", 0) or 0),
+        },
+    }
 
 
 def svg_data_uri(svg: str) -> str:
@@ -269,6 +337,16 @@ def get_session(session_id: str) -> SessionState:
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     return state
+
+
+@app.post("/api/sessions/{session_id}/deepseek")
+def deepseek(session_id: str, request: DeepSeekRequest) -> dict[str, Any]:
+    state = SESSIONS.get(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if state.completed or current_stage(state) != "coach":
+        raise HTTPException(409, "LLM Coach 단계에서만 DeepSeek을 호출할 수 있습니다.")
+    return deepseek_generate(request.prompt, session_id.replace("-", ""))
 
 
 @app.post("/api/sessions/{session_id}/decisions")

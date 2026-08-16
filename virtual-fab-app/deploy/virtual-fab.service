@@ -9,6 +9,7 @@ ExecStart=/home/waterfirst/.cokacdir/workspace/syctizfu/semiconductor-ai-hackath
 Restart=always
 RestartSec=3
 Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/home/waterfirst/.cokacdir/workspace/syctizfu/semiconductor-ai-hackathon-bootcamp/virtual-fab-app/.env
 NoNewPrivileges=true
 PrivateTmp=true
 
