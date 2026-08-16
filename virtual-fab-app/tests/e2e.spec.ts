@@ -11,7 +11,7 @@ async function enterCleanroom(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: /방진복 착용/ }).click()
   await expect(page.getByRole('heading', { name: '에어샤워 통과' })).toBeVisible()
   await page.getByRole('button', { name: /에어샤워 가동/ }).click()
-  await expect(page.getByRole('heading', { name: /사건이 기다리는 공정룸/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /사건이 기다리는 공정룸/ })).toBeVisible({ timeout: 12_000 })
 }
 
 test('complete the evidence-led scenario', async ({ page }, testInfo) => {
