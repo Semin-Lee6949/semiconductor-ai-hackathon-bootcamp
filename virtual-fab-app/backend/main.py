@@ -371,6 +371,12 @@ def provider_json_request(url: str, headers: dict[str, str], body: dict[str, Any
         with urlopen(request, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
+        provider_detail = ""
+        try:
+            error_payload = json.loads(exc.read().decode("utf-8"))
+            provider_detail = str(error_payload.get("error", {}).get("message", "")).strip()
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            provider_detail = ""
         if exc.code in {401, 403}:
             message = "API 키 인증에 실패했습니다. 키의 상태와 권한을 확인하세요."
         elif exc.code == 404:
@@ -379,6 +385,8 @@ def provider_json_request(url: str, headers: dict[str, str], body: dict[str, Any
             message = "제공사의 사용량 또는 결제 한도에 도달했습니다."
         else:
             message = f"제공사 API 요청에 실패했습니다 ({exc.code})."
+        if provider_detail and exc.code not in {401, 403}:
+            message = f"{message} 제공사 응답: {provider_detail[:300]}"
         raise HTTPException(502, message) from exc
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise HTTPException(502, "제공사 API 응답을 30초 안에 확인하지 못했습니다.") from exc
@@ -567,9 +575,7 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
     elif provider == "gemini":
         encoded_model = quote(model.removeprefix("models/"), safe="-._:")
         endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent"
-        generation_config: dict[str, Any] = {"maxOutputTokens": 4096}
-        if model.removeprefix("models/").startswith("gemini-3"):
-            generation_config["thinkingConfig"] = {"thinkingLevel": "low"}
+        generation_config: dict[str, Any] = {"maxOutputTokens": 8192}
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "model" if item["role"] == "assistant" else "user", "parts": [{"text": item["content"]}]} for item in messages],
@@ -583,7 +589,7 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         retry_count = 0
         if finish_reason == "MAX_TOKENS" and len(content) < 400:
             retry_count = 1
-            retry_body = {**body, "generationConfig": {"maxOutputTokens": 8192, **({"thinkingConfig": {"thinkingLevel": "minimal"}} if model.removeprefix("models/").startswith("gemini-3") else {})}}
+            retry_body = {**body, "generationConfig": {"maxOutputTokens": 16384}}
             result = provider_json_request(endpoint, {"x-goog-api-key": api_key}, retry_body)
             candidates = result.get("candidates", [])
             parts = candidates[0].get("content", {}).get("parts", []) if candidates else []

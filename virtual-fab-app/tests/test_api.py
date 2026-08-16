@@ -339,7 +339,7 @@ def test_all_provider_responses_are_normalized(monkeypatch):
         assert result["usage"]["total_tokens"] > 0
 
 
-def test_gemini_retries_short_max_token_response_with_low_thinking(monkeypatch):
+def test_gemini_retries_short_max_token_response_with_larger_limit(monkeypatch):
     calls = []
     truncated = {
         "candidates": [{"content": {"parts": [{"text": "**데이터 근거**\n합성 데이터는 총 42행이며,"}]}, "finishReason": "MAX_TOKENS"}],
@@ -361,8 +361,8 @@ def test_gemini_retries_short_max_token_response_with_low_thinking(monkeypatch):
         "CD와 Dose를 사용해 합성 CSV를 분석해줘.", main.PHOTO_SCENARIO,
     )
     assert len(calls) == 2
-    assert calls[0]["generationConfig"] == {"maxOutputTokens": 4096, "thinkingConfig": {"thinkingLevel": "low"}}
-    assert calls[1]["generationConfig"] == {"maxOutputTokens": 8192, "thinkingConfig": {"thinkingLevel": "minimal"}}
+    assert calls[0]["generationConfig"] == {"maxOutputTokens": 8192}
+    assert calls[1]["generationConfig"] == {"maxOutputTokens": 16384}
     assert result["response"] == complete_text.strip()
     assert result["finish_reason"] == "STOP"
     assert result["retry_count"] == 1

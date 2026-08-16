@@ -34,6 +34,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
   const [callsMade, setCallsMade] = useState(Number.isFinite(callsUsed) ? callsUsed : 0)
   const [status, setStatus] = useState<'idle' | 'checking' | 'connected' | 'running'>('idle')
   const [message, setMessage] = useState('')
+  const [requestError, setRequestError] = useState('')
   const [chatOpen, setChatOpen] = useState(false)
   const [copyStatus, setCopyStatus] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -43,6 +44,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
   useEffect(() => {
     setStatus('idle')
     setMessage('')
+    setRequestError('')
   }, [provider, model, apiKey])
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
   }
 
   const checkConnection = async () => {
-    setStatus('checking'); setMessage('')
+    setStatus('checking'); setMessage(''); setRequestError('')
     try {
       const result = await api.checkPersonalAI(sessionId, { provider, model: model.trim(), api_key: apiKey.trim() })
       setModel(result.model)
@@ -78,12 +80,12 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
       setMessage(`${result.provider_label} · ${result.model} 연결 확인 완료`)
     } catch (cause) {
       setStatus('idle')
-      setMessage(cause instanceof Error ? cause.message : '연결을 확인하지 못했어.')
+      setRequestError(cause instanceof Error ? cause.message : '연결을 확인하지 못했어.')
     }
   }
 
   const runPrompt = async () => {
-    setStatus('running'); setMessage('')
+    setStatus('running'); setMessage(''); setRequestError('')
     try {
       const result = await api.generatePersonalAI(sessionId, { provider, model: model.trim(), api_key: apiKey.trim() }, prompt)
       onResult(result)
@@ -94,7 +96,8 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
       setMessage(`${result.provider_label} 응답 완료 · 총 ${result.usage.total_tokens.toLocaleString()} tokens`)
     } catch (cause) {
       setStatus('connected')
-      setMessage(cause instanceof Error ? cause.message : 'AI 응답을 받지 못했어.')
+      setRequestError(cause instanceof Error ? cause.message : 'AI 응답을 받지 못했어.')
+      setChatOpen(true)
     }
   }
 
@@ -126,6 +129,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
     </div>
     {conversation.length > 0 && <button type="button" className="open-ai-chat" onClick={() => setChatOpen(true)}>AI 대화창 열기 · {conversation.length}/15</button>}
     {message && <p className={status === 'connected' ? 'connection-status' : 'inline-error'} role="status">{message}</p>}
+    {requestError && <p className="inline-error" role="alert">{requestError}</p>}
     <small>{promptReady ? '연결 확인은 생성 비용을 발생시키지 않아. 문답 비용·쿼터는 개인 제공사 계정에 적용되고 세션당 최대 15회야.' : '질문에 위 공정 핵심 키워드를 1개 이상 포함해야 전송할 수 있어.'}</small>
   </section>{chatOpen && createPortal(
     <div className="ai-chat-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setChatOpen(false) }}>
@@ -144,6 +148,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
           </div>
           <aside className="ai-chat-composer">
             <div><span>NEXT TURN</span><b>응답을 읽고 후속 질문</b><p>동의·반박·누락된 증거를 짚고 다음 질문을 수정해. 공정 키워드를 최소 1개 포함해야 해.</p></div>
+            {requestError && <div className="chat-request-error" role="alert"><b>새 응답을 받지 못했어</b><p>{requestError}</p><button type="button" onClick={runPrompt} disabled={status === 'running'}>{status === 'running' ? '재시도 중…' : '같은 질문 다시 시도'}</button></div>}
             <label>다음 질문<textarea ref={followUpRef} value={prompt} onChange={(event) => onPromptChange(event.target.value)} placeholder="방금 답변에서 검증이 필요한 가설과 공정 키워드를 넣어 후속 질문을 작성해." /></label>
             <p className={`chat-prompt-status ${promptReady ? 'ready' : ''}`}>{promptReady ? conversation.length < 8 ? `심층 분석까지 ${8 - conversation.length}회 · 전체 ${15 - callsMade}회 남음` : `필수 문답 완료 · ${15 - callsMade}회 추가 가능` : '공정 핵심 키워드를 추가해야 해.'}</p>
             <button type="button" className="chat-send" onClick={runPrompt} disabled={status !== 'connected' || prompt.trim().length < 10 || !promptReady || exhausted}>{status === 'running' ? 'AI 답변 기다리는 중…' : exhausted ? '15회 문답 완료' : '후속 질문 보내기'}</button>

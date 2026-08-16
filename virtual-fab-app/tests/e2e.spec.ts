@@ -153,3 +153,26 @@ test('continue personal AI dialogue inside an automatic response popup', async (
   await responseField.fill(`${mockResponse} 사람이 수정한 문장.`)
   await expect(responseField).toHaveValue(/사람이 수정한 문장/)
 })
+
+test('show Gemini request failures inside the dialogue popup', async ({ page }) => {
+  await page.route('**/api/sessions/*/llm/check', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ status: 'connected', provider: 'gemini', provider_label: 'Google Gemini', model: 'gemini-3.5-flash' }),
+  }))
+  await page.route('**/api/sessions/*/llm/generate', (route) => route.fulfill({
+    status: 502,
+    contentType: 'application/json',
+    body: JSON.stringify({ detail: '제공사 API 요청에 실패했습니다 (400). 제공사 응답: generationConfig 설정을 확인하세요.' }),
+  }))
+  await page.goto('/#photo-cd-drift')
+  await page.getByRole('button', { name: /Lot 보류/ }).click()
+  await page.getByRole('button', { name: /판단을 기록하고/ }).click()
+  await page.getByLabel('개인 API 키').fill('test-key-with-more-than-20-characters')
+  await page.getByRole('button', { name: '1. 연결 확인' }).click()
+  await page.getByRole('button', { name: '2. 질문 보내기' }).click()
+  const chat = page.getByRole('dialog', { name: 'AI와 공정 문제 좁히기' })
+  await expect(chat).toBeVisible()
+  await expect(chat).toContainText('새 응답을 받지 못했어')
+  await expect(chat).toContainText('generationConfig 설정을 확인하세요.')
+  await expect(chat.getByRole('button', { name: '같은 질문 다시 시도' })).toBeVisible()
+})
