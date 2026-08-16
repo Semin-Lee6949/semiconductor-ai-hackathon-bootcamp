@@ -1,4 +1,13 @@
-export type StageId = 'incident' | 'coach' | 'data' | 'experiment' | 'analysis' | 'validation'
+export type StageId = 'incident' | 'investigation' | 'experiment' | 'analysis' | 'validation'
+
+export type AIExchange = {
+  turn_no: number
+  question: string
+  response: string
+  provider_label: string
+  model: string
+  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+}
 
 export type Tool = {
   label: string
@@ -77,6 +86,8 @@ export type SessionState = {
   score: number
   llm_check_attempts: number
   llm_call_count: number
+  dataset_downloaded: boolean
+  ai_conversation: AIExchange[]
   evidence: string[]
   history: HistoryItem[]
   completed: boolean
@@ -115,6 +126,7 @@ export type BYOKConnection = {
 export type BYOKResponse = DeepSeekResponse & {
   provider: AIProvider
   provider_label: string
+  turn_no?: number
 }
 
 export type ReportPayload = {

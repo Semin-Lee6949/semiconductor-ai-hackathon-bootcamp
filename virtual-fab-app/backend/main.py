@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import html
+import io
 import json
 import os
 import re
@@ -32,7 +34,7 @@ DB_LOCK = Lock()
 RATE_LOCK = Lock()
 LLM_RATE_WINDOW: dict[str, list[float]] = {}
 VERIFIED_BYOK: dict[str, tuple[str, str, str]] = {}
-STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
+STAGES = ["incident", "investigation", "experiment", "analysis", "validation"]
 AI_PROVIDERS = {"openai": "OpenAI", "anthropic": "Anthropic", "gemini": "Google Gemini", "deepseek": "DeepSeek"}
 MODEL_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$")
 
@@ -49,8 +51,7 @@ TOOLS: dict[str, dict[str, Any]] = {
 
 BASE_STAGES = [
     {"id": "incident", "label": "문제 발생", "station": "alert"},
-    {"id": "coach", "label": "LLM Coach", "station": "coach", "brief": "AI에게 정답이 아니라 경쟁 가설·반증 증거·누락 변수를 질문한다."},
-    {"id": "data", "label": "데이터 판단", "station": "data", "brief": "Train 데이터의 결측·중복·단위·설비 편중과 위치별 분포를 확인한다."},
+    {"id": "investigation", "label": "데이터·AI 공동분석", "station": "coach", "brief": "합성 원시 데이터를 내려받아 품질과 분포를 확인하고, AI와 최대 15회 문답하며 경쟁 가설과 반증 순서를 좁힌다."},
     {"id": "experiment", "label": "실험계획", "station": "doe", "brief": "대조군·요인·수준·반복·판정기준을 고정한다."},
     {"id": "analysis", "label": "분석 툴", "station": "analysis", "brief": "구조·화학·전기 분석을 비용·시간·정보가치로 선택한다."},
     {"id": "validation", "label": "검증", "station": "validation", "brief": "Holdout과 재실험 결과로 조치 범위를 결정한다."},
@@ -69,7 +70,7 @@ PHOTO_SCENARIO = {
     "tagline": "평균 CD는 정상인데 Edge 결함이 급증했다.",
     "skills": ["공간 분포", "DOE", "CD 계측"],
     "badge": "LIVE · 검증 완료",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
     "coach_prompt": "Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.",
     "experiment_label": "Dose·Focus·PEB Screening",
@@ -95,7 +96,7 @@ PHOTO_SCENARIO = {
 
 DRY_ETCH_SCENARIO = {
     "id": "dry-etch-profile", "module_no": "02", "process": "DRY ETCH", "title": "기울어진 Sidewall", "tagline": "식각 깊이는 맞지만 Sidewall 각도가 무너졌다.",
-    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Dry Etch 깊이는 정상인데 Sidewall angle과 edge residue가 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·RF Bias·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · edge residue index", "aria": "웨이퍼 중심에서 가장자리로 갈수록 잔류물 지수가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 56, "risk_from": 9, "bars": [27, 28, 29, 31, 33, 35, 39, 43, 49, 57, 63, 70, 78, 86]},
     "incident": {"case_id": "VF-DE-02", "role": "Dry Etch 공정기술 엔지니어", "deadline": "후속 세정·계측 판정까지 75분",
@@ -107,7 +108,7 @@ DRY_ETCH_SCENARIO = {
 
 SPUTTER_SCENARIO = {
     "id": "sputter-sheet-resistance", "module_no": "03", "process": "SPUTTER", "title": "같은 두께, 다른 저항", "tagline": "막 두께는 정상인데 Sheet resistance가 흔들린다.",
-    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Sputter 막 두께는 정상인데 sheet resistance가 edge에서 상승한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Power·Pressure·Ar Flow Screening",
     "signal": {"title": "합성 Train 데이터 · sheet resistance", "aria": "웨이퍼 중심에서 가장자리로 갈수록 면저항이 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 58, "risk_from": 10, "bars": [34, 35, 34, 36, 37, 39, 42, 44, 47, 51, 59, 65, 73, 80]},
     "incident": {"case_id": "VF-SP-03", "role": "Sputter 박막 공정 엔지니어", "deadline": "후속 Patterning 투입까지 70분",
@@ -119,7 +120,7 @@ SPUTTER_SCENARIO = {
 
 CVD_SCENARIO = {
     "id": "cvd-film-uniformity", "module_no": "04", "process": "CVD", "title": "막은 쌓였지만 같지 않다", "tagline": "평균 두께 뒤에 균일도와 막질 이상이 숨어 있다.",
-    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CVD 평균 두께는 정상인데 wafer 균일도와 굴절률이 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Temperature·Pressure·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · thickness non-uniformity", "aria": "웨이퍼 중심에서 가장자리로 갈수록 두께 불균일도가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 53, "risk_from": 8, "bars": [24, 26, 29, 30, 33, 37, 42, 48, 55, 61, 68, 74, 81, 88]},
     "incident": {"case_id": "VF-CV-04", "role": "CVD 박막 공정기술 엔지니어", "deadline": "후속 Lithography 투입까지 90분",
@@ -131,7 +132,7 @@ CVD_SCENARIO = {
 
 CMP_SCENARIO = {
     "id": "cmp-dishing", "module_no": "05", "process": "CMP", "title": "평탄화 뒤의 함몰", "tagline": "평균 제거량은 맞지만 Dense pattern이 꺼졌다.",
-    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CMP 평균 제거량은 정상인데 dense pattern dishing과 edge 잔막이 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·Platen Speed·Slurry Flow Screening",
     "signal": {"title": "합성 Train 데이터 · pattern dishing", "aria": "패턴 밀도가 높아질수록 디싱 값이 증가하는 막대그래프", "start": "ISO", "end": "DENSE", "warning": 55, "risk_from": 9, "bars": [22, 25, 28, 31, 34, 38, 41, 46, 51, 58, 66, 73, 80, 87]},
     "incident": {"case_id": "VF-CM-05", "role": "CMP 공정기술 엔지니어", "deadline": "세정·후속 계측까지 65분",
@@ -143,7 +144,7 @@ CMP_SCENARIO = {
 
 DEVICE_SCENARIO = {
     "id": "device-vth-shift", "module_no": "06", "process": "DEVICE", "title": "오른쪽으로 밀린 I–V", "tagline": "On-current는 통과했지만 Vth와 Off-current가 변했다.",
-    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "소자 On-current는 정상인데 Vth shift와 Off-current가 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Stress Voltage·Time·Temperature Screening",
     "signal": {"title": "합성 Train 데이터 · Vth shift after stress", "aria": "스트레스 시간이 증가할수록 문턱전압 이동이 증가하는 막대그래프", "start": "INITIAL", "end": "STRESS", "warning": 57, "risk_from": 9, "bars": [20, 23, 26, 29, 33, 37, 41, 46, 52, 59, 66, 72, 79, 85]},
     "incident": {"case_id": "VF-DV-06", "role": "소자·신뢰성 평가 엔지니어", "deadline": "Reliability review까지 80분",
@@ -157,7 +158,7 @@ SCENARIOS = {scenario["id"]: scenario for scenario in [PHOTO_SCENARIO, DRY_ETCH_
 
 
 class DecisionRequest(BaseModel):
-    stage: Literal["incident", "coach", "data", "experiment", "analysis", "validation"]
+    stage: Literal["incident", "investigation", "experiment", "analysis", "validation"]
     choice: str = Field(min_length=1, max_length=80)
     payload: dict[str, Any] = Field(default_factory=dict)
 
@@ -173,11 +174,11 @@ class BYOKConnectionRequest(BaseModel):
 
 
 class BYOKGenerateRequest(BYOKConnectionRequest):
-    prompt: str = Field(min_length=20, max_length=2000)
+    prompt: str = Field(min_length=10, max_length=3000)
 
 
 class ReportRequest(BaseModel):
-    opinion: str = Field(min_length=40, max_length=3000)
+    opinion: str = Field(min_length=10, max_length=3000)
     presenter: str = Field(default="지원자", max_length=80)
     target_role: str = Field(default="반도체 공정기술", max_length=120)
 
@@ -193,6 +194,8 @@ class SessionState(BaseModel):
     score: int = 0
     llm_check_attempts: int = 0
     llm_call_count: int = 0
+    dataset_downloaded: bool = False
+    ai_conversation: list[dict[str, Any]] = Field(default_factory=list)
     evidence: list[str] = Field(default_factory=list)
     history: list[dict[str, Any]] = Field(default_factory=list)
     completed: bool = False
@@ -242,7 +245,7 @@ def load_session(session_id: str) -> SessionState | None:
 
 init_db()
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.4.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.5.0")
 
 
 CHOICE_LABELS = {
@@ -291,7 +294,7 @@ def enforce_llm_rate_limit(request: FastAPIRequest) -> None:
     now = time.monotonic()
     with RATE_LOCK:
         recent = [stamp for stamp in LLM_RATE_WINDOW.get(client, []) if now - stamp < 60]
-        if len(recent) >= 10:
+        if len(recent) >= 30:
             raise HTTPException(429, "AI 연결 요청이 너무 많습니다. 1분 뒤 다시 시도하세요.")
         recent.append(now)
         LLM_RATE_WINDOW[client] = recent
@@ -349,21 +352,63 @@ def check_llm_connection(provider: str, model: str, api_key: str) -> dict[str, s
     return {"status": "connected", "provider": provider, "provider_label": AI_PROVIDERS[provider], "model": resolved}
 
 
-def coach_messages(prompt: str, scenario: dict[str, Any]) -> tuple[str, str]:
+def dataset_rows(state: SessionState, scenario: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    bars = scenario["signal"]["bars"]
+    for lot_index in range(3):
+        for position_index, base_value in enumerate(bars):
+            jitter = ((state.seed + lot_index * 17 + position_index * 11) % 9 - 4) / 10
+            zone = "CENTER" if position_index < 5 else "MIDDLE" if position_index < 9 else "EDGE"
+            rows.append({
+                "scenario_version": state.scenario_version,
+                "seed": state.seed,
+                "lot_id": f"SYN-{lot_index + 1:02d}",
+                "tool_id": f"SIM-{(lot_index % 2) + 1}",
+                "wafer_zone": zone,
+                "position_index": position_index + 1,
+                "metric_value": round(float(base_value) + jitter, 2),
+                "unit": "synthetic_index",
+                "missing_flag": "Y" if (position_index + lot_index * 5 + state.seed) % 31 == 0 else "N",
+            })
+    return rows
+
+
+def dataset_context(state: SessionState, scenario: dict[str, Any]) -> str:
+    rows = dataset_rows(state, scenario)
+    valid = [row for row in rows if row["missing_flag"] == "N"]
+    zones = {zone: [float(row["metric_value"]) for row in valid if row["wafer_zone"] == zone] for zone in ("CENTER", "MIDDLE", "EDGE")}
+    means = {zone: round(sum(values) / len(values), 2) if values else None for zone, values in zones.items()}
+    missing = sum(row["missing_flag"] == "Y" for row in rows)
+    return (
+        f"다운로드 데이터는 {len(rows)}행이며 결측 {missing}행이다. "
+        f"영역별 유효 평균은 CENTER {means['CENTER']}, MIDDLE {means['MIDDLE']}, EDGE {means['EDGE']}이다. "
+        "열은 lot_id, tool_id, wafer_zone, position_index, metric_value, unit, missing_flag로 구성된다."
+    )
+
+
+def coach_messages(prompt: str, scenario: dict[str, Any], state: SessionState | None = None) -> tuple[str, list[dict[str, str]]]:
     system = (
         f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
         "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
-        "정답을 단정하지 말고 경쟁 가설 3개, 각 가설을 반증할 최소 증거, "
-        "가장 먼저 할 저비용 측정을 한국어로 간결하게 제안한다."
+        "정답을 단정하지 말고 학습자가 다운로드한 합성 데이터의 품질·분포·누락 변수를 먼저 점검하게 한다. "
+        "경쟁 가설과 반증 증거를 구분하고, 앞선 대화의 불확실성을 이어받아 한국어로 간결하게 답한다."
     )
-    user = (
+    observation = (
         "교육용 관찰: "
         + "; ".join(f"{fact['label']} {fact['value']} ({fact['note']})" for fact in scenario["incident"]["facts"])
         + f". 제한시간은 {scenario['incident']['deadline']}이다. 미확인 항목은 "
         + ", ".join(scenario["incident"]["unknowns"])
-        + f".\n학습자 질문: {prompt}"
+        + (f". 데이터 요약: {dataset_context(state, scenario)}" if state else ".")
     )
-    return system, user
+    messages: list[dict[str, str]] = [{"role": "user", "content": observation}]
+    if state:
+        for exchange in state.ai_conversation[-14:]:
+            question = str(exchange.get("question", ""))[:3000]
+            response = str(exchange.get("response", ""))[:5000]
+            if question and response:
+                messages.extend([{"role": "user", "content": question}, {"role": "assistant", "content": response}])
+    messages.append({"role": "user", "content": prompt})
+    return system, messages
 
 
 def normalize_usage(prompt_tokens: int = 0, completion_tokens: int = 0, total_tokens: int = 0) -> dict[str, int]:
@@ -374,13 +419,13 @@ def normalize_usage(prompt_tokens: int = 0, completion_tokens: int = 0, total_to
     }
 
 
-def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, scenario: dict[str, Any]) -> dict[str, Any]:
-    system, user = coach_messages(prompt, scenario)
+def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, scenario: dict[str, Any], state: SessionState | None = None) -> dict[str, Any]:
+    system, messages = coach_messages(prompt, scenario, state)
     if provider == "openai":
         result = provider_json_request(
             "https://api.openai.com/v1/responses",
             {"Authorization": f"Bearer {api_key}"},
-            {"model": model, "input": [{"role": "system", "content": system}, {"role": "user", "content": user}], "max_output_tokens": 500},
+            {"model": model, "input": [{"role": "system", "content": system}, *messages], "max_output_tokens": 700},
         )
         texts = [
             str(content.get("text", ""))
@@ -394,7 +439,7 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         result = provider_json_request(
             "https://api.anthropic.com/v1/messages",
             {"x-api-key": api_key, "anthropic-version": "2023-06-01"},
-            {"model": model, "max_tokens": 500, "system": system, "messages": [{"role": "user", "content": user}]},
+            {"model": model, "max_tokens": 700, "system": system, "messages": messages},
         )
         content = "\n".join(str(block.get("text", "")) for block in result.get("content", []) if block.get("type") == "text").strip()
         usage_raw = result.get("usage", {})
@@ -404,7 +449,7 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         result = provider_json_request(
             f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent",
             {"x-goog-api-key": api_key},
-            {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": user}]}], "generationConfig": {"maxOutputTokens": 500, "temperature": 0.2}},
+            {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "model" if item["role"] == "assistant" else "user", "parts": [{"text": item["content"]}]} for item in messages], "generationConfig": {"maxOutputTokens": 700, "temperature": 0.2}},
         )
         candidates = result.get("candidates", [])
         parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
@@ -415,7 +460,7 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         result = provider_json_request(
             "https://api.deepseek.com/chat/completions",
             {"Authorization": f"Bearer {api_key}"},
-            {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}], "thinking": {"type": "disabled"}, "temperature": 0.2, "max_tokens": 500},
+            {"model": model, "messages": [{"role": "system", "content": system}, *messages], "thinking": {"type": "disabled"}, "temperature": 0.2, "max_tokens": 700},
         )
         choices = result.get("choices", [])
         content = str(choices[0].get("message", {}).get("content", "")).strip() if choices else ""
@@ -499,17 +544,27 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     safe_opinion = html.escape(request.opinion).replace("\n", "<br>")
     history_by_stage = {item["stage"]: item for item in state.history}
     incident = history_by_stage.get("incident", {})
-    coach = history_by_stage.get("coach", {})
+    investigation = history_by_stage.get("investigation", {})
     analysis = history_by_stage.get("analysis", {})
     validation = history_by_stage.get("validation", {})
     tools = [TOOLS[item]["label"] for item in analysis.get("tools", []) if item in TOOLS]
     metrics = validation.get("payload", {}).get("metrics", {})
-    mentor_text = str(coach.get("payload", {}).get("llm_response", "기록 없음"))[:1500]
-    prompt_text = str(coach.get("payload", {}).get("prompt", "기록 없음"))[:1200]
-    model_text = str(coach.get("payload", {}).get("llm_model", "외부 AI"))[:80]
+    conversation = investigation.get("payload", {}).get("ai_conversation") or state.ai_conversation
+    if not isinstance(conversation, list):
+        conversation = []
+    last_exchange = conversation[-1] if conversation else {}
+    mentor_text = str(last_exchange.get("response") or investigation.get("payload", {}).get("llm_response", "기록 없음"))[:1500]
+    prompt_text = str(last_exchange.get("question") or investigation.get("payload", {}).get("prompt", "기록 없음"))[:1200]
+    model_name = str(last_exchange.get("model") or investigation.get("payload", {}).get("llm_model", "외부 AI"))
+    provider_name = str(last_exchange.get("provider_label", ""))
+    model_text = f"{provider_name} · {model_name}"[:120] if provider_name else model_name[:120]
     safe_mentor = html.escape(mentor_text).replace("\n", "<br>")
     safe_prompt = html.escape(prompt_text).replace("\n", "<br>")
     safe_model = html.escape(model_text)
+    conversation_rows = "".join(
+        f"<li><b>Q{index + 1}</b><span>{html.escape(str(exchange.get('question', ''))[:260])}<br><em>{html.escape(str(exchange.get('response', ''))[:420])}</em></span></li>"
+        for index, exchange in enumerate(conversation[-5:])
+    ) or "<li><b>대화</b><span>기록 없음</span></li>"
     choice_rows = "".join(
         f"<li><b>{html.escape(next(stage['label'] for stage in scenario['stages'] if stage['id'] == item['stage']))}</b>"
         f"<span>{html.escape(CHOICE_LABELS.get(item['choice'], item['choice']))}</span></li>"
@@ -543,12 +598,13 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
 <section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>{safe_tagline}</h2><p>{situation_facts}</p><p><b>제한:</b> {html.escape(scenario['incident']['deadline'])}</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 공정 이상 신호 도식'></section>
 <section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·설비 편중과 조건별 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
-<section class='slide'><span class='label'>AI COLLABORATION · {safe_model}</span><div><h2>질문과 외부 AI 답변을 함께 기록했다</h2><p><b>PROMPT</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 공정 원리·합성 데이터·측정 한계와 대조하고 채택·수정·기각했다.</p></div></section>
+<section class='slide'><span class='label'>DATA · AI COLLABORATION · {safe_model}</span><div><h2>데이터를 내려받고 AI와 {len(conversation)}회 검토했다</h2><p><b>마지막 질문</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 합성 데이터 품질·분포·측정 한계와 대조하고 사람이 최종 판단했다.</p></div></section>
+<section class='slide'><span class='label'>AI DIALOGUE TRACE · LAST 5</span><div><h2>질문이 판단으로 좁혀진 과정</h2><ul>{conversation_rows}</ul></div></section>
 <section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
 <section class='slide dark'><span class='label'>R · RESULT</span><div><h2>{verdict}</h2><div class='metric'><span><b>{state.score}</b>점수</span><span><b>{state.budget}</b>남은 예산</span><span><b>{state.time_left}</b>남은 시간</span></div><p>Baseline {html.escape(str(metrics.get('baseline','-')))} → Holdout {html.escape(str(metrics.get('holdout','-')))}</p></div><small>이 수치는 교육용 합성 입력에 대한 시나리오 결과다.</small></section>
 <section class='slide'><span class='label'>MY DISCUSSION</span><div><h2>내 판단과 한계</h2><blockquote>{safe_opinion}</blockquote></div></section>
-<section class='slide dark'><span class='label'>INTERVIEW CLOSE</span><div><h2>제가 증명한 것은<br><span class='accent'>정답이 아니라 과정</span>입니다</h2><p>문제 정의 → AI 가설 → 데이터 감사 → 실험 → 분석 선택 → Holdout 검증</p><p>질문을 받겠습니다.</p></div></section>
-<div class='counter'><span id='current'>1</span> / <span id='total'>9</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
+<section class='slide dark'><span class='label'>INTERVIEW CLOSE</span><div><h2>제가 증명한 것은<br><span class='accent'>정답이 아니라 과정</span>입니다</h2><p>문제 정의 → 데이터 다운로드 → AI 문답 → 사람의 판단 → 실험 → 분석 선택 → Holdout 검증</p><p>질문을 받겠습니다.</p></div></section>
+<div class='counter'><span id='current'>1</span> / <span id='total'>10</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
 <script>const s=[...document.querySelectorAll('.slide')];let i=0;function show(n){{i=(n+s.length)%s.length;s.forEach((x,j)=>x.classList.toggle('active',j===i));document.getElementById('current').textContent=i+1}}function move(n){{show(i+n)}}document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')move(1);if(e.key==='ArrowLeft')move(-1)}});document.getElementById('total').textContent=s.length;</script>
 </body></html>"""
 
@@ -568,7 +624,7 @@ def final_verdict(state: SessionState) -> str:
         return "증거 공백 · 분석영역 부족"
     if analysis and analysis.get("overanalysis", False):
         return "과잉분석 · 시간·비용 소진"
-    if choices.get("data") == "mean_only":
+    if choices.get("investigation") == "mean_only":
         return "근거 부족 · 평균값 과신"
     return "시나리오 해결 · 입력 증거 기준"
 
@@ -597,20 +653,33 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
         state.score += 10 if request.choice == "hold" else -12
         state.evidence.append("평균과 조건별 분포 분리" if request.choice == "hold" else "대표 평균값만 확인")
         feedback = "Lot을 보류하고 관찰과 원인 추정을 분리했습니다." if request.choice == "hold" else "평균은 정상이나 edge 산포가 다음 단계로 넘어갑니다."
-    elif request.stage == "coach":
-        if (len(str(request.payload.get("prompt", ""))) < 20
-                or len(str(request.payload.get("human_check", ""))) < 20
-                or len(str(request.payload.get("llm_response", ""))) < 20):
-            raise HTTPException(422, "LLM 질문·실제 응답·사람의 검증 계획을 모두 기록하세요.")
-        state.score += 12 if request.choice in {"modify", "reject"} else 6
-        state.evidence.append("LLM 제안 검토")
-        feedback = "AI 제안과 사람의 판단을 분리해 기록했습니다."
-    elif request.stage == "data":
+    elif request.stage == "investigation":
         if request.choice not in {"distribution", "mean_only"}:
             raise HTTPException(422, "지원하지 않는 데이터 판단입니다.")
-        state.score += 18 if request.choice == "distribution" else -10
-        state.evidence.append("Tool·Lot·위치별 분포" if request.choice == "distribution" else "전체 평균")
-        feedback = "설비·Lot·조건별 편중과 경쟁 가설을 확보했습니다." if request.choice == "distribution" else "평균만으로는 조건별 패턴을 설명할 수 없습니다."
+        if not state.dataset_downloaded:
+            raise HTTPException(422, "먼저 합성 원시 데이터 CSV를 다운로드하세요.")
+        supplied_conversation = request.payload.get("ai_conversation", [])
+        if not state.ai_conversation and isinstance(supplied_conversation, list):
+            state.ai_conversation = [
+                {
+                    "turn_no": index + 1,
+                    "question": str(exchange.get("question", ""))[:3000],
+                    "response": str(exchange.get("response", ""))[:5000],
+                    "provider_label": str(exchange.get("provider_label", "외부 AI"))[:80],
+                    "model": str(exchange.get("model", "외부 AI"))[:100],
+                    "usage": exchange.get("usage", {}),
+                }
+                for index, exchange in enumerate(supplied_conversation[:15]) if isinstance(exchange, dict)
+                and len(str(exchange.get("question", ""))) >= 10 and len(str(exchange.get("response", ""))) >= 20
+            ]
+        if not state.ai_conversation:
+            raise HTTPException(422, "AI와 최소 1회 질문·응답을 기록하세요.")
+        if len(str(request.payload.get("human_check", ""))) < 20:
+            raise HTTPException(422, "AI 답변을 어떻게 검증했는지 20자 이상 기록하세요.")
+        request.payload["ai_conversation"] = state.ai_conversation
+        state.score += 30 if request.choice == "distribution" else -20
+        state.evidence.extend(["합성 원시 데이터 CSV", f"AI 문답 {len(state.ai_conversation)}회", "Tool·Lot·위치별 분포" if request.choice == "distribution" else "전체 평균"])
+        feedback = "데이터 품질·분포와 AI 문답을 근거로 사람의 판단을 기록했습니다." if request.choice == "distribution" else "AI 문답이 있어도 평균만으로는 조건별 패턴을 설명할 수 없습니다."
     elif request.stage == "experiment":
         if request.choice not in {"screening", "ofat", "immediate"}:
             raise HTTPException(422, "지원하지 않는 실험계획입니다.")
@@ -707,7 +776,31 @@ def get_session(session_id: str) -> SessionState:
     state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    scenario = SCENARIOS.get(state.scenario_id)
+    if not scenario or state.scenario_version != scenario["version"]:
+        raise HTTPException(409, "학습 흐름이 갱신되어 새 실험을 시작합니다.")
     return state
+
+
+@app.get("/api/sessions/{session_id}/dataset.csv")
+def download_dataset(session_id: str) -> Response:
+    state = load_session(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if state.completed or current_stage(state) != "investigation":
+        raise HTTPException(409, "데이터·AI 공동분석 단계에서 데이터를 다운로드할 수 있습니다.")
+    rows = dataset_rows(state, scenario_for(state))
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()), lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    state.dataset_downloaded = True
+    save_session(state)
+    return Response(
+        content="\ufeff" + output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="virtual-fab-{state.scenario_id}-{state.seed}.csv"'},
+    )
 
 
 @app.post("/api/sessions/{session_id}/llm/check")
@@ -717,8 +810,8 @@ def check_personal_llm(session_id: str, request: BYOKConnectionRequest, http_req
     state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    if state.completed or current_stage(state) != "coach":
-        raise HTTPException(409, "LLM Coach 단계에서만 개인 AI를 연결할 수 있습니다.")
+    if state.completed or current_stage(state) != "investigation":
+        raise HTTPException(409, "데이터·AI 공동분석 단계에서만 개인 AI를 연결할 수 있습니다.")
     if state.llm_check_attempts >= 5:
         raise HTTPException(429, "이 세션의 연결 확인 한도에 도달했습니다.")
     model, api_key = validate_byok_request(request)
@@ -739,19 +832,29 @@ def generate_personal_llm(session_id: str, request: BYOKGenerateRequest, http_re
     state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    if state.completed or current_stage(state) != "coach":
-        raise HTTPException(409, "LLM Coach 단계에서만 개인 AI를 호출할 수 있습니다.")
-    if state.llm_call_count >= 2:
-        raise HTTPException(429, "이 세션의 AI 분석 한도 2회에 도달했습니다.")
+    if state.completed or current_stage(state) != "investigation":
+        raise HTTPException(409, "데이터·AI 공동분석 단계에서만 개인 AI를 호출할 수 있습니다.")
+    if state.llm_call_count >= 15:
+        raise HTTPException(429, "이 세션의 AI 문답 한도 15회에 도달했습니다.")
     model, api_key = validate_byok_request(request)
     with RATE_LOCK:
         verified = VERIFIED_BYOK.get(session_id)
     expected = (request.provider, model, byok_fingerprint(api_key))
     if verified != expected:
         raise HTTPException(409, "먼저 현재 제공사·모델·API 키의 연결을 확인하세요.")
+    result = generate_with_byok(request.provider, model, api_key, request.prompt, scenario_for(state), state)
     state.llm_call_count += 1
+    exchange = {
+        "turn_no": state.llm_call_count,
+        "question": request.prompt,
+        "response": result["response"],
+        "provider_label": result["provider_label"],
+        "model": result["model"],
+        "usage": result["usage"],
+    }
+    state.ai_conversation.append(exchange)
     save_session(state)
-    return generate_with_byok(request.provider, model, api_key, request.prompt, scenario_for(state))
+    return {**result, "turn_no": state.llm_call_count}
 
 
 @app.post("/api/sessions/{session_id}/deepseek")
@@ -760,13 +863,15 @@ def deepseek(session_id: str, request: DeepSeekRequest, http_request: FastAPIReq
     state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    if state.completed or current_stage(state) != "coach":
-        raise HTTPException(409, "LLM Coach 단계에서만 DeepSeek을 호출할 수 있습니다.")
-    if state.llm_call_count >= 2:
-        raise HTTPException(429, "이 세션의 AI 분석 한도 2회에 도달했습니다.")
+    if state.completed or current_stage(state) != "investigation":
+        raise HTTPException(409, "데이터·AI 공동분석 단계에서만 DeepSeek을 호출할 수 있습니다.")
+    if state.llm_call_count >= 15:
+        raise HTTPException(429, "이 세션의 AI 문답 한도 15회에 도달했습니다.")
+    result = deepseek_generate(request.prompt, session_id.replace("-", ""), scenario_for(state))
     state.llm_call_count += 1
+    state.ai_conversation.append({"turn_no": state.llm_call_count, "question": request.prompt, "response": result["response"], "provider_label": "DeepSeek", "model": result["model"], "usage": result["usage"]})
     save_session(state)
-    return deepseek_generate(request.prompt, session_id.replace("-", ""), scenario_for(state))
+    return {**result, "turn_no": state.llm_call_count}
 
 
 @app.post("/api/sessions/{session_id}/decisions")
@@ -776,7 +881,7 @@ def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     result = apply_decision(state, request)
     save_session(state)
-    if request.stage == "coach":
+    if request.stage == "investigation":
         with RATE_LOCK:
             VERIFIED_BYOK.pop(session_id, None)
     return result

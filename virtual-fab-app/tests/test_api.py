@@ -27,11 +27,28 @@ def decide(session_id: str, stage: str, choice: str, payload=None):
     )
 
 
+def investigation_payload():
+    return {
+        "prompt": "CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
+        "human_check": "CSV의 결측 플래그와 Lot·Tool·위치별 분포를 직접 계산해 AI 답변과 대조한다.",
+        "llm_response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
+        "llm_model": "Gemini",
+        "ai_conversation": [{
+            "turn_no": 1,
+            "question": "CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
+            "response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
+            "provider_label": "Google Gemini",
+            "model": "gemini-3.5-flash",
+            "usage": {"prompt_tokens": 20, "completion_tokens": 20, "total_tokens": 40},
+        }],
+    }
+
+
 def test_controlled_path_solves_scenario():
     session_id = new_session()
     assert decide(session_id, "incident", "hold").status_code == 200
-    assert decide(session_id, "coach", "modify", {"prompt": "경쟁 가설 세 개와 반증 증거를 질문해줘.", "human_check": "교재 원문과 Tool별 데이터로 다시 확인한다.", "llm_response": "경쟁 가설과 반증 증거를 구분하고 최소 측정부터 확인하세요.", "llm_model": "Gemini"}).status_code == 200
-    assert decide(session_id, "data", "distribution").status_code == 200
+    assert client.get(f"/api/sessions/{session_id}/dataset.csv").status_code == 200
+    assert decide(session_id, "investigation", "distribution", investigation_payload()).status_code == 200
     assert decide(session_id, "experiment", "screening", {"repeats": 3}).status_code == 200
     analysis = decide(session_id, "analysis", "select", {"tools": ["optical", "sem"]})
     assert analysis.status_code == 200
@@ -49,8 +66,8 @@ def test_controlled_path_solves_scenario():
     assert "data:image/svg+xml;base64" in report.text
     assert "테스트 지원자" in report.text
     assert "Gemini" in report.text
-    assert "경쟁 가설 세 개와 반증 증거" in report.text
-    assert "최소 측정부터 확인" in report.text
+    assert "CSV의 결측과 위치별 분포" in report.text
+    assert "CENTER·EDGE 분포" in report.text
 
 
 def test_catalog_and_all_scenarios_create_independent_sessions():
@@ -70,8 +87,8 @@ def test_catalog_and_all_scenarios_create_independent_sessions():
 def test_analysis_budget_is_enforced():
     session_id = new_session()
     decide(session_id, "incident", "hold")
-    decide(session_id, "coach", "modify", {"prompt": "경쟁 가설 세 개와 반증 증거를 질문해줘.", "human_check": "교재 원문과 데이터로 다시 확인한다.", "llm_response": "경쟁 가설과 반증 증거를 구분하고 최소 측정부터 확인하세요."})
-    decide(session_id, "data", "distribution")
+    client.get(f"/api/sessions/{session_id}/dataset.csv")
+    decide(session_id, "investigation", "distribution", investigation_payload())
     decide(session_id, "experiment", "screening", {"repeats": 3})
     response = decide(session_id, "analysis", "select", {"tools": ["tem", "fib", "xps"]})
     assert response.status_code == 422
@@ -79,7 +96,7 @@ def test_analysis_budget_is_enforced():
 
 def test_out_of_order_decision_is_rejected():
     session_id = new_session()
-    response = decide(session_id, "data", "distribution")
+    response = decide(session_id, "investigation", "distribution", investigation_payload())
     assert response.status_code == 409
 
 
@@ -162,7 +179,7 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
     monkeypatch.setattr(main, "check_llm_connection", lambda provider, model, key: {
         "status": "connected", "provider": provider, "provider_label": "OpenAI", "model": model,
     })
-    monkeypatch.setattr(main, "generate_with_byok", lambda provider, model, key, prompt, scenario: {
+    monkeypatch.setattr(main, "generate_with_byok", lambda provider, model, key, prompt, scenario, state=None: {
         "response": "경쟁 가설과 반증 증거를 분리하고 가장 저비용인 측정부터 확인하세요.",
         "provider": provider,
         "provider_label": "OpenAI",
@@ -187,11 +204,13 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
     assert generated.status_code == 200
     assert generated.json()["usage"]["total_tokens"] == 120
 
-    second = client.post(
-        f"/api/sessions/{session_id}/llm/generate",
-        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
-    )
-    assert second.status_code == 200
+    for turn in range(2, 16):
+        response = client.post(
+            f"/api/sessions/{session_id}/llm/generate",
+            json={**credentials, "prompt": f"{turn}번째 질문으로 경쟁 가설과 반증 증거를 다시 비교해줘."},
+        )
+        assert response.status_code == 200
+        assert response.json()["turn_no"] == turn
     limited = client.post(
         f"/api/sessions/{session_id}/llm/generate",
         json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
@@ -202,7 +221,9 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
         stored = connection.execute("SELECT state_json FROM sessions WHERE id = ?", (session_id,)).fetchone()[0]
     assert api_key not in stored
     assert "api_key" not in stored
-    assert main.load_session(session_id).llm_call_count == 2
+    restored = main.load_session(session_id)
+    assert restored.llm_call_count == 15
+    assert len(restored.ai_conversation) == 15
 
 
 def test_byok_is_blocked_over_public_http():
@@ -214,6 +235,34 @@ def test_byok_is_blocked_over_public_http():
         json={"provider": "gemini", "model": "gemini-3.5-flash", "api_key": "test-personal-key-abcdefghijklmnopqrstuvwxyz"},
     )
     assert response.status_code == 426
+
+
+def test_dataset_download_is_reproducible_and_required_for_investigation():
+    first = new_seeded_session(20260816)
+    second = new_seeded_session(20260816)
+    decide(first["id"], "incident", "hold")
+    decide(second["id"], "incident", "hold")
+    blocked = decide(first["id"], "investigation", "distribution", investigation_payload())
+    assert blocked.status_code == 422
+    first_csv = client.get(f"/api/sessions/{first['id']}/dataset.csv")
+    second_csv = client.get(f"/api/sessions/{second['id']}/dataset.csv")
+    assert first_csv.status_code == second_csv.status_code == 200
+    assert first_csv.text == second_csv.text
+    assert "lot_id,tool_id,wafer_zone" in first_csv.text
+    completed = decide(first["id"], "investigation", "distribution", investigation_payload())
+    assert completed.status_code == 200
+    assert completed.json()["state"]["dataset_downloaded"] is True
+
+
+def test_follow_up_prompt_contains_dataset_and_previous_exchange():
+    state = main.SessionState(id="context-test", scenario_id="photo-cd-drift", scenario_version=main.PHOTO_SCENARIO["version"], seed=77)
+    state.ai_conversation = [{"question": "결측을 먼저 어떻게 처리해?", "response": "결측 원인을 분리하고 민감도 분석을 하세요."}]
+    system, messages = main.coach_messages("그다음 Tool 편중은 어떻게 확인해?", main.PHOTO_SCENARIO, state)
+    assert "합성 데이터" in system
+    assert "다운로드 데이터는 42행" in messages[0]["content"]
+    assert messages[-3]["content"] == "결측을 먼저 어떻게 처리해?"
+    assert messages[-2]["role"] == "assistant"
+    assert messages[-1]["content"] == "그다음 Tool 편중은 어떻게 확인해?"
 
 
 def test_all_provider_responses_are_normalized(monkeypatch):

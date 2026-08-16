@@ -27,10 +27,8 @@ export function EvidenceDrawer({ open, scenario, session, onClose }: { open: boo
         {session.history.map((item, index) => {
           const stage = scenario.stages.find((candidate) => candidate.id === item.stage)
           const toolLabels = item.tools?.map((id) => scenario.tools[id]?.label).filter(Boolean).join(' + ')
-          const prompt = String(item.payload?.prompt ?? '')
-          const response = String(item.payload?.llm_response ?? '')
-          const model = String(item.payload?.llm_model ?? '')
-          return <li key={`${item.stage}-${index}`}><span>{String(item.decision_no ?? index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'coach' && <details><summary>{model} 질문·답변</summary><strong>PROMPT</strong><p>{prompt}</p><strong>RESPONSE</strong><p>{response}</p></details>}</div></li>
+          const conversation = Array.isArray(item.payload?.ai_conversation) ? item.payload.ai_conversation : []
+          return <li key={`${item.stage}-${index}`}><span>{String(item.decision_no ?? index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'investigation' && <details><summary>데이터 다운로드 · AI 문답 {conversation.length}회</summary>{conversation.map((exchange, turn) => <div key={turn}><strong>Q{turn + 1} · {String(exchange.model ?? '외부 AI')}</strong><p>{String(exchange.question ?? '')}</p><strong>RESPONSE</strong><p>{String(exchange.response ?? '')}</p></div>)}</details>}</div></li>
         })}
       </ol>}
       <p className="drawer-note">현재 단계의 입력을 바꾸지 않고 완료된 판단만 보여줘.</p>

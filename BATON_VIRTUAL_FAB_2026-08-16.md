@@ -67,7 +67,7 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
 ## 5. 검증 상태
 
 - `npm run build` 통과
-- Python 테스트 `12 passed`
+- Python 테스트 `14 passed`
 - 데스크톱 전체 시나리오와 PC·모바일 입실 E2E 통과
 - 공개 HTTPS 서버와 `/api/health` HTTP/2 200
 - 공개 주소에서 보안 컨텍스트·BYOK 입력 활성화·콘솔 오류 0건 확인

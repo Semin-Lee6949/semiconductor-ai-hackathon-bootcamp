@@ -14,8 +14,8 @@ React·Three.js·FastAPI로 만든 첫 번째 반도체 공정 문제해결 시�
 ## 학습 흐름
 
 1. 평균 CD가 규격 안이어도 edge 산포를 근거로 Lot 보류 여부를 판단한다.
-2. DeepSeek API 또는 Gemini·ChatGPT·Claude 등 외부 AI로 질문을 분석하고 답변과 사람의 검증 계획을 함께 기록한다.
-3. 평균이 아니라 Tool·Lot·위치별 분포와 데이터 품질을 확인한다.
+2. 같은 seed로 재현되는 3개 Lot 합성 원시 데이터 CSV를 다운로드해 결측·단위·Tool·위치 분포를 확인한다.
+3. OpenAI·Gemini·Anthropic·DeepSeek와 최대 15회 후속 질문을 주고받으며 경쟁 가설과 반증 순서를 좁히고 사람의 검증 판단을 기록한다.
 4. 대조군·요인·반복·판정 기준이 있는 실험을 설계한다.
 5. 광학·SEM·TEM·EDX·XPS·전기 분석을 비용·시간·정보가치로 선택한다.
 6. Holdout 결과로 적용 범위를 결정하고 Evidence trail을 남긴다.
@@ -24,8 +24,7 @@ React·Three.js·FastAPI로 만든 첫 번째 반도체 공정 문제해결 시�
 ## 단계별 3D 장면
 
 - 문제 발생: edge 결함 웨이퍼
-- AI 협업: External AI Workbench
-- 데이터 판단: 3D wafer map
+- 데이터·AI 공동분석: CSV + External AI Workbench + wafer map
 - 실험계획: Screening DOE matrix
 - 분석 툴: Optical CD·SEM·I–V 장비 bay
 - 검증: Baseline–Holdout 비교 gate
@@ -43,7 +42,8 @@ React·Three.js·FastAPI로 만든 첫 번째 반도체 공정 문제해결 시�
 
 - 개인 키는 React 메모리와 해당 요청 안에서만 사용하며 `localStorage`, SQLite, Evidence trail, 보고서, 로그에 저장하지 않는다.
 - 새로고침·Coach 단계 이탈·서버 재시작 시 연결 확인 상태가 폐기된다.
-- BYOK 엔드포인트는 HTTPS 또는 localhost에서만 열리고, 세션당 연결 확인 5회·분석 2회·IP당 분당 10회·30초 timeout을 적용한다.
+- BYOK 엔드포인트는 HTTPS 또는 localhost에서만 열리고, 세션당 연결 확인 5회·문답 15회·IP당 분당 30회·30초 timeout을 적용한다.
+- 질문·응답·모델·토큰은 세션에 저장해 새로고침 후에도 대화 근거를 복원하고 최종 PT에 반영하지만 API 키는 저장하지 않는다.
 - 프롬프트와 화면에 공개된 교육용 합성 관찰은 사용자가 선택한 제공사로 전송된다. 실제 회사 Recipe·Spec·로그·개인정보는 입력하지 않는다.
 - 개인 키를 쓰지 않으려면 기존처럼 프롬프트를 복사해 외부 AI에서 실행하고 답변을 붙여넣을 수 있다.
 
@@ -89,4 +89,4 @@ npx playwright test
 - 만료되거나 유효하지 않은 세션 ID가 남아 있으면 새 세션을 자동 생성하고 처음부터 다시 선택하도록 안내한다.
 - 결과는 실제 공정의 인과관계, Recipe 적합성 또는 현장 성과를 입증하지 않는다.
 - 실제 기업의 UI·팹 배치·내부 Spec·데이터를 복제하지 않는다.
-- 면접 슬라이드의 SVG 이미지는 Base64로 내장되어 다운로드 후 인터넷 없이 실행된다.
+- 10장 면접 슬라이드는 데이터 다운로드·최근 AI 문답·사람의 판단과 SVG 이미지를 내장해 다운로드 후 인터넷 없이 실행된다.

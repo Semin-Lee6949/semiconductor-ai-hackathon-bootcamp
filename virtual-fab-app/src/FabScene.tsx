@@ -75,11 +75,10 @@ function Station({
   )
 }
 
-const EXHIBIT_LABELS = ['PROCESS SIGNAL', 'EXTERNAL AI WORKBENCH', 'DISTRIBUTION MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
+const EXHIBIT_LABELS = ['PROCESS SIGNAL', 'DATA · AI INVESTIGATION', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
 const OPERATOR_LINES = [
   '평균보다 분포를 먼저 볼까?',
-  'AI 초안을 무엇으로 반증하지?',
-  '결측·단위·Tool 편중부터!',
+  'CSV를 보고 AI에게 다시 물어보자.',
   '대조군과 반복을 고정하자.',
   '최소 비용의 증거는 무엇일까?',
   'Holdout이 정말 재현됐나?',
@@ -177,11 +176,10 @@ function StageExhibit({ stageIndex }: { stageIndex: number }) {
   useFrame(({ clock }) => { if (exhibit.current) exhibit.current.position.y = .15 + Math.sin(clock.elapsedTime * 1.4) * .045 })
   return <group ref={exhibit} position={[0,.15,-.15]}>
     {stageIndex === 0 && <WaferDisc defects/>}
-    {stageIndex === 1 && <MentorConsole/>}
-    {stageIndex === 2 && <WaferMap/>}
-    {stageIndex === 3 && <DoeMatrix/>}
-    {stageIndex === 4 && <AnalysisTools/>}
-    {stageIndex === 5 && <ValidationGate/>}
+    {stageIndex === 1 && <><MentorConsole/><group position={[0,0,-1.8]} scale={.72}><WaferMap/></group></>}
+    {stageIndex === 2 && <DoeMatrix/>}
+    {stageIndex === 3 && <AnalysisTools/>}
+    {stageIndex === 4 && <ValidationGate/>}
   </group>
 }
 

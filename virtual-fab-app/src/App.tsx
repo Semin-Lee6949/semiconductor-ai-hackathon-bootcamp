@@ -6,7 +6,7 @@ import { PersonalAIConnector } from './components/PersonalAIConnector'
 import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
 import { useFabSession } from './hooks/useFabSession'
-import type { Decision, Scenario, ScenarioSummary, SessionState, StageId } from './types'
+import type { AIExchange, Decision, Scenario, ScenarioSummary, SessionState, StageId } from './types'
 import './styles.css'
 
 const CHOICE_LABELS: Record<string, string> = {
@@ -64,11 +64,17 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [baseline, setBaseline] = useState('0.62')
   const [holdout, setHoldout] = useState('0.78')
   const [direction, setDirection] = useState('higher')
-  const [externalResponse, setExternalResponse] = useState('')
-  const [externalModel, setExternalModel] = useState('Gemini')
+  const restoredConversation = state.ai_conversation ?? []
+  const restoredLast = restoredConversation.at(-1)
+  const [conversation, setConversation] = useState<AIExchange[]>(restoredConversation)
+  const [externalResponse, setExternalResponse] = useState(restoredLast?.response ?? '')
+  const [externalModel, setExternalModel] = useState(restoredLast ? `${restoredLast.provider_label} · ${restoredLast.model}` : 'Gemini')
   const [copyStatus, setCopyStatus] = useState('')
   const [responseCopyStatus, setResponseCopyStatus] = useState('')
-  const [tokenUsage, setTokenUsage] = useState<number | null>(null)
+  const [tokenUsage, setTokenUsage] = useState<number | null>(restoredLast?.usage.total_tokens ?? null)
+  const [datasetDownloaded, setDatasetDownloaded] = useState(state.dataset_downloaded)
+  const [datasetBusy, setDatasetBusy] = useState(false)
+  const [datasetError, setDatasetError] = useState('')
   const responseRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => setChoice(''), [stage.id])
@@ -91,7 +97,10 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     event.preventDefault()
     if (!choice) return
     const payload: Record<string, unknown> = {}
-    if (stage.id === 'coach') Object.assign(payload, { prompt, human_check: humanCheck, llm_response: externalResponse, llm_model: externalModel })
+    if (stage.id === 'investigation') {
+      const recordedConversation = conversation.length > 0 ? conversation : [{ turn_no: 1, question: prompt, response: externalResponse, provider_label: externalModel, model: externalModel, usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } }]
+      Object.assign(payload, { prompt, human_check: humanCheck, llm_response: externalResponse, llm_model: externalModel, ai_conversation: recordedConversation, dataset_downloaded: datasetDownloaded })
+    }
     if (stage.id === 'experiment') payload.repeats = repeats
     if (stage.id === 'analysis') payload.tools = tools
     if (stage.id === 'validation') payload.metrics = { baseline, holdout, direction }
@@ -108,28 +117,62 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     catch { setResponseCopyStatus('자동 복사가 막혔어. 응답 편집칸에서 직접 선택해 복사해줘.') }
   }
 
+  const downloadDataset = async () => {
+    setDatasetBusy(true); setDatasetError('')
+    try {
+      const { blob, filename } = await api.dataset(state.id)
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url; anchor.download = filename; document.body.appendChild(anchor); anchor.click(); anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setDatasetDownloaded(true)
+    } catch (cause) { setDatasetError(cause instanceof Error ? cause.message : '합성 데이터를 내려받지 못했어.') }
+    finally { setDatasetBusy(false) }
+  }
+
+  const receiveAIResult = (result: import('./types').BYOKResponse) => {
+    const exchange: AIExchange = { turn_no: result.turn_no ?? conversation.length + 1, question: prompt, response: result.response, provider_label: result.provider_label, model: result.model, usage: result.usage }
+    setConversation((current) => [...current, exchange].slice(-15))
+    setExternalResponse(result.response)
+    setExternalModel(`${result.provider_label} · ${result.model}`)
+    setTokenUsage(result.usage.total_tokens)
+  }
+
+  const editExternalResponse = (value: string) => {
+    setExternalResponse(value)
+    setResponseCopyStatus('')
+    setConversation((current) => current.map((exchange, index) => index === current.length - 1 ? { ...exchange, response: value } : exchange))
+  }
+
   return (
     <form className="decision-panel" onSubmit={submit}>
       <div className="stage-heading"><span>{String(state.stage_index + 1).padStart(2, '0')}</span><h2>{stage.label}</h2></div>
       <p className="brief">{stage.brief}</p>
       {stage.id === 'incident' && <><IncidentBrief scenario={scenario}/><SignalPlot scenario={scenario} /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>{scenario.incident.choices.hold[0]}<br/><small>{scenario.incident.choices.hold[1]}</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>{scenario.incident.choices.release[0]}<br/><small>{scenario.incident.choices.release[1]}</small></ChoiceButton></div></>}
-      {stage.id === 'coach' && <>
-        <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
-        <PersonalAIConnector sessionId={state.id} prompt={prompt} callsUsed={state.llm_call_count} onResult={(result) => { setExternalResponse(result.response); setExternalModel(`${result.provider_label} · ${result.model}`); setTokenUsage(result.usage.total_tokens) }}/>
+      {stage.id === 'investigation' && <>
+        <SignalPlot scenario={scenario} />
+        <section className={`dataset-panel ${datasetDownloaded ? 'ready' : ''}`}>
+          <div><b>STEP 1 · 합성 원시 데이터 확보</b><p>3개 Lot의 위치·Tool·결측 플래그가 포함된 CSV를 내려받아 엑셀·Python 등으로 직접 확인해.</p></div>
+          <button type="button" onClick={downloadDataset} disabled={datasetBusy}>{datasetBusy ? 'CSV 생성 중…' : datasetDownloaded ? 'CSV 다시 다운로드' : '합성 데이터 CSV 다운로드'}</button>
+          <small>{datasetDownloaded ? `다운로드 완료 · scenario v${state.scenario_version} · seed ${state.seed}` : '데이터를 내려받아야 최종 데이터 판단을 기록할 수 있어.'}</small>
+          {datasetError && <p className="inline-error" role="alert">{datasetError}</p>}
+        </section>
+        <div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div>
+        {conversation.length > 0 && <section className="ai-dialogue" aria-label="AI 문답 기록"><header><b>STEP 2 · AI 문답 기록</b><span>{conversation.length}/15회</span></header>{conversation.map((exchange) => <article key={exchange.turn_no}><div><b>Q{exchange.turn_no}</b><p>{exchange.question}</p></div><div><b>{exchange.provider_label}</b><p>{exchange.response}</p><small>{exchange.model} · {exchange.usage.total_tokens.toLocaleString()} tokens</small></div></article>)}</section>}
+        <label>AI에게 물어볼 다음 질문<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: CSV의 결측을 처리한 뒤 Lot·Tool·위치 효과를 어떤 순서로 비교해야 해?" /></label>
+        <PersonalAIConnector sessionId={state.id} prompt={prompt} callsUsed={state.llm_call_count} onResult={receiveAIResult}/>
         <section className={`ai-response-editor ${externalResponse ? 'has-response' : ''}`} aria-labelledby="ai-response-title">
-          <header><div><b id="ai-response-title">AI 분석 응답</b><span>확인 · 수정 · 직접 붙여넣기 가능</span></div><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button></header>
-          <textarea ref={responseRef} aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => { setExternalResponse(event.target.value); setResponseCopyStatus('') }} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
+          <header><div><b id="ai-response-title">최근 AI 응답</b><span>확인 · 수정 · 외부 답변 직접 붙여넣기 가능</span></div><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button></header>
+          <textarea ref={responseRef} aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => editExternalResponse(event.target.value)} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
           {tokenUsage !== null && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · 총 {tokenUsage.toLocaleString()} tokens</p>}
           {responseCopyStatus && <p className="copy-status" role="status">{responseCopyStatus}</p>}
         </section>
-        <button type="button" className="prompt-copy secondary full-width-action" onClick={copyPrompt} disabled={prompt.length < 20}>개인 키 없이 외부 AI용 프롬프트 복사</button>
+        <button type="button" className="prompt-copy secondary full-width-action" onClick={copyPrompt} disabled={prompt.length < 10}>개인 키 없이 외부 AI용 질문 복사</button>
         {copyStatus && <p className="copy-status" role="status">{copyStatus}</p>}
-        <div className="external-ai-grid"><label>사용한 외부 AI<input value={externalModel} onChange={(event) => setExternalModel(event.target.value)} /></label><label>결과 출처 기록<input value={externalModel} readOnly /></label></div>
-        <label>사람의 검증 계획<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} /></label>
-        <div className="choice-grid three"><ChoiceButton value="modify" selected={choice} onClick={setChoice}>수정 채택</ChoiceButton><ChoiceButton value="accept" selected={choice} onClick={setChoice}>그대로 채택</ChoiceButton><ChoiceButton value="reject" selected={choice} onClick={setChoice}>근거 부족</ChoiceButton></div>
-        <p className="field-note">질문·모델명·붙여넣은 답변·사람의 검증계획을 함께 저장한다. 실제 회사 Recipe·Spec·기밀자료는 외부 AI에 입력하지 마.</p>
+        <label>AI 문답을 검증한 내 판단<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} placeholder="데이터의 어떤 열·분포·결측과 대조했고 무엇을 채택·수정·기각했는지 적어." /></label>
+        <div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포·품질 근거로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>전체 평균으로 판단</ChoiceButton></div>
+        <p className="field-note">CSV·최대 15회 질문·응답·모델·사람의 검증 판단이 Evidence와 최종 PT에 기록돼. 실제 회사 Recipe·Spec·기밀자료는 입력하지 마.</p>
       </>}
-      {stage.id === 'data' && <><SignalPlot scenario={scenario} /><div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div><div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>평균으로 판단</ChoiceButton></div></>}
       {stage.id === 'experiment' && <>
         <div className="choice-list"><ChoiceButton value="screening" selected={choice} onClick={setChoice}>대조군 + {scenario.experiment_label}</ChoiceButton><ChoiceButton value="ofat" selected={choice} onClick={setChoice}>한 변수씩 변경</ChoiceButton><ChoiceButton value="immediate" selected={choice} onClick={setChoice}>검증 없이 Recipe 변경</ChoiceButton></div>
         <label>조건별 반복 횟수<input type="number" min="2" max="10" value={repeats} onChange={(e) => setRepeats(Number(e.target.value))} /></label>
@@ -145,8 +188,8 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         {validationPreview && <div className={`validation-preview ${validationPreview.improved ? 'improved' : 'degraded'}`} role="status"><span>LIVE HOLDOUT PREVIEW</span><b>{validationPreview.delta >= 0 ? '+' : ''}{validationPreview.delta.toFixed(3)}</b><p>{validationPreview.improved ? '설정한 개선 방향과 일치해. 적용 범위를 선택해.' : '개선 방향과 불일치해. 조치보다 가설·실험을 다시 의심해야 해.'}</p></div>}
         <div className="choice-list"><ChoiceButton value="controlled" selected={choice} onClick={setChoice}>한정 적용 + 모니터링</ChoiceButton><ChoiceButton value="direct" selected={choice} onClick={setChoice}>전체 Lot 즉시 적용</ChoiceButton><ChoiceButton value="release" selected={choice} onClick={setChoice}>검증 없이 해제</ChoiceButton></div>
       </>}
-      <button className="commit" disabled={!choice || busy || (stage.id === 'coach' && externalResponse.trim().length < 20)}>
-        {busy ? '판단 기록 중…' : stage.id === 'coach' ? '질문·답변·판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
+      <button className="commit" disabled={!choice || busy || (stage.id === 'investigation' && (!datasetDownloaded || (conversation.length === 0 && externalResponse.trim().length < 20) || humanCheck.trim().length < 20))}>
+        {busy ? '판단 기록 중…' : stage.id === 'investigation' ? '데이터·AI 문답·내 판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
       </button>
     </form>
   )
@@ -165,8 +208,8 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
       const blob = await api.report(session.id, { opinion, presenter, target_role: targetRole })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
-      anchor.href = url; anchor.download = 'virtual-fab-interview-slides.html'; anchor.click()
-      URL.revokeObjectURL(url)
+      anchor.href = url; anchor.download = 'virtual-fab-interview-slides.html'; document.body.appendChild(anchor); anchor.click(); anchor.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (cause) { setReportError(cause instanceof Error ? cause.message : '면접 자료를 만들지 못했어.') }
     finally { setReportBusy(false) }
   }
@@ -185,9 +228,10 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
     <section className="report-builder">
       <h2>내 의견을 면접 PT로 전환</h2>
       <div className="identity-grid"><label>발표자<input value={presenter} onChange={(event) => setPresenter(event.target.value)} /></label><label>지원 직무<input value={targetRole} onChange={(event) => setTargetRole(event.target.value)} /></label></div>
-      <label>내 판단·배운 점·한계<textarea value={opinion} onChange={(event) => setOpinion(event.target.value)} placeholder="왜 이 경로를 선택했는지, AI 의견 중 무엇을 수정했는지, 실제 현장 적용 전 무엇을 추가 검증할지 40자 이상 적어봐." /></label>
-      <p className="field-note">웨이퍼·분석 툴 SVG를 Base64로 내장한 9장 독립형 HTML 슬라이드를 생성한다. 다운로드 후 인터넷 없이 실행하고 PDF 인쇄도 가능해.</p>
-      <button className="download-report" onClick={downloadReport} disabled={reportBusy || opinion.trim().length < 40}>{reportBusy ? 'STAR 면접 자료 생성 중…' : 'Base64 HTML 면접 슬라이드 다운로드'}</button>
+      <label>내 판단·배운 점·한계<textarea value={opinion} onChange={(event) => setOpinion(event.target.value)} placeholder="왜 이 경로를 선택했는지, AI 의견 중 무엇을 수정했는지, 추가 검증할 한계를 10자 이상 적어봐." /></label>
+      <p className={`report-requirement ${opinion.trim().length >= 10 ? 'ready' : ''}`}>{opinion.trim().length >= 10 ? '다운로드 준비 완료' : `의견을 ${10 - opinion.trim().length}자 더 입력하면 다운로드할 수 있어.`}</p>
+      <p className="field-note">데이터 다운로드·AI 문답·판단 근거와 SVG를 내장한 10장 독립형 HTML 슬라이드를 생성한다. 다운로드 후 인터넷 없이 실행하고 PDF 인쇄도 가능해.</p>
+      <button className="download-report" onClick={downloadReport} disabled={reportBusy || opinion.trim().length < 10}>{reportBusy ? 'STAR 면접 자료 생성 중…' : 'HTML 면접 PT 슬라이드 다운로드'}</button>
       {reportError && <p className="inline-error">{reportError}</p>}
     </section>
     <p className="limit-note">이 결과는 교육용 합성 입력에 대한 시나리오 판정이며 실제 공정 인과관계나 현장 성과를 보장하지 않아.</p>

@@ -1,7 +1,8 @@
+import type { CSSProperties } from 'react'
 import type { Scenario, SessionState } from '../types'
 
 export function StageProgress({ scenario, session }: { scenario: Scenario; session: SessionState }) {
-  return <nav className="stage-rail" aria-label="시나리오 진행 단계">
+  return <nav className="stage-rail" aria-label="시나리오 진행 단계" style={{ '--stage-count': scenario.stages.length } as CSSProperties}>
     {scenario.stages.map((stage, index) => {
       const status = index === session.stage_index && !session.completed ? 'active' : index < session.stage_index || session.completed ? 'done' : ''
       return <div key={stage.id} className={status} aria-current={status === 'active' ? 'step' : undefined}>

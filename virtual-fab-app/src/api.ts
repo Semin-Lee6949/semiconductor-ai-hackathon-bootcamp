@@ -42,6 +42,14 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ ...credentials, prompt }),
     }),
+  dataset: async (sessionId: string) => {
+    const response = await fetch(`${BASE}api/sessions/${sessionId}/dataset.csv`)
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new ApiError(body.detail ?? `데이터 다운로드 실패 (${response.status})`, response.status)
+    }
+    return { blob: await response.blob(), filename: response.headers.get('content-disposition')?.match(/filename="?([^";]+)"?/)?.[1] ?? 'virtual-fab-data.csv' }
+  },
   report: async (sessionId: string, payload: ReportPayload) => {
     const response = await fetch(`${BASE}api/sessions/${sessionId}/report`, {
       method: 'POST',
