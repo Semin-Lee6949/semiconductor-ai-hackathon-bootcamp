@@ -34,6 +34,13 @@ function phaseForTurn(turn: number) {
   return QUESTION_PHASES[4]
 }
 
+function tokenSummary(usage: AIExchange['usage']) {
+  const thought = usage.thought_tokens ?? 0
+  return thought > 0
+    ? `응답 ${usage.completion_tokens.toLocaleString()} · 사고 ${thought.toLocaleString()} · 전체 ${usage.total_tokens.toLocaleString()} tokens`
+    : `응답 ${usage.completion_tokens.toLocaleString()} · 전체 ${usage.total_tokens.toLocaleString()} tokens`
+}
+
 function deepQuestionForTurn(turn: number, scenario: Scenario, terms: string[]) {
   const keywords = terms.length > 0 ? terms.join(', ') : scenario.keywords.slice(0, 2).map((item) => item.term).join(', ')
   const requests = [
@@ -104,7 +111,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [externalModel, setExternalModel] = useState(restoredLast ? `${restoredLast.provider_label} · ${restoredLast.model}` : 'Gemini')
   const [copyStatus, setCopyStatus] = useState('')
   const [responseCopyStatus, setResponseCopyStatus] = useState('')
-  const [tokenUsage, setTokenUsage] = useState<number | null>(restoredLast?.usage.total_tokens ?? null)
+  const [latestUsage, setLatestUsage] = useState<AIExchange['usage'] | null>(restoredLast?.usage ?? null)
   const [manualDraft, setManualDraft] = useState(restoredConversation.length === 0)
   const [datasetDownloaded, setDatasetDownloaded] = useState(state.dataset_downloaded)
   const [datasetBusy, setDatasetBusy] = useState(false)
@@ -179,11 +186,11 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   }
 
   const receiveAIResult = (result: import('./types').BYOKResponse) => {
-    const exchange: AIExchange = { turn_no: result.turn_no ?? conversation.length + 1, question: prompt, response: result.response, provider_label: result.provider_label, model: result.model, usage: result.usage, keywords: result.keywords ?? matchedTerms, phase: result.phase ?? { id: currentPhase.id, label: currentPhase.label, goal: currentPhase.goal } }
+    const exchange: AIExchange = { turn_no: result.turn_no ?? conversation.length + 1, question: prompt, response: result.response, provider_label: result.provider_label, model: result.model, usage: result.usage, keywords: result.keywords ?? matchedTerms, phase: result.phase ?? { id: currentPhase.id, label: currentPhase.label, goal: currentPhase.goal }, finish_reason: result.finish_reason, retry_count: result.retry_count }
     setConversation((current) => [...current, exchange].slice(-15))
     setExternalResponse(result.response)
     setExternalModel(`${result.provider_label} · ${result.model}`)
-    setTokenUsage(result.usage.total_tokens)
+    setLatestUsage(result.usage)
     setManualDraft(false)
     const nextTurn = Math.min(exchange.turn_no + 1, 15)
     if (exchange.turn_no < 15) setPrompt(deepQuestionForTurn(nextTurn, scenario, selectedTerms))
@@ -199,7 +206,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     setManualDraft(true)
     setExternalResponse('')
     setExternalModel('외부 AI · 수동 기록')
-    setTokenUsage(null)
+    setLatestUsage(null)
     setResponseCopyStatus('새 후속 질문의 외부 AI 답변을 붙여넣어.')
   }
 
@@ -237,14 +244,14 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
           <p className={`prompt-quality ${matchedTerms.length > 0 ? 'ready' : ''}`}>{matchedTerms.length > 0 ? `전송 준비 · 포함 키워드: ${matchedTerms.join(', ')}` : '질문에 공정 핵심 키워드를 1개 이상 포함해야 해.'}</p>
           <p className="keyword-sources">용어 참고: {scenario.keyword_sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}</a>)}</p>
         </section>
-        {conversation.length > 0 && <section className="ai-dialogue" aria-label="AI 문답 기록"><header><b>STEP 2 · AI 문답 기록</b><span>{conversation.length}/15회</span></header>{conversation.map((exchange) => <article key={exchange.turn_no}><div><b>Q{exchange.turn_no} · {exchange.phase?.label ?? '문답'}</b><p>{exchange.question}</p><small>{exchange.keywords?.join(' · ') || '키워드 기록 없음'}</small></div><div><b>{exchange.provider_label}</b><p>{exchange.response}</p><small>{exchange.model} · {exchange.usage.total_tokens.toLocaleString()} tokens</small></div></article>)}</section>}
+        {conversation.length > 0 && <section className="ai-dialogue" aria-label="AI 문답 기록"><header><b>STEP 2 · AI 문답 기록</b><span>{conversation.length}/15회</span></header>{conversation.map((exchange) => <article key={exchange.turn_no}><div><b>Q{exchange.turn_no} · {exchange.phase?.label ?? '문답'}</b><p>{exchange.question}</p><small>{exchange.keywords?.join(' · ') || '키워드 기록 없음'}</small></div><div><b>{exchange.provider_label}</b><p>{exchange.response}</p><small>{exchange.model} · {tokenSummary(exchange.usage)}</small></div></article>)}</section>}
         <label>AI에게 물어볼 다음 질문<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: CSV의 결측을 처리한 뒤 Lot·Tool·위치 효과를 어떤 순서로 비교해야 해?" /></label>
         <PersonalAIConnector sessionId={state.id} prompt={prompt} promptReady={matchedTerms.length > 0} callsUsed={state.llm_call_count} conversation={conversation} onPromptChange={setPrompt} onResult={receiveAIResult}/>
         <section className={`ai-response-editor ${externalResponse ? 'has-response' : ''}`} aria-labelledby="ai-response-title">
           <header><div><b id="ai-response-title">최근 AI 응답</b><span>{manualDraft ? '외부 AI 답변을 붙여넣고 회차별로 기록' : '연결 AI 응답 확인·수정 가능'}</span></div><div className="response-actions"><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button>{!manualDraft && <button type="button" onClick={startManualDraft}>수동 문답 시작</button>}</div></header>
           <textarea aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => editExternalResponse(event.target.value)} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
           {manualDraft && <button type="button" className="record-manual-turn" onClick={recordManualExchange} disabled={externalResponse.trim().length < 20 || matchedTerms.length === 0 || conversation.length >= 15}>현재 질문·답변을 문답 기록에 추가</button>}
-          {tokenUsage !== null && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · 총 {tokenUsage.toLocaleString()} tokens</p>}
+          {latestUsage && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · {tokenSummary(latestUsage)}</p>}
           {responseCopyStatus && <p className="copy-status" role="status">{responseCopyStatus}</p>}
         </section>
         <button type="button" className="prompt-copy secondary full-width-action" onClick={copyPrompt} disabled={prompt.length < 10 || matchedTerms.length === 0}>개인 키 없이 외부 AI용 질문 복사</button>

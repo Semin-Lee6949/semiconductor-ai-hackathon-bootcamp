@@ -10,6 +10,13 @@ const PROVIDERS: Record<AIProvider, { label: string; model: string; keyHint: str
   deepseek: { label: 'DeepSeek', model: 'deepseek-v4-flash', keyHint: 'DeepSeek API key' },
 }
 
+function tokenSummary(usage: AIExchange['usage']) {
+  const thought = usage.thought_tokens ?? 0
+  return thought > 0
+    ? `응답 ${usage.completion_tokens.toLocaleString()} · 사고 ${thought.toLocaleString()} · 전체 ${usage.total_tokens.toLocaleString()} tokens`
+    : `응답 ${usage.completion_tokens.toLocaleString()} · 전체 ${usage.total_tokens.toLocaleString()} tokens`
+}
+
 type Props = {
   sessionId: string
   prompt: string
@@ -131,7 +138,7 @@ export function PersonalAIConnector({ sessionId, prompt, promptReady = true, cal
           <div className="ai-chat-transcript" aria-live="polite">
             {conversation.map((exchange) => <article key={exchange.turn_no}>
               <div className="chat-question"><header><b>Q{exchange.turn_no} · {exchange.phase?.label ?? '문답'}</b><small>{exchange.keywords?.join(' · ') || '공정 키워드'}</small></header><p>{exchange.question}</p></div>
-              <div className="chat-answer"><header><b>{exchange.provider_label}</b><small>{exchange.model} · {exchange.usage.total_tokens.toLocaleString()} tokens</small></header><p>{exchange.response}</p></div>
+              <div className="chat-answer"><header><b>{exchange.provider_label}</b><small>{exchange.model} · {tokenSummary(exchange.usage)}</small></header><p>{exchange.response}</p></div>
             </article>)}
             <div ref={chatEndRef}/>
           </div>

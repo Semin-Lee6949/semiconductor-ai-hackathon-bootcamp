@@ -566,16 +566,32 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         usage = normalize_usage(usage_raw.get("input_tokens", 0), usage_raw.get("output_tokens", 0))
     elif provider == "gemini":
         encoded_model = quote(model.removeprefix("models/"), safe="-._:")
-        result = provider_json_request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent",
-            {"x-goog-api-key": api_key},
-            {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "model" if item["role"] == "assistant" else "user", "parts": [{"text": item["content"]}]} for item in messages], "generationConfig": {"maxOutputTokens": 700, "temperature": 0.2}},
-        )
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent"
+        generation_config: dict[str, Any] = {"maxOutputTokens": 4096}
+        if model.removeprefix("models/").startswith("gemini-3"):
+            generation_config["thinkingConfig"] = {"thinkingLevel": "low"}
+        body = {
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "model" if item["role"] == "assistant" else "user", "parts": [{"text": item["content"]}]} for item in messages],
+            "generationConfig": generation_config,
+        }
+        result = provider_json_request(endpoint, {"x-goog-api-key": api_key}, body)
         candidates = result.get("candidates", [])
         parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
         content = "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
+        finish_reason = str(candidates[0].get("finishReason", "")) if candidates else ""
+        retry_count = 0
+        if finish_reason == "MAX_TOKENS" and len(content) < 400:
+            retry_count = 1
+            retry_body = {**body, "generationConfig": {"maxOutputTokens": 8192, **({"thinkingConfig": {"thinkingLevel": "minimal"}} if model.removeprefix("models/").startswith("gemini-3") else {})}}
+            result = provider_json_request(endpoint, {"x-goog-api-key": api_key}, retry_body)
+            candidates = result.get("candidates", [])
+            parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+            content = "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
+            finish_reason = str(candidates[0].get("finishReason", "")) if candidates else ""
         usage_raw = result.get("usageMetadata", {})
         usage = normalize_usage(usage_raw.get("promptTokenCount", 0), usage_raw.get("candidatesTokenCount", 0), usage_raw.get("totalTokenCount", 0))
+        usage["thought_tokens"] = int(usage_raw.get("thoughtsTokenCount", 0) or 0)
     else:
         result = provider_json_request(
             "https://api.deepseek.com/chat/completions",
@@ -588,7 +604,10 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
         usage = normalize_usage(usage_raw.get("prompt_tokens", 0), usage_raw.get("completion_tokens", 0), usage_raw.get("total_tokens", 0))
     if not content:
         raise HTTPException(502, "선택한 AI가 빈 답변을 반환했습니다.")
-    return {"response": content, "provider": provider, "provider_label": AI_PROVIDERS[provider], "model": model, "usage": usage}
+    response = {"response": content, "provider": provider, "provider_label": AI_PROVIDERS[provider], "model": model, "usage": usage}
+    if provider == "gemini":
+        response.update({"finish_reason": finish_reason or "STOP", "retry_count": retry_count})
+    return response
 
 
 def deepseek_generate(prompt: str, user_id: str, scenario: dict[str, Any]) -> dict[str, Any]:
@@ -1010,6 +1029,8 @@ def generate_personal_llm(session_id: str, request: BYOKGenerateRequest, http_re
         "usage": result["usage"],
         "keywords": keywords,
         "phase": phase,
+        "finish_reason": result.get("finish_reason"),
+        "retry_count": result.get("retry_count", 0),
     }
     state.ai_conversation.append(exchange)
     save_session(state)

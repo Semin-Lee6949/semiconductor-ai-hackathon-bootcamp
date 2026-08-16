@@ -337,3 +337,33 @@ def test_all_provider_responses_are_normalized(monkeypatch):
         assert result["model"] == model
         assert result["response"].endswith("답변")
         assert result["usage"]["total_tokens"] > 0
+
+
+def test_gemini_retries_short_max_token_response_with_low_thinking(monkeypatch):
+    calls = []
+    truncated = {
+        "candidates": [{"content": {"parts": [{"text": "**데이터 근거**\n합성 데이터는 총 42행이며,"}]}, "finishReason": "MAX_TOKENS"}],
+        "usageMetadata": {"promptTokenCount": 699, "candidatesTokenCount": 26, "thoughtsTokenCount": 670, "totalTokenCount": 1395},
+    }
+    complete_text = "데이터 근거와 해석, 경쟁 가설, 반증 기준, 남은 불확실성, 추천 후속 질문을 모두 포함한 완전한 한국어 응답입니다. " * 8
+    complete = {
+        "candidates": [{"content": {"parts": [{"text": complete_text}]}, "finishReason": "STOP"}],
+        "usageMetadata": {"promptTokenCount": 710, "candidatesTokenCount": 310, "thoughtsTokenCount": 120, "totalTokenCount": 1140},
+    }
+
+    def fake_request(url, headers, body=None):
+        calls.append(body)
+        return truncated if len(calls) == 1 else complete
+
+    monkeypatch.setattr(main, "provider_json_request", fake_request)
+    result = main.generate_with_byok(
+        "gemini", "gemini-3.5-flash", "test-personal-key-abcdefghijklmnopqrstuvwxyz",
+        "CD와 Dose를 사용해 합성 CSV를 분석해줘.", main.PHOTO_SCENARIO,
+    )
+    assert len(calls) == 2
+    assert calls[0]["generationConfig"] == {"maxOutputTokens": 4096, "thinkingConfig": {"thinkingLevel": "low"}}
+    assert calls[1]["generationConfig"] == {"maxOutputTokens": 8192, "thinkingConfig": {"thinkingLevel": "minimal"}}
+    assert result["response"] == complete_text.strip()
+    assert result["finish_reason"] == "STOP"
+    assert result["retry_count"] == 1
+    assert result["usage"]["thought_tokens"] == 120

@@ -6,9 +6,11 @@ export type AIExchange = {
   response: string
   provider_label: string
   model: string
-  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number; thought_tokens?: number }
   keywords?: string[]
   phase?: { id: string; label: string; goal: string }
+  finish_reason?: string
+  retry_count?: number
 }
 
 export type ProcessKeyword = { id: string; term: string; meaning: string; relevance: string }
@@ -111,7 +113,7 @@ export type DecisionResult = { state: SessionState; feedback: string }
 export type DeepSeekResponse = {
   response: string
   model: string
-  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+  usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number; thought_tokens?: number }
 }
 
 export type AIProvider = 'openai' | 'anthropic' | 'gemini' | 'deepseek'
@@ -135,6 +137,8 @@ export type BYOKResponse = DeepSeekResponse & {
   turn_no?: number
   keywords?: string[]
   phase?: { id: string; label: string; goal: string }
+  finish_reason?: string
+  retry_count?: number
 }
 
 export type ReportPayload = {

@@ -126,7 +126,7 @@ test('continue personal AI dialogue inside an automatic response popup', async (
   }))
   await page.route('**/api/sessions/*/llm/generate', (route) => route.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify({ provider: 'gemini', provider_label: 'Google Gemini', model: 'gemini-3.5-flash', response: mockResponse, usage: { prompt_tokens: 100, completion_tokens: 80, total_tokens: 180 } }),
+    body: JSON.stringify({ provider: 'gemini', provider_label: 'Google Gemini', model: 'gemini-3.5-flash', response: mockResponse, usage: { prompt_tokens: 100, completion_tokens: 80, thought_tokens: 45, total_tokens: 225 }, finish_reason: 'STOP', retry_count: 0 }),
   }))
   await page.goto('/#dry-etch-profile')
   await page.getByRole('button', { name: /Lot 보류/ }).click()
@@ -138,6 +138,7 @@ test('continue personal AI dialogue inside an automatic response popup', async (
   const chat = page.getByRole('dialog', { name: 'AI와 공정 문제 좁히기' })
   await expect(chat).toBeVisible()
   await expect(chat).toContainText(mockResponse)
+  await expect(chat).toContainText('응답 80 · 사고 45 · 전체 225 tokens')
   await expect(chat).toContainText('1/15회')
   const followUp = chat.getByLabel('다음 질문')
   await expect(followUp).toBeFocused()
