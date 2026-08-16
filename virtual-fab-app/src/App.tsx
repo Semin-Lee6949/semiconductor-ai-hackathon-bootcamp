@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { api } from './api'
 import { CleanroomLobby } from './CleanroomLobby'
 import { EvidenceDrawer } from './components/EvidenceDrawer'
@@ -93,14 +93,8 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [datasetError, setDatasetError] = useState('')
   const [selectedKeywordIds, setSelectedKeywordIds] = useState<string[]>(scenario.keywords.slice(0, 2).map((item) => item.id))
   const [questionGoal, setQuestionGoal] = useState(phaseForTurn(restoredConversation.length + 1).id)
-  const responseRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => setChoice(''), [stage.id])
-  useEffect(() => {
-    if (tokenUsage === null) return
-    responseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    responseRef.current?.focus({ preventScroll: true })
-  }, [tokenUsage])
 
   const currentTurn = Math.min(conversation.length + 1, 15)
   const currentPhase = phaseForTurn(currentTurn)
@@ -204,10 +198,10 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         </section>
         {conversation.length > 0 && <section className="ai-dialogue" aria-label="AI 문답 기록"><header><b>STEP 2 · AI 문답 기록</b><span>{conversation.length}/15회</span></header>{conversation.map((exchange) => <article key={exchange.turn_no}><div><b>Q{exchange.turn_no} · {exchange.phase?.label ?? '문답'}</b><p>{exchange.question}</p><small>{exchange.keywords?.join(' · ') || '키워드 기록 없음'}</small></div><div><b>{exchange.provider_label}</b><p>{exchange.response}</p><small>{exchange.model} · {exchange.usage.total_tokens.toLocaleString()} tokens</small></div></article>)}</section>}
         <label>AI에게 물어볼 다음 질문<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: CSV의 결측을 처리한 뒤 Lot·Tool·위치 효과를 어떤 순서로 비교해야 해?" /></label>
-        <PersonalAIConnector sessionId={state.id} prompt={prompt} promptReady={matchedTerms.length > 0} callsUsed={state.llm_call_count} onResult={receiveAIResult}/>
+        <PersonalAIConnector sessionId={state.id} prompt={prompt} promptReady={matchedTerms.length > 0} callsUsed={state.llm_call_count} conversation={conversation} onPromptChange={setPrompt} onResult={receiveAIResult}/>
         <section className={`ai-response-editor ${externalResponse ? 'has-response' : ''}`} aria-labelledby="ai-response-title">
           <header><div><b id="ai-response-title">최근 AI 응답</b><span>확인 · 수정 · 외부 답변 직접 붙여넣기 가능</span></div><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button></header>
-          <textarea ref={responseRef} aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => editExternalResponse(event.target.value)} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
+          <textarea aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => editExternalResponse(event.target.value)} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
           {tokenUsage !== null && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · 총 {tokenUsage.toLocaleString()} tokens</p>}
           {responseCopyStatus && <p className="copy-status" role="status">{responseCopyStatus}</p>}
         </section>

@@ -112,7 +112,7 @@ test('open a new dry etch case from the module home', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Profile·위치 분포부터 확인/ })).toBeVisible()
 })
 
-test('show a personal AI response in an editable focused field', async ({ page }) => {
+test('continue personal AI dialogue inside an automatic response popup', async ({ page }) => {
   const mockResponse = '가설 1은 챔버 위치 편차, 가설 2는 RF 조건 변화, 가설 3은 측정 편향이다. 위치별 분포와 대조군으로 각각 반증한다.'
   await page.route('**/api/sessions/*/llm/check', (route) => route.fulfill({
     contentType: 'application/json',
@@ -129,9 +129,19 @@ test('show a personal AI response in an editable focused field', async ({ page }
   await page.getByRole('button', { name: '1. 연결 확인' }).click()
   await expect(page.getByRole('button', { name: '2. 질문 보내기' })).toBeEnabled()
   await page.getByRole('button', { name: '2. 질문 보내기' }).click()
+  const chat = page.getByRole('dialog', { name: 'AI와 공정 문제 좁히기' })
+  await expect(chat).toBeVisible()
+  await expect(chat).toContainText(mockResponse)
+  await expect(chat).toContainText('1/15회')
+  const followUp = chat.getByLabel('다음 질문')
+  await expect(followUp).toBeFocused()
+  await followUp.fill('Sidewall angle 가설 중 RF bias와 위치 편차를 구분할 최소 반증 데이터는 무엇이야?')
+  await chat.getByRole('button', { name: '후속 질문 보내기' }).click()
+  await expect(chat).toContainText('2/15회')
+  await expect(chat.locator('.chat-answer')).toHaveCount(2)
+  await chat.getByRole('button', { name: 'AI 대화창 닫기' }).click()
   const responseField = page.getByLabel('외부 AI 분석 답변 붙여넣기')
   await expect(responseField).toHaveValue(mockResponse)
-  await expect(responseField).toBeFocused()
   await expect(page.getByText(/응답이 자동 입력됐어/)).toBeVisible()
   await responseField.fill(`${mockResponse} 사람이 수정한 문장.`)
   await expect(responseField).toHaveValue(/사람이 수정한 문장/)
