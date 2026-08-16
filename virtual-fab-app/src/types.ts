@@ -20,6 +20,14 @@ export type Scenario = {
   title: string
   version: string
   notice: string
+  incident: {
+    case_id: string
+    role: string
+    deadline: string
+    facts: Array<{ label: string; value: string; note: string }>
+    unknowns: string[]
+    decision: string
+  }
   stages: ScenarioStage[]
   tools: Record<string, Tool>
   required_analysis_kinds: string[]

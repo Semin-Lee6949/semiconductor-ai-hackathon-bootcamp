@@ -41,10 +41,22 @@ TOOLS: dict[str, dict[str, Any]] = {
 SCENARIO = {
     "id": "photo-cd-drift",
     "title": "사라진 선폭의 비밀",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
+    "incident": {
+        "case_id": "VF-PH-01",
+        "role": "입사 3개월 차 Photo 공정기술 엔지니어",
+        "deadline": "후속 Etch 투입까지 60분",
+        "facts": [
+            {"label": "전체 평균 CD", "value": "54.9 nm", "note": "합성 규격 53–57 nm 안"},
+            {"label": "Edge 결함률", "value": "3.2%", "note": "최근 기준 0.8%, 경고선 2.0%"},
+            {"label": "공정 이력", "value": "동일 Recipe", "note": "직전 Lot까지 특이사항 미보고"},
+        ],
+        "unknowns": ["Photo 공정의 실제 변화", "설비·위치 편중", "계측기 편향 또는 데이터 품질 문제"],
+        "decision": "평균 CD를 근거로 진행할 것인가, Lot을 보류하고 공간 분포부터 확인할 것인가?",
+    },
     "stages": [
-        {"id": "incident", "label": "문제 발생", "station": "alert", "brief": "현상 후 wafer edge CD 산포와 결함률이 증가했다. 평균 CD는 규격 안이다."},
+        {"id": "incident", "label": "문제 발생", "station": "alert", "brief": "전체 평균은 합성 규격 안이지만 edge 결함률은 경고선을 넘었다. 후속 공정 투입 전 첫 조치를 결정해야 한다."},
         {"id": "coach", "label": "LLM Coach", "station": "coach", "brief": "AI에게 정답이 아니라 경쟁 가설·반증 증거·누락 변수를 질문한다."},
         {"id": "data", "label": "데이터 판단", "station": "data", "brief": "Train 데이터의 결측·중복·단위·Tool 편중과 위치별 분포를 확인한다."},
         {"id": "experiment", "label": "실험계획", "station": "doe", "brief": "대조군·요인·수준·반복·판정기준을 고정한다."},
@@ -123,7 +135,7 @@ def load_session(session_id: str) -> SessionState | None:
 
 init_db()
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.2.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.3.0")
 
 
 CHOICE_LABELS = {
@@ -154,7 +166,7 @@ def deepseek_generate(prompt: str, user_id: str) -> dict[str, Any]:
             {
                 "role": "user",
                 "content": (
-                    "교육용 관찰: 현상 후 wafer edge CD 산포와 결함률이 증가했지만 평균 CD는 규격 안이다.\n"
+                    "교육용 관찰: 전체 평균 CD 54.9 nm는 합성 규격 53–57 nm 안이지만, wafer edge 결함률은 최근 기준 0.8%에서 3.2%로 증가했다. 후속 Etch 투입까지 60분이며 아직 공정 변화·설비 편중·계측 편향은 확인하지 않았다.\n"
                     f"학습자 질문: {prompt}"
                 ),
             },
@@ -238,7 +250,7 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
 .slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
 </style></head><body>
 <section class='slide dark active'><span class='label'>VIRTUAL FAB · INTERVIEW BRIEF</span><div><h1>사라진 선폭의 비밀</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
-<section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>평균은 정상이지만<br>분포는 경고했다</h2><p>현상 후 wafer edge CD 산포와 결함률이 증가했다. 평균값만 보면 놓칠 수 있는 공간 패턴을 문제로 정의했다.</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 wafer edge 결함 도식'></section>
+<section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>평균은 통과했지만<br>Edge는 경고했다</h2><p>합성 평균 CD 54.9 nm는 규격 53–57 nm 안이었다. 그러나 edge 결함률은 최근 기준 0.8%에서 3.2%로 상승했고, 후속 Etch 투입까지 60분만 남았다.</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 wafer edge 결함 도식'></section>
 <section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·Tool 편중과 Center–Edge 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
 <section class='slide'><span class='label'>AI COLLABORATION · {safe_model}</span><div><h2>질문과 외부 AI 답변을 함께 기록했다</h2><p><b>PROMPT</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 공정 원리·합성 데이터·측정 한계와 대조하고 채택·수정·기각했다.</p></div></section>

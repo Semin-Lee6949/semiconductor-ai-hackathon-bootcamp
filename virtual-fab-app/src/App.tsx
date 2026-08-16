@@ -16,7 +16,7 @@ const CHOICE_LABELS: Record<string, string> = {
 }
 
 function SignalPlot() {
-  const bars = [38, 41, 44, 47, 52, 58, 69, 78, 72, 60, 51, 46, 43, 40]
+  const bars = [31, 33, 34, 35, 37, 39, 42, 46, 50, 55, 62, 69, 76, 82]
   return (
     <figure className="signal-plot">
       <figcaption>합성 Train 데이터 · wafer edge 결함률</figcaption>
@@ -24,11 +24,22 @@ function SignalPlot() {
         <line x1="24" y1="104" x2="404" y2="104" />
         <line x1="24" y1="18" x2="24" y2="104" />
         <line className="spec" x1="24" y1="54" x2="404" y2="54" />
-        {bars.map((height, index) => <rect key={index} x={32 + index * 26} y={104 - height} width="15" height={height} className={index > 5 && index < 10 ? 'risk' : ''} />)}
+        {bars.map((height, index) => <rect key={index} x={32 + index * 26} y={104 - height} width="15" height={height} className={index > 8 ? 'risk' : ''} />)}
         <text x="30" y="123">CENTER</text><text x="350" y="123">EDGE</text><text x="340" y="49">warning</text>
       </svg>
     </figure>
   )
+}
+
+function IncidentBrief({ scenario }: { scenario: Scenario }) {
+  const incident = scenario.incident
+  return <section className="incident-case" aria-labelledby="incident-case-title">
+    <header><div><span>CASE {incident.case_id}</span><h3 id="incident-case-title">교대 직전, 판단이 필요한 Lot</h3></div><b>{incident.deadline}</b></header>
+    <p className="role-brief"><strong>너의 역할</strong>{incident.role}. 품질팀은 edge 이상을 알렸지만 아직 원인은 확인되지 않았다.</p>
+    <div className="incident-facts">{incident.facts.map((fact) => <div key={fact.label}><span>{fact.label}</span><b>{fact.value}</b><small>{fact.note}</small></div>)}</div>
+    <div className="incident-unknowns"><strong>아직 모르는 것</strong><ul>{incident.unknowns.map((item) => <li key={item}>{item}</li>)}</ul></div>
+    <p className="decision-call"><span>지금 결정할 것</span>{incident.decision}</p>
+  </section>
 }
 
 function ChoiceButton({ value, selected, children, onClick }: { value: string; selected: string; children: React.ReactNode; onClick: (value: string) => void }) {
@@ -99,7 +110,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     <form className="decision-panel" onSubmit={submit}>
       <div className="stage-heading"><span>{String(state.stage_index + 1).padStart(2, '0')}</span><h2>{stage.label}</h2></div>
       <p className="brief">{stage.brief}</p>
-      {stage.id === 'incident' && <><SignalPlot /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>Lot 보류<br/><small>분포와 위치 패턴부터 확인</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>공정 진행<br/><small>평균 CD가 규격 안이므로 통과</small></ChoiceButton></div></>}
+      {stage.id === 'incident' && <><IncidentBrief scenario={scenario}/><SignalPlot /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>Lot 보류<br/><small>분포와 위치 패턴부터 확인</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>공정 진행<br/><small>평균 CD가 규격 안이므로 통과</small></ChoiceButton></div></>}
       {stage.id === 'coach' && <>
         <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
         <div className="ai-action-grid"><button type="button" className="deepseek-call" onClick={askDeepSeek} disabled={deepseekBusy || prompt.length < 20}>{deepseekBusy ? 'DeepSeek 분석 중…' : 'DeepSeek API로 분석'}</button><button type="button" className="prompt-copy secondary" onClick={copyPrompt} disabled={prompt.length < 20}>다른 AI용 프롬프트 복사</button></div>

@@ -5,6 +5,8 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
   await page.goto('/')
   await expect(page.getByText('사라진 선폭의 비밀')).toBeVisible()
+  await expect(page.getByText('CASE VF-PH-01')).toBeVisible()
+  await expect(page.getByText('후속 Etch 투입까지 60분')).toBeVisible()
   await expect(page.locator('.station-tag')).toHaveCount(6)
   await expect(page.getByText('FAB ROOKIE', { exact: true })).toBeVisible()
   await expect(page.locator('.mission-hud')).toContainText('MISSION 01')
