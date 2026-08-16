@@ -55,6 +55,8 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: '내 AI 연결' })).toBeVisible()
   await expect(page.getByLabel('AI 제공사')).toHaveValue('gemini')
   await expect(page.getByLabel('개인 API 키')).toHaveAttribute('type', 'password')
+  await expect(page.getByLabel('개인 API 키')).toBeEnabled()
+  await expect(page.getByText('HTTPS 연결 필요')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '1. 연결 확인' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '2. 이 프롬프트로 분석' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '개인 키 없이 외부 AI용 프롬프트 복사' })).toBeVisible()
