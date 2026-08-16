@@ -15,6 +15,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   scenario: () => request<Scenario>('scenario/photo-cd-drift'),
   createSession: () => request<SessionState>('sessions', { method: 'POST' }),
+  session: (sessionId: string) => request<SessionState>(`sessions/${sessionId}`),
   decide: (sessionId: string, decision: Decision) =>
     request<DecisionResult>(`sessions/${sessionId}/decisions`, {
       method: 'POST',

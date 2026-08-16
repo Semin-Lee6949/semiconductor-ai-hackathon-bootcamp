@@ -1,6 +1,9 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { api } from './api'
+import { EvidenceDrawer } from './components/EvidenceDrawer'
+import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
+import { useFabSession } from './hooks/useFabSession'
 import type { CoachResponse, Decision, Scenario, SessionState, StageId } from './types'
 import './styles.css'
 
@@ -32,6 +35,12 @@ function ChoiceButton({ value, selected, children, onClick }: { value: string; s
   return <button type="button" className={`choice ${selected === value ? 'selected' : ''}`} onClick={() => onClick(value)}>{children}</button>
 }
 
+function ResourceMeter({ label, value, limit, unit }: { label: string; value: number; limit: number; unit: string }) {
+  const ratio = limit > 0 ? Math.min(100, Math.round((value / limit) * 100)) : 100
+  const risk = value > limit
+  return <div className={`resource-meter ${risk ? 'over' : ''}`}><div><span>{label}</span><b>{value}{unit} / {limit}{unit}</b></div><div className="meter-track"><span style={{ '--meter-ratio': ratio / 100 } as CSSProperties} /></div></div>
+}
+
 function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario: Scenario; state: SessionState; onSubmit: (decision: Decision) => Promise<void>; onCoach: (question: string) => Promise<CoachResponse>; busy: boolean }) {
   const stage = scenario.stages[state.stage_index]
   const [choice, setChoice] = useState('')
@@ -50,6 +59,13 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
   useEffect(() => setChoice(''), [stage.id])
 
   const totals = useMemo(() => tools.reduce((sum, id) => ({ cost: sum.cost + scenario.tools[id].cost, time: sum.time + scenario.tools[id].time }), { cost: 0, time: 0 }), [tools, scenario.tools])
+  const validationPreview = useMemo(() => {
+    const before = Number(baseline); const after = Number(holdout)
+    if (!Number.isFinite(before) || !Number.isFinite(after)) return null
+    const delta = after - before
+    const improved = direction === 'higher' ? delta > 0 : delta < 0
+    return { delta, improved }
+  }, [baseline, holdout, direction])
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -93,11 +109,12 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
       </>}
       {stage.id === 'analysis' && <>
         <div className="tool-grid">{Object.entries(scenario.tools).map(([id, tool]) => <label className={`tool ${tools.includes(id) ? 'selected' : ''}`} key={id}><input type="checkbox" checked={tools.includes(id)} onChange={() => setTools((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}/><b>{tool.label}</b><span>{tool.kind} · {tool.cost}C · {tool.time}m{tool.destructive ? ' · 파괴' : ''}</span></label>)}</div>
-        <div className="resource-line"><span>선택 비용 <b>{totals.cost} / {state.budget}</b></span><span>소요 시간 <b>{totals.time} / {state.time_left}m</b></span></div>
+        <div className="resource-preview" aria-live="polite"><ResourceMeter label="선택 비용" value={totals.cost} limit={state.budget} unit="C"/><ResourceMeter label="소요 시간" value={totals.time} limit={state.time_left} unit="m"/></div>
         <input type="hidden" value="select" /><button type="button" className="choice selected analysis-choice" onClick={() => setChoice('select')}>이 분석 조합으로 증거 수집</button>
       </>}
       {stage.id === 'validation' && <>
         <div className="metric-grid"><label>Baseline<input inputMode="decimal" value={baseline} onChange={(e) => setBaseline(e.target.value)} /></label><label>Holdout<input inputMode="decimal" value={holdout} onChange={(e) => setHoldout(e.target.value)} /></label><label>개선 방향<select value={direction} onChange={(e) => setDirection(e.target.value)}><option value="higher">높을수록 개선</option><option value="lower">낮을수록 개선</option></select></label></div>
+        {validationPreview && <div className={`validation-preview ${validationPreview.improved ? 'improved' : 'degraded'}`} role="status"><span>LIVE HOLDOUT PREVIEW</span><b>{validationPreview.delta >= 0 ? '+' : ''}{validationPreview.delta.toFixed(3)}</b><p>{validationPreview.improved ? '설정한 개선 방향과 일치해. 적용 범위를 선택해.' : '개선 방향과 불일치해. 조치보다 가설·실험을 다시 의심해야 해.'}</p></div>}
         <div className="choice-list"><ChoiceButton value="controlled" selected={choice} onClick={setChoice}>한정 적용 + 모니터링</ChoiceButton><ChoiceButton value="direct" selected={choice} onClick={setChoice}>전체 Lot 즉시 적용</ChoiceButton><ChoiceButton value="release" selected={choice} onClick={setChoice}>검증 없이 해제</ChoiceButton></div>
       </>}
       <button className="commit" disabled={!choice || busy || (stage.id === 'coach' && !mentorResponse)}>{busy ? '판단 기록 중…' : '판단을 기록하고 다음 스테이션으로'}</button>
@@ -148,35 +165,8 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
 }
 
 export default function App() {
-  const [scenario, setScenario] = useState<Scenario | null>(null)
-  const [session, setSession] = useState<SessionState | null>(null)
-  const [feedback, setFeedback] = useState('현재 스테이션을 선택해 첫 판단을 시작해.')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(true)
-
-  useEffect(() => {
-    Promise.all([api.scenario(), api.createSession()]).then(([nextScenario, nextSession]) => {
-      setScenario(nextScenario); setSession(nextSession)
-    }).catch((cause: Error) => setError(cause.message)).finally(() => setBusy(false))
-  }, [])
-
-  const decide = async (decision: Decision) => {
-    if (!session) return
-    setBusy(true); setError('')
-    try {
-      const result = await api.decide(session.id, decision)
-      setSession(result.state); setFeedback(result.feedback)
-    } catch (cause) { setError(cause instanceof Error ? cause.message : '판단을 기록하지 못했어.') }
-    finally { setBusy(false) }
-  }
-
-  const restart = async () => {
-    if (!session) return
-    setBusy(true); setError('')
-    try { setSession(await api.restart(session.id)); setFeedback('새 실험이 시작됐어. 이번에는 다른 판단 경로를 비교해봐.') }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '재시작하지 못했어.') }
-    finally { setBusy(false) }
-  }
+  const { scenario, session, feedback, error, busy, decide, restart, setFeedback } = useFabSession()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   if (!scenario || !session) return <main className="loading"><div className="loader"/><p>{error || '가상 팹을 준비하고 있어…'}</p></main>
 
@@ -184,22 +174,23 @@ export default function App() {
     <main className="app-shell">
       <header className="topbar">
         <div><a className="brand" href="./">VIRTUAL FAB</a><span className="scenario-name">{scenario.title}</span></div>
-        <div className="status-strip"><span>SCORE <b>{session.score}</b></span><span>BUDGET <b>{session.budget}</b></span><span>TIME <b>{session.time_left}m</b></span></div>
+        <div className="status-strip"><span>SCORE <b>{session.score}</b></span><span>BUDGET <b>{session.budget}</b></span><span>TIME <b>{session.time_left}m</b></span><button type="button" onClick={() => setDrawerOpen(true)}>EVIDENCE <b>{session.history.length}</b></button></div>
       </header>
-      <nav className="stage-rail" aria-label="시나리오 진행 단계">{scenario.stages.map((stage, index) => <button key={stage.id} className={index === session.stage_index ? 'active' : index < session.stage_index || session.completed ? 'done' : ''} disabled={index !== session.stage_index || session.completed}><span>{String(index + 1).padStart(2, '0')}</span>{stage.label}</button>)}</nav>
+      <StageProgress scenario={scenario} session={session}/>
       <section className="workspace">
         <div className="visual-column">
           <FabScene scenario={scenario} stageIndex={session.stage_index} onStationSelect={(index) => setFeedback(index === session.stage_index ? `${scenario.stages[index].label} 스테이션이 열렸어.` : index < session.stage_index ? '이미 완료한 스테이션이야. 기록은 아래에서 확인해.' : '앞 단계의 근거를 먼저 남겨야 열려.')} />
           <div className="feedback" role="status"><span>LIVE NOTE</span><p>{feedback}</p></div>
         </div>
         <aside className="workbench">
-          {session.completed
-            ? <ResultPanel scenario={scenario} session={session} busy={busy} onRestart={restart}/>
-            : <DecisionPanel key={scenario.stages[session.stage_index].id} scenario={scenario} state={session} onSubmit={decide} onCoach={(question) => api.coach(session.id, question)} busy={busy}/>
-          }
+          <div className="stage-transition" key={session.completed ? 'result' : scenario.stages[session.stage_index].id}>{session.completed
+              ? <ResultPanel scenario={scenario} session={session} busy={busy} onRestart={restart}/>
+              : <DecisionPanel scenario={scenario} state={session} onSubmit={decide} onCoach={(question) => api.coach(session.id, question)} busy={busy}/>
+          }</div>
           {error && <div className="error" role="alert"><b>기록 실패</b><span>{error}</span></div>}
         </aside>
       </section>
+      <EvidenceDrawer open={drawerOpen} scenario={scenario} session={session} onClose={() => setDrawerOpen(false)}/>
       <footer><p>{scenario.notice}</p><p>React · Three.js · FastAPI / scenario v{scenario.version}</p></footer>
     </main>
   )
