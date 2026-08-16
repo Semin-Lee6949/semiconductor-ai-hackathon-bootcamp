@@ -68,6 +68,8 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   const datasetDownload = page.waitForEvent('download')
   await page.getByRole('button', { name: '합성 데이터 CSV 다운로드' }).click()
   expect((await datasetDownload).suggestedFilename()).toContain('virtual-fab-photo-cd-drift')
+  await expect(page.getByText('AI 질문에 동일 CSV 42행 자동 첨부')).toBeVisible()
+  await expect(page.getByText(/PC의 파일 경로를 입력하지 않아도 돼/)).toBeVisible()
   await expect(page.getByRole('button', { name: '개인 키 없이 외부 AI용 질문 복사' })).toBeVisible()
   const manualAnswer = '가설 1은 Dose 변화, 가설 2는 Focus 변화, 가설 3은 측정 편향입니다. 합성 CSV의 CENTER·EDGE와 Tool·Lot 분포를 대조해 반증합니다.'
   for (let turn = 1; turn <= 8; turn += 1) {

@@ -344,10 +344,14 @@ def test_dataset_download_is_reproducible_and_required_for_investigation():
 
 def test_follow_up_prompt_contains_dataset_and_previous_exchange():
     state = main.SessionState(id="context-test", scenario_id="photo-cd-drift", scenario_version=main.PHOTO_SCENARIO["version"], seed=77)
+    state.dataset_downloaded = True
     state.ai_conversation = [{"question": "결측을 먼저 어떻게 처리해?", "response": "결측 원인을 분리하고 민감도 분석을 하세요."}]
     system, messages = main.coach_messages("그다음 Tool 편중은 어떻게 확인해?", main.PHOTO_SCENARIO, state)
     assert "합성 데이터" in system
     assert "다운로드 데이터는 42행" in messages[0]["content"]
+    assert "[서버 첨부 CSV 원문" in messages[0]["content"]
+    assert "scenario_version,seed,lot_id,tool_id,wafer_zone,position_index,metric_value,unit,missing_flag" in messages[0]["content"]
+    assert messages[0]["content"].count("SYN-") == 42
     assert messages[-3]["content"] == "결측을 먼저 어떻게 처리해?"
     assert messages[-2]["role"] == "assistant"
     assert messages[-1]["content"] == "그다음 Tool 편중은 어떻게 확인해?"
@@ -399,3 +403,26 @@ def test_gemini_retries_short_max_token_response_with_larger_limit(monkeypatch):
     assert result["finish_reason"] == "STOP"
     assert result["retry_count"] == 1
     assert result["usage"]["thought_tokens"] == 120
+
+
+def test_gemini_retries_temporary_503_before_succeeding(monkeypatch):
+    calls = []
+
+    def fake_request(url, headers, body=None):
+        calls.append(body)
+        if len(calls) < 3:
+            raise main.HTTPException(502, "제공사 서버가 일시적으로 혼잡합니다. 자동 재시도 후에도 응답을 받지 못했습니다.")
+        return {
+            "candidates": [{"content": {"parts": [{"text": "CSV 42행을 읽고 결측과 영역별 분포를 분석한 응답"}]}, "finishReason": "STOP"}],
+            "usageMetadata": {"promptTokenCount": 600, "candidatesTokenCount": 80, "totalTokenCount": 680},
+        }
+
+    monkeypatch.setattr(main, "provider_json_request", fake_request)
+    monkeypatch.setattr(main.time, "sleep", lambda seconds: None)
+    result = main.generate_with_byok(
+        "gemini", "gemini-3.5-flash", "test-personal-key-abcdefghijklmnopqrstuvwxyz",
+        "CD와 Dose를 사용해 합성 CSV를 분석해줘.", main.PHOTO_SCENARIO,
+    )
+    assert len(calls) == 3
+    assert result["retry_count"] == 2
+    assert "CSV 42행" in result["response"]

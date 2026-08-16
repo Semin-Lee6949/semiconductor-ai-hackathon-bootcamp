@@ -388,6 +388,8 @@ def provider_json_request(url: str, headers: dict[str, str], body: dict[str, Any
             message = "이 계정에서 모델 ID를 찾을 수 없습니다. 모델명을 확인하세요."
         elif exc.code == 429:
             message = "제공사의 사용량 또는 결제 한도에 도달했습니다."
+        elif exc.code == 503:
+            message = "제공사 서버가 일시적으로 혼잡합니다. 자동 재시도 후에도 응답을 받지 못했습니다. 잠시 후 다시 시도하세요."
         else:
             message = f"제공사 API 요청에 실패했습니다 ({exc.code})."
         if provider_detail and exc.code not in {401, 403}:
@@ -395,6 +397,19 @@ def provider_json_request(url: str, headers: dict[str, str], body: dict[str, Any
         raise HTTPException(502, message) from exc
     except (URLError, TimeoutError, json.JSONDecodeError) as exc:
         raise HTTPException(502, "제공사 API 응답을 30초 안에 확인하지 못했습니다.") from exc
+
+
+def provider_json_request_with_transient_retry(url: str, headers: dict[str, str], body: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    retries = 0
+    while True:
+        try:
+            return provider_json_request(url, headers, body), retries
+        except HTTPException as exc:
+            detail = str(exc.detail)
+            if ("(503)" not in detail and "일시적으로 혼잡" not in detail) or retries >= 2:
+                raise
+            time.sleep(1 + retries)
+            retries += 1
 
 
 def check_llm_connection(provider: str, model: str, api_key: str) -> dict[str, str]:
@@ -460,6 +475,15 @@ def dataset_context(state: SessionState, scenario: dict[str, Any]) -> str:
     )
 
 
+def dataset_csv_text(state: SessionState, scenario: dict[str, Any]) -> str:
+    rows = dataset_rows(state, scenario)
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()), lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue()
+
+
 def dataset_statistics(state: SessionState, scenario: dict[str, Any]) -> dict[str, Any]:
     rows = dataset_rows(state, scenario)
     valid = [row for row in rows if row["missing_flag"] == "N"]
@@ -520,18 +544,26 @@ def coach_messages(prompt: str, scenario: dict[str, Any], state: SessionState | 
         f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
         "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
         "정답을 단정하지 말고 학습자가 다운로드한 합성 데이터의 품질·분포·누락 변수를 먼저 점검하게 한다. "
+        "사용자 PC의 C:\\ 또는 /Users/ 같은 로컬 파일 경로에는 접근할 수 없다. 경로를 열려고 하지 말고 아래 서버 첨부 CSV 원문만 분석한다. "
         "경쟁 가설과 반증 증거를 구분하고 앞선 대화에서 확정된 것·기각된 것·남은 불확실성을 반드시 이어받는다. "
         "반드시 한국어로 답하고, 매 답변을 '데이터 근거 / 해석 / 가설 또는 판단 / 반증 기준 / 남은 불확실성 / 추천 후속 질문'으로 나눈다. "
         "데이터 근거에는 제공된 합성 데이터의 행 수·결측·영역별 평균·Tool별 평균 중 관련 수치를 직접 인용하고, 관찰되지 않은 수치를 만들지 않는다. "
         f"현재 {turn_no}/15회 단계는 '{phase['label']}'이며 목표는 {phase['goal']} "
         f"공정 용어 사전은 {glossary}이다. 용어를 사용할 때 질문 맥락에 맞춰 짧게 풀어 쓴다."
     )
+    csv_attachment = ""
+    if state and state.dataset_downloaded:
+        csv_attachment = (
+            "\n\n[서버 첨부 CSV 원문 · 사용자가 다운로드한 파일과 동일한 scenario version·seed]\n"
+            "```csv\n" + dataset_csv_text(state, scenario) + "```"
+        )
     observation = (
         "교육용 관찰: "
         + "; ".join(f"{fact['label']} {fact['value']} ({fact['note']})" for fact in scenario["incident"]["facts"])
         + f". 제한시간은 {scenario['incident']['deadline']}이다. 미확인 항목은 "
         + ", ".join(scenario["incident"]["unknowns"])
         + (f". 데이터 요약: {dataset_context(state, scenario)}" if state else ".")
+        + csv_attachment
     )
     messages: list[dict[str, str]] = [{"role": "user", "content": observation}]
     if state:
@@ -586,16 +618,16 @@ def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, sce
             "contents": [{"role": "model" if item["role"] == "assistant" else "user", "parts": [{"text": item["content"]}]} for item in messages],
             "generationConfig": generation_config,
         }
-        result = provider_json_request(endpoint, {"x-goog-api-key": api_key}, body)
+        result, retry_count = provider_json_request_with_transient_retry(endpoint, {"x-goog-api-key": api_key}, body)
         candidates = result.get("candidates", [])
         parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
         content = "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
         finish_reason = str(candidates[0].get("finishReason", "")) if candidates else ""
-        retry_count = 0
         if finish_reason == "MAX_TOKENS" and len(content) < 400:
-            retry_count = 1
+            retry_count += 1
             retry_body = {**body, "generationConfig": {"maxOutputTokens": 16384}}
-            result = provider_json_request(endpoint, {"x-goog-api-key": api_key}, retry_body)
+            result, transient_retries = provider_json_request_with_transient_retry(endpoint, {"x-goog-api-key": api_key}, retry_body)
+            retry_count += transient_retries
             candidates = result.get("candidates", [])
             parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
             content = "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
@@ -970,15 +1002,10 @@ def download_dataset(session_id: str) -> Response:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     if state.completed or current_stage(state) != "investigation":
         raise HTTPException(409, "데이터·AI 공동분석 단계에서 데이터를 다운로드할 수 있습니다.")
-    rows = dataset_rows(state, scenario_for(state))
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()), lineterminator="\n")
-    writer.writeheader()
-    writer.writerows(rows)
     state.dataset_downloaded = True
     save_session(state)
     return Response(
-        content="\ufeff" + output.getvalue(),
+        content="\ufeff" + dataset_csv_text(state, scenario_for(state)),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="virtual-fab-{state.scenario_id}-{state.seed}.csv"'},
     )

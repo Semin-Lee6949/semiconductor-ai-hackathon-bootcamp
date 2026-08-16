@@ -231,7 +231,8 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         <section className={`dataset-panel ${datasetDownloaded ? 'ready' : ''}`}>
           <div><b>STEP 1 · 합성 원시 데이터 확보</b><p>3개 Lot의 위치·Tool·결측 플래그가 포함된 CSV를 내려받아 엑셀·Python 등으로 직접 확인해.</p></div>
           <button type="button" onClick={downloadDataset} disabled={datasetBusy}>{datasetBusy ? 'CSV 생성 중…' : datasetDownloaded ? 'CSV 다시 다운로드' : '합성 데이터 CSV 다운로드'}</button>
-          <small>{datasetDownloaded ? `다운로드 완료 · scenario v${state.scenario_version} · seed ${state.seed}` : '데이터를 내려받아야 최종 데이터 판단을 기록할 수 있어.'}</small>
+          <small>{datasetDownloaded ? `다운로드 완료 · scenario v${state.scenario_version} · seed ${state.seed} · AI 질문에 동일 CSV 42행 자동 첨부` : '데이터를 내려받아야 최종 데이터 판단을 기록할 수 있어.'}</small>
+          {datasetDownloaded && <p className="dataset-ai-note">PC의 파일 경로를 입력하지 않아도 돼. 서버가 다운로드 파일과 동일한 CSV 원문을 Gemini 요청에 직접 넣어.</p>}
           {datasetError && <p className="inline-error" role="alert">{datasetError}</p>}
         </section>
         <div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div>
