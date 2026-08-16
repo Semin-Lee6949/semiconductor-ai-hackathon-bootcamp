@@ -1,16 +1,24 @@
 from __future__ import annotations
 
+import base64
+import html
+import json
+import os
 from pathlib import Path
 from typing import Any, Literal
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 APP_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = APP_DIR / "dist"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
 
 STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
 
@@ -28,7 +36,7 @@ TOOLS: dict[str, dict[str, Any]] = {
 SCENARIO = {
     "id": "photo-cd-drift",
     "title": "사라진 선폭의 비밀",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
     "stages": [
         {"id": "incident", "label": "문제 발생", "station": "alert", "brief": "현상 후 wafer edge CD 산포와 결함률이 증가했다. 평균 CD는 규격 안이다."},
@@ -50,6 +58,16 @@ class DecisionRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
+class CoachRequest(BaseModel):
+    question: str = Field(min_length=20, max_length=1000)
+
+
+class ReportRequest(BaseModel):
+    opinion: str = Field(min_length=40, max_length=3000)
+    presenter: str = Field(default="지원자", max_length=80)
+    target_role: str = Field(default="반도체 공정기술", max_length=120)
+
+
 class SessionState(BaseModel):
     id: str
     scenario_id: str = "photo-cd-drift"
@@ -65,7 +83,106 @@ class SessionState(BaseModel):
 
 SESSIONS: dict[str, SessionState] = {}
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.1.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.2.0")
+
+
+CHOICE_LABELS = {
+    "hold": "Lot 보류 후 분포 확인", "release_by_mean": "평균 CD만 보고 진행",
+    "modify": "AI 제안을 수정해 사용", "accept": "AI 제안을 그대로 채택", "reject": "근거 부족으로 보류",
+    "distribution": "위치·Tool·Lot 분포 분석", "mean_only": "전체 평균만 확인",
+    "screening": "대조군 포함 Screening DOE", "ofat": "한 변수 확인 실험", "immediate": "검증 없이 Recipe 변경",
+    "select": "정보가치 기반 분석 툴 선택",
+    "controlled": "한정 적용 후 모니터링", "direct": "전체 Lot 즉시 적용", "release": "검증 없이 해제",
+}
+
+
+def ollama_chat(question: str) -> str:
+    system_prompt = """당신은 반도체 공정 학습자의 소크라테스식 멘토다.
+숨은 원인이나 정답을 단정하지 않는다. 실제 회사 수치와 비밀은 쓰지 않는다.
+학습자가 다음 행동을 스스로 결정하도록 데이터 확인 질문 한 개만 한국어 60자 이내로 작성한다."""
+    payload = json.dumps({
+        "model": OLLAMA_MODEL,
+        "stream": False,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"관찰: 현상 후 wafer edge CD 산포와 결함률이 증가했지만 평균 CD는 규격 안이다.\n학습자 질문: {question}"},
+        ],
+        "options": {"temperature": 0.1, "num_ctx": 768, "num_predict": 60},
+    }).encode("utf-8")
+    request = Request(f"{OLLAMA_URL}/api/chat", data=payload, headers={"Content-Type": "application/json"})
+    try:
+        with urlopen(request, timeout=180) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise HTTPException(503, f"로컬 LLM 응답을 받지 못했습니다: {exc}") from exc
+    content = str(result.get("message", {}).get("content", "")).strip()
+    if not content:
+        raise HTTPException(503, "로컬 LLM이 빈 응답을 반환했습니다.")
+    evidence_framework = """EVIDENCE FRAMEWORK · 검증 규칙
+H1 Dose/Focus | Focus map·위치별 CD로 공정 window 이탈 여부를 반증
+H2 PR두께/PEB/현상 | 두께·Bake·현상 조건별 대조군 반복으로 반증
+H3 계측기/Tool편향 | 동일 시편 교차 계측과 Tool별 bias로 반증
+DATA QUALITY | 결측·단위·wafer 위치·Tool imbalance를 먼저 확인
+NEXT | Optical CD 재측정과 Tool split을 최소 비용 첫 행동으로 검토
+
+OLLAMA DRAFT · 로컬 모델 생성
+"""
+    critique = "\nCRITIQUE · 이 초안의 모호한 표현을 측정 변수·비교군·기각 기준으로 다시 써보세요."
+    return evidence_framework + content.strip('"') + critique
+
+
+def svg_data_uri(svg: str) -> str:
+    encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"data:image/svg+xml;base64,{encoded}"
+
+
+def build_report(state: SessionState, request: ReportRequest) -> str:
+    safe_presenter = html.escape(request.presenter)
+    safe_role = html.escape(request.target_role)
+    safe_opinion = html.escape(request.opinion).replace("\n", "<br>")
+    history_by_stage = {item["stage"]: item for item in state.history}
+    incident = history_by_stage.get("incident", {})
+    coach = history_by_stage.get("coach", {})
+    analysis = history_by_stage.get("analysis", {})
+    validation = history_by_stage.get("validation", {})
+    tools = [TOOLS[item]["label"] for item in analysis.get("tools", []) if item in TOOLS]
+    metrics = validation.get("payload", {}).get("metrics", {})
+    mentor_text = str(coach.get("payload", {}).get("llm_response", "기록 없음"))[:1500]
+    safe_mentor = html.escape(mentor_text).replace("\n", "<br>")
+    choice_rows = "".join(
+        f"<li><b>{html.escape(next(stage['label'] for stage in SCENARIO['stages'] if stage['id'] == item['stage']))}</b>"
+        f"<span>{html.escape(CHOICE_LABELS.get(item['choice'], item['choice']))}</span></li>"
+        for item in state.history
+    )
+    wafer_svg = svg_data_uri("""<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'>
+      <rect width='640' height='360' fill='#eaf1f1'/><circle cx='320' cy='180' r='128' fill='#a9e1e3' stroke='#092d35' stroke-width='8'/>
+      <path d='M308 52h24v18h-24z' fill='#eaf1f1'/><circle cx='225' cy='100' r='12' fill='#e58a00'/><circle cx='414' cy='112' r='16' fill='#e58a00'/>
+      <circle cx='438' cy='210' r='13' fill='#e58a00'/><circle cx='205' cy='235' r='11' fill='#e58a00'/><circle cx='370' cy='292' r='14' fill='#e58a00'/>
+      <circle cx='318' cy='178' r='42' fill='none' stroke='#fff' stroke-width='3' stroke-dasharray='8 8'/>
+      <text x='28' y='326' font-family='Arial,sans-serif' font-size='22' fill='#092d35'>SYNTHETIC WAFER · EDGE CD DISPERSION</text></svg>""")
+    tool_svg = svg_data_uri("""<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360'>
+      <rect width='640' height='360' fill='#071d24'/><g fill='#dff6f6' stroke='#00a8b5' stroke-width='5'>
+      <rect x='55' y='88' width='140' height='190'/><rect x='250' y='55' width='140' height='223'/><rect x='445' y='112' width='140' height='166'/></g>
+      <g fill='#ffb21d'><circle cx='125' cy='154' r='34'/><rect x='295' y='92' width='50' height='105'/><path d='M480 235l35-76 35 76z'/></g>
+      <g font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='#dff6f6'><text x='83' y='320'>DIMENSION</text><text x='274' y='320'>STRUCTURE</text><text x='472' y='320'>VERIFY</text></g></svg>""")
+    verdict = html.escape(state.verdict or "판정 없음")
+    return f"""<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>Virtual Fab 면접 PT · {safe_presenter}</title><style>
+*{{box-sizing:border-box}}:root{{--ink:#071d24;--cyan:#00a8b5;--amber:#ffb21d;--paper:#f6f9f8}}body{{margin:0;background:var(--ink);font-family:'Malgun Gothic',sans-serif;color:var(--ink);overflow:hidden}}
+.slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
+</style></head><body>
+<section class='slide dark active'><span class='label'>VIRTUAL FAB · INTERVIEW BRIEF</span><div><h1>사라진 선폭의 비밀</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
+<section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>평균은 정상이지만<br>분포는 경고했다</h2><p>현상 후 wafer edge CD 산포와 결함률이 증가했다. 평균값만 보면 놓칠 수 있는 공간 패턴을 문제로 정의했다.</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 wafer edge 결함 도식'></section>
+<section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·Tool 편중과 Center–Edge 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
+<section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
+<section class='slide'><span class='label'>AI COLLABORATION</span><div><h2>검증 프레임과 Ollama 질문을 분리했다</h2><blockquote>{safe_mentor}</blockquote><p>검증 규칙은 코드가 보장하고, 로컬 모델 질문은 공정 원리·합성 데이터·측정 한계로 다시 검토했다.</p></div></section>
+<section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
+<section class='slide dark'><span class='label'>R · RESULT</span><div><h2>{verdict}</h2><div class='metric'><span><b>{state.score}</b>점수</span><span><b>{state.budget}</b>남은 예산</span><span><b>{state.time_left}</b>남은 시간</span></div><p>Baseline {html.escape(str(metrics.get('baseline','-')))} → Holdout {html.escape(str(metrics.get('holdout','-')))}</p></div><small>이 수치는 교육용 합성 입력에 대한 시나리오 결과다.</small></section>
+<section class='slide'><span class='label'>MY DISCUSSION</span><div><h2>내 판단과 한계</h2><blockquote>{safe_opinion}</blockquote></div></section>
+<section class='slide dark'><span class='label'>INTERVIEW CLOSE</span><div><h2>제가 증명한 것은<br><span class='accent'>정답이 아니라 과정</span>입니다</h2><p>문제 정의 → AI 가설 → 데이터 감사 → 실험 → 분석 선택 → Holdout 검증</p><p>질문을 받겠습니다.</p></div></section>
+<div class='counter'><span id='current'>1</span> / <span id='total'>9</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
+<script>const s=[...document.querySelectorAll('.slide')];let i=0;function show(n){{i=(n+s.length)%s.length;s.forEach((x,j)=>x.classList.toggle('active',j===i));document.getElementById('current').textContent=i+1}}function move(n){{show(i+n)}}document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')move(1);if(e.key==='ArrowLeft')move(-1)}});document.getElementById('total').textContent=s.length;</script>
+</body></html>"""
 
 
 def current_stage(state: SessionState) -> str:
@@ -105,8 +222,10 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
         state.evidence.append("평균과 위치별 분포 분리" if request.choice == "hold" else "평균 CD만 확인")
         feedback = "Lot을 보류하고 관찰과 원인 추정을 분리했습니다." if request.choice == "hold" else "평균은 정상이나 edge 산포가 다음 단계로 넘어갑니다."
     elif request.stage == "coach":
-        if len(str(request.payload.get("prompt", ""))) < 20 or len(str(request.payload.get("human_check", ""))) < 20:
-            raise HTTPException(422, "LLM 질문과 사람의 검증 계획을 각각 20자 이상 기록하세요.")
+        if (len(str(request.payload.get("prompt", ""))) < 20
+                or len(str(request.payload.get("human_check", ""))) < 20
+                or len(str(request.payload.get("llm_response", ""))) < 20):
+            raise HTTPException(422, "LLM 질문·실제 응답·사람의 검증 계획을 모두 기록하세요.")
         state.score += 12 if request.choice in {"modify", "reject"} else 6
         state.evidence.append("LLM 제안 검토")
         feedback = "AI 제안과 사람의 판단을 분리해 기록했습니다."
@@ -174,6 +293,17 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": "virtual-fab"}
 
 
+@app.get("/api/llm/health")
+def llm_health() -> dict[str, str]:
+    try:
+        with urlopen(f"{OLLAMA_URL}/api/tags", timeout=3) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        names = {item.get("name") for item in result.get("models", [])}
+        return {"status": "ok" if OLLAMA_MODEL in names else "model_missing", "model": OLLAMA_MODEL}
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return {"status": "offline", "model": OLLAMA_MODEL}
+
+
 @app.get("/api/scenario/photo-cd-drift")
 def get_scenario() -> dict[str, Any]:
     return SCENARIO
@@ -194,6 +324,16 @@ def get_session(session_id: str) -> SessionState:
     return state
 
 
+@app.post("/api/sessions/{session_id}/coach")
+def coach(session_id: str, request: CoachRequest) -> dict[str, str]:
+    state = SESSIONS.get(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if current_stage(state) != "coach" or state.completed:
+        raise HTTPException(409, "LLM Coach 단계에서만 질문할 수 있습니다.")
+    return {"response": ollama_chat(request.question), "model": OLLAMA_MODEL}
+
+
 @app.post("/api/sessions/{session_id}/decisions")
 def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
     state = SESSIONS.get(session_id)
@@ -209,6 +349,21 @@ def restart(session_id: str) -> SessionState:
     state = SessionState(id=session_id)
     SESSIONS[session_id] = state
     return state
+
+
+@app.post("/api/sessions/{session_id}/report")
+def report(session_id: str, request: ReportRequest) -> Response:
+    state = SESSIONS.get(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if not state.completed:
+        raise HTTPException(409, "시나리오 완료 후 면접 자료를 만들 수 있습니다.")
+    document = build_report(state, request)
+    return Response(
+        content=document,
+        media_type="text/html; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=virtual-fab-interview-slides.html"},
+    )
 
 
 if DIST_DIR.exists():

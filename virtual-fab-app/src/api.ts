@@ -1,4 +1,4 @@
-import type { Decision, DecisionResult, Scenario, SessionState } from './types'
+import type { CoachResponse, Decision, DecisionResult, ReportPayload, Scenario, SessionState } from './types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -20,6 +20,23 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ ...decision, payload: decision.payload ?? {} }),
     }),
+  coach: (sessionId: string, question: string) =>
+    request<CoachResponse>(`sessions/${sessionId}/coach`, {
+      method: 'POST',
+      body: JSON.stringify({ question }),
+    }),
+  report: async (sessionId: string, payload: ReportPayload) => {
+    const response = await fetch(`${BASE}api/sessions/${sessionId}/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.detail ?? `자료 생성 실패 (${response.status})`)
+    }
+    return response.blob()
+  },
   restart: (sessionId: string) =>
     request<SessionState>(`sessions/${sessionId}/restart`, { method: 'POST' }),
 }

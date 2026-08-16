@@ -56,3 +56,11 @@ export type Decision = {
 }
 
 export type DecisionResult = { state: SessionState; feedback: string }
+
+export type CoachResponse = { response: string; model: string }
+
+export type ReportPayload = {
+  opinion: string
+  presenter: string
+  target_role: string
+}
