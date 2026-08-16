@@ -54,7 +54,7 @@ function deepQuestionForTurn(turn: number, scenario: Scenario, terms: string[]) 
     '면접 PT에 넣을 수 있도록 상황, 실제 데이터 수치, 경쟁 가설, 반증 과정, 사람의 최종 판단과 한계를 연결해 요약해줘.',
   ]
   const request = requests[turn - 1] ?? '이 결론에 대한 가장 강한 반론과 추가 검증 한계를 제시하고 면접관의 예상 질문에 답해줘.'
-  return `[문답 ${turn}/15 · ${phaseForTurn(turn).label}]\n[핵심 키워드] ${keywords}\n[데이터 조건] 다운로드한 교육용 합성 CSV의 실제 행 수·결측·Lot·Tool·wafer zone 통계를 근거로 사용할 것\n[질문] ${request}\n[출력 형식] 데이터 근거 / 해석 / 가설 또는 판단 / 반증 기준 / 남은 불확실성 / 추천 후속 질문`
+  return `[문답 ${turn}/15 · ${phaseForTurn(turn).label}]\n[핵심 키워드] ${keywords}\n[데이터 연결] 이 사이트가 현재 세션의 서버 CSV 원문 42행과 통계 요약을 자동 첨부함. PC 다운로드 경로는 사용하지 말 것\n[데이터 조건] 첨부된 교육용 합성 CSV의 실제 행 수·결측·Lot·Tool·wafer zone 통계를 근거로 사용할 것\n[질문] ${request}\n[출력 형식] 데이터 근거 / 해석 / 가설 또는 판단 / 반증 기준 / 남은 불확실성 / 추천 후속 질문`
 }
 
 function SignalPlot({ scenario }: { scenario: Scenario }) {
@@ -118,6 +118,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [datasetError, setDatasetError] = useState('')
   const [selectedKeywordIds, setSelectedKeywordIds] = useState<string[]>(scenario.keywords.slice(0, 2).map((item) => item.id))
   const [questionGoal, setQuestionGoal] = useState(phaseForTurn(restoredConversation.length + 1).id)
+  const datasetSourcePath = `${import.meta.env.BASE_URL}api/sessions/${state.id}/dataset.csv`
 
   useEffect(() => setChoice(''), [stage.id])
 
@@ -169,7 +170,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
       decide: '지금까지의 데이터와 문답을 바탕으로 우선 가설, 대조군, 판정 기준, 적용 리스크와 보류 조건을 정리해줘.',
       synthesize: '면접 PT용으로 상황, 데이터 품질, 핵심 가설, 반증 과정, 사람의 최종 판단과 한계를 STAR 구조로 요약해줘.',
     }
-    setPrompt(`[문답 ${currentTurn}/15 · ${currentPhase.label}]\n[핵심 키워드] ${selectedTerms.join(', ')}\n[현재 관찰] ${facts}\n[질문] ${requests[questionGoal]}\n[출력 형식] 데이터 근거 / 가설 또는 판단 / 반증 기준 / 다음 행동을 구분해 한국어로 답해줘.`)
+    setPrompt(`[문답 ${currentTurn}/15 · ${currentPhase.label}]\n[핵심 키워드] ${selectedTerms.join(', ')}\n[데이터 연결] 이 사이트가 현재 세션의 서버 CSV 원문 42행과 통계 요약을 자동 첨부함. PC 다운로드 경로는 사용하지 말 것\n[현재 관찰] ${facts}\n[질문] ${requests[questionGoal]}\n[출력 형식] 데이터 근거 / 가설 또는 판단 / 반증 기준 / 다음 행동을 구분해 한국어로 답해줘.`)
   }
 
   const downloadDataset = async () => {
@@ -232,7 +233,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
           <div><b>STEP 1 · 합성 원시 데이터 확보</b><p>3개 Lot의 위치·Tool·결측 플래그가 포함된 CSV를 내려받아 엑셀·Python 등으로 직접 확인해.</p></div>
           <button type="button" onClick={downloadDataset} disabled={datasetBusy}>{datasetBusy ? 'CSV 생성 중…' : datasetDownloaded ? 'CSV 다시 다운로드' : '합성 데이터 CSV 다운로드'}</button>
           <small>{datasetDownloaded ? `다운로드 완료 · scenario v${state.scenario_version} · seed ${state.seed} · AI 질문에 동일 CSV 42행 자동 첨부` : '데이터를 내려받아야 최종 데이터 판단을 기록할 수 있어.'}</small>
-          {datasetDownloaded && <p className="dataset-ai-note">PC의 파일 경로를 입력하지 않아도 돼. 서버가 다운로드 파일과 동일한 CSV 원문을 Gemini 요청에 직접 넣어.</p>}
+          {datasetDownloaded && <div className="dataset-ai-note" role="status"><b>AI 데이터 자동 연결됨</b><p>브라우저 보안상 PC의 Downloads 폴더 경로는 찾거나 읽지 않아. 대신 사이트가 아래 서버 데이터 경로에서 동일 seed의 CSV를 확인하고, 원문 42행과 통계 요약을 Gemini 요청에 직접 넣어.</p><code>{datasetSourcePath}</code><small>`C:\Users\…\파일.csv` 경로를 질문에 붙일 필요가 없어.</small></div>}
           {datasetError && <p className="inline-error" role="alert">{datasetError}</p>}
         </section>
         <div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div>
