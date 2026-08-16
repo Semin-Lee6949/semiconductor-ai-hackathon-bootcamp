@@ -5,8 +5,8 @@ import backend.main as main
 client = TestClient(main.app)
 
 
-def new_session() -> str:
-    response = client.post("/api/sessions")
+def new_session(scenario_id: str = "photo-cd-drift") -> str:
+    response = client.post("/api/sessions", params={"scenario_id": scenario_id})
     assert response.status_code == 200
     return response.json()["id"]
 
@@ -44,6 +44,20 @@ def test_controlled_path_solves_scenario():
     assert "최소 측정부터 확인" in report.text
 
 
+def test_catalog_and_all_scenarios_create_independent_sessions():
+    catalog = client.get("/api/scenarios")
+    assert catalog.status_code == 200
+    items = catalog.json()
+    assert [item["process"] for item in items] == ["PHOTO", "DRY ETCH", "SPUTTER", "CVD", "CMP", "DEVICE"]
+    for item in items:
+        scenario = client.get(f"/api/scenario/{item['id']}")
+        assert scenario.status_code == 200
+        session = client.post("/api/sessions", params={"scenario_id": item["id"]})
+        assert session.status_code == 200
+        assert session.json()["scenario_id"] == item["id"]
+        assert session.json()["time_left"] == scenario.json()["limits"]["time"]
+
+
 def test_analysis_budget_is_enforced():
     session_id = new_session()
     decide(session_id, "incident", "hold")
@@ -63,7 +77,7 @@ def test_out_of_order_decision_is_rejected():
 def test_deepseek_response_includes_model_and_usage(monkeypatch):
     session_id = new_session()
     decide(session_id, "incident", "hold")
-    monkeypatch.setattr(main, "deepseek_generate", lambda prompt, user_id: {
+    monkeypatch.setattr(main, "deepseek_generate", lambda prompt, user_id, scenario: {
         "response": "Dose, 현상 균일도, 계측 편향 가설을 위치별 분포와 교차 측정으로 반증하세요.",
         "model": "deepseek-v4-flash",
         "usage": {"prompt_tokens": 120, "completion_tokens": 80, "total_tokens": 200},

@@ -4,28 +4,28 @@ import { EvidenceDrawer } from './components/EvidenceDrawer'
 import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
 import { useFabSession } from './hooks/useFabSession'
-import type { Decision, Scenario, SessionState, StageId } from './types'
+import type { Decision, Scenario, ScenarioSummary, SessionState, StageId } from './types'
 import './styles.css'
 
 const CHOICE_LABELS: Record<string, string> = {
-  hold: 'Lot 보류 후 분포 확인', release_by_mean: '평균 CD만 보고 진행',
+  hold: '판정 보류 후 분포 확인', release_by_mean: '대표 평균값만 보고 진행',
   modify: 'AI 제안을 수정해 사용', accept: 'AI 제안을 그대로 채택', reject: '근거 부족으로 보류',
   distribution: '위치·Tool·Lot 분포 분석', mean_only: '전체 평균만 확인',
   screening: '대조군 포함 Screening DOE', ofat: '한 변수씩 확인', immediate: '즉시 Recipe 변경',
   controlled: '한정 적용 후 모니터링', direct: '전체 Lot 즉시 적용', release: '검증 없이 해제',
 }
 
-function SignalPlot() {
-  const bars = [31, 33, 34, 35, 37, 39, 42, 46, 50, 55, 62, 69, 76, 82]
+function SignalPlot({ scenario }: { scenario: Scenario }) {
+  const signal = scenario.signal
   return (
     <figure className="signal-plot">
-      <figcaption>합성 Train 데이터 · wafer edge 결함률</figcaption>
-      <svg viewBox="0 0 420 130" role="img" aria-label="웨이퍼 중심보다 가장자리에서 결함률이 증가하는 합성 데이터 막대그래프">
+      <figcaption>{signal.title}</figcaption>
+      <svg viewBox="0 0 420 130" role="img" aria-label={signal.aria}>
         <line x1="24" y1="104" x2="404" y2="104" />
         <line x1="24" y1="18" x2="24" y2="104" />
-        <line className="spec" x1="24" y1="54" x2="404" y2="54" />
-        {bars.map((height, index) => <rect key={index} x={32 + index * 26} y={104 - height} width="15" height={height} className={index > 8 ? 'risk' : ''} />)}
-        <text x="30" y="123">CENTER</text><text x="350" y="123">EDGE</text><text x="340" y="49">warning</text>
+        <line className="spec" x1="24" y1={signal.warning} x2="404" y2={signal.warning} />
+        {signal.bars.map((height, index) => <rect key={index} x={32 + index * 26} y={104 - height} width="15" height={height} className={index >= signal.risk_from ? 'risk' : ''} />)}
+        <text x="30" y="123">{signal.start}</text><text x="350" y="123">{signal.end}</text><text x="340" y={signal.warning - 5}>warning</text>
       </svg>
     </figure>
   )
@@ -34,8 +34,8 @@ function SignalPlot() {
 function IncidentBrief({ scenario }: { scenario: Scenario }) {
   const incident = scenario.incident
   return <section className="incident-case" aria-labelledby="incident-case-title">
-    <header><div><span>CASE {incident.case_id}</span><h3 id="incident-case-title">교대 직전, 판단이 필요한 Lot</h3></div><b>{incident.deadline}</b></header>
-    <p className="role-brief"><strong>너의 역할</strong>{incident.role}. 품질팀은 edge 이상을 알렸지만 아직 원인은 확인되지 않았다.</p>
+    <header><div><span>CASE {incident.case_id}</span><h3 id="incident-case-title">교대 직전, 판단이 필요한 이상 신호</h3></div><b>{incident.deadline}</b></header>
+    <p className="role-brief"><strong>너의 역할</strong>{incident.role}. 이상 신호는 확인됐지만 아직 원인은 확정되지 않았다.</p>
     <div className="incident-facts">{incident.facts.map((fact) => <div key={fact.label}><span>{fact.label}</span><b>{fact.value}</b><small>{fact.note}</small></div>)}</div>
     <div className="incident-unknowns"><strong>아직 모르는 것</strong><ul>{incident.unknowns.map((item) => <li key={item}>{item}</li>)}</ul></div>
     <p className="decision-call"><span>지금 결정할 것</span>{incident.decision}</p>
@@ -55,7 +55,7 @@ function ResourceMeter({ label, value, limit, unit }: { label: string; value: nu
 function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario; state: SessionState; onSubmit: (decision: Decision) => Promise<void>; busy: boolean }) {
   const stage = scenario.stages[state.stage_index]
   const [choice, setChoice] = useState('')
-  const [prompt, setPrompt] = useState('Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.')
+  const [prompt, setPrompt] = useState(scenario.coach_prompt)
   const [humanCheck, setHumanCheck] = useState('AI 제안은 공정 교재와 합성 데이터 분포, 측정 원리 및 대안 가설을 대조해 사람이 검증한다.')
   const [repeats, setRepeats] = useState(3)
   const [tools, setTools] = useState<string[]>(['optical', 'sem'])
@@ -110,7 +110,7 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     <form className="decision-panel" onSubmit={submit}>
       <div className="stage-heading"><span>{String(state.stage_index + 1).padStart(2, '0')}</span><h2>{stage.label}</h2></div>
       <p className="brief">{stage.brief}</p>
-      {stage.id === 'incident' && <><IncidentBrief scenario={scenario}/><SignalPlot /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>Lot 보류<br/><small>분포와 위치 패턴부터 확인</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>공정 진행<br/><small>평균 CD가 규격 안이므로 통과</small></ChoiceButton></div></>}
+      {stage.id === 'incident' && <><IncidentBrief scenario={scenario}/><SignalPlot scenario={scenario} /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>{scenario.incident.choices.hold[0]}<br/><small>{scenario.incident.choices.hold[1]}</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>{scenario.incident.choices.release[0]}<br/><small>{scenario.incident.choices.release[1]}</small></ChoiceButton></div></>}
       {stage.id === 'coach' && <>
         <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
         <div className="ai-action-grid"><button type="button" className="deepseek-call" onClick={askDeepSeek} disabled={deepseekBusy || prompt.length < 20}>{deepseekBusy ? 'DeepSeek 분석 중…' : 'DeepSeek API로 분석'}</button><button type="button" className="prompt-copy secondary" onClick={copyPrompt} disabled={prompt.length < 20}>다른 AI용 프롬프트 복사</button></div>
@@ -123,9 +123,9 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         <div className="choice-grid three"><ChoiceButton value="modify" selected={choice} onClick={setChoice}>수정 채택</ChoiceButton><ChoiceButton value="accept" selected={choice} onClick={setChoice}>그대로 채택</ChoiceButton><ChoiceButton value="reject" selected={choice} onClick={setChoice}>근거 부족</ChoiceButton></div>
         <p className="field-note">질문·모델명·붙여넣은 답변·사람의 검증계획을 함께 저장한다. 실제 회사 Recipe·Spec·기밀자료는 외부 AI에 입력하지 마.</p>
       </>}
-      {stage.id === 'data' && <><SignalPlot /><div className="checklist"><span>결측·중복·단위</span><span>Tool·Lot 편중</span><span>Center–Edge 분포</span><span>Train–Holdout 분리</span></div><div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>평균으로 판단</ChoiceButton></div></>}
+      {stage.id === 'data' && <><SignalPlot scenario={scenario} /><div className="checklist"><span>결측·중복·단위</span><span>설비·Lot 편중</span><span>공간·조건별 분포</span><span>Train–Holdout 분리</span></div><div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>평균으로 판단</ChoiceButton></div></>}
       {stage.id === 'experiment' && <>
-        <div className="choice-list"><ChoiceButton value="screening" selected={choice} onClick={setChoice}>대조군 + Dose·Focus·PEB Screening</ChoiceButton><ChoiceButton value="ofat" selected={choice} onClick={setChoice}>한 변수씩 변경</ChoiceButton><ChoiceButton value="immediate" selected={choice} onClick={setChoice}>검증 없이 Recipe 변경</ChoiceButton></div>
+        <div className="choice-list"><ChoiceButton value="screening" selected={choice} onClick={setChoice}>대조군 + {scenario.experiment_label}</ChoiceButton><ChoiceButton value="ofat" selected={choice} onClick={setChoice}>한 변수씩 변경</ChoiceButton><ChoiceButton value="immediate" selected={choice} onClick={setChoice}>검증 없이 Recipe 변경</ChoiceButton></div>
         <label>조건별 반복 횟수<input type="number" min="2" max="10" value={repeats} onChange={(e) => setRepeats(Number(e.target.value))} /></label>
         <p className="field-note">합성 실험의 판정 기준을 먼저 고정한 뒤 Holdout을 연다.</p>
       </>}
@@ -188,8 +188,33 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
   </div>
 }
 
-export default function App() {
-  const { scenario, session, feedback, error, busy, decide, restart, setFeedback } = useFabSession()
+function ModuleHome({ scenarios, loading, error, onSelect }: { scenarios: ScenarioSummary[]; loading: boolean; error: string; onSelect: (id: string) => void }) {
+  return <main className="module-home">
+    <header className="home-nav"><a className="brand" href="./">VIRTUAL FAB</a><span>SCHOLARBRIDGE · SEMICONDUCTOR PROBLEM LAB</span></header>
+    <section className="home-hero">
+      <div className="hero-copy"><span className="eyebrow">PROCESS TROUBLESHOOTING RPG · 06 MODULES</span><h1><span className="hero-line"><span>공정을 외우지 </span><span>말고,</span></span><em className="hero-line"><span>사건을 </span><span>해결하라.</span></em></h1><p>평균값 뒤에 숨은 이상 신호를 찾고, AI와 경쟁 가설을 세우고, 비용 안에서 분석 툴을 고른 뒤 Holdout으로 검증한다.</p></div>
+      <div className="hero-system" aria-label="문제 해결 과정"><span>01 SIGNAL</span><i/><span>02 HYPOTHESIS</span><i/><span>03 EVIDENCE</span><i/><span>04 DECISION</span></div>
+    </section>
+    <section className="module-index" aria-labelledby="module-title">
+      <header><div><span>SELECT A CASE</span><h2 id="module-title">공정별 사고 훈련</h2></div><p>모든 수치와 상황은 교육용 합성 데이터다.<br/>실제 회사 Recipe·Spec·내부 정보는 사용하지 않는다.</p></header>
+      {loading && <div className="catalog-loading">시나리오 목록을 준비하고 있어…</div>}
+      {error && <div className="catalog-error" role="alert">{error}</div>}
+      <div className="module-grid">{scenarios.map((item) => <article className="module-card" key={item.id}>
+        <div className="module-meta"><span>{item.module_no}</span><b>{item.badge}</b></div>
+        <p className="process-code">{item.process}</p>
+        <h3>{item.title}</h3>
+        <p className="module-tagline">{item.tagline}</p>
+        <div className="skill-line">{item.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
+        <button type="button" onClick={() => onSelect(item.id)} aria-label={`${item.process} ${item.title} 시나리오 시작`}><span>시나리오 시작</span><b>↗</b></button>
+      </article>)}</div>
+    </section>
+    <section className="home-principle"><span>TRAINING PRINCIPLE</span><p>AI는 가설을 넓히고, 엔지니어는 증거의 순서와 조치 범위를 책임진다.</p></section>
+    <footer><p>ScholarBridge Virtual Fab · 교육용 MVP</p><p>React · Three.js · FastAPI</p></footer>
+  </main>
+}
+
+function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack: () => void }) {
+  const { scenario, session, feedback, error, busy, decide, restart, setFeedback } = useFabSession(scenarioId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   if (!scenario || !session) return <main className="loading"><div className="loader"/><p>{error || '가상 팹을 준비하고 있어…'}</p></main>
@@ -197,7 +222,7 @@ export default function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div><a className="brand" href="./">VIRTUAL FAB</a><span className="scenario-name">{scenario.title}</span></div>
+        <div><button type="button" className="brand brand-button" onClick={onBack}>VIRTUAL FAB</button><span className="scenario-name">{scenario.process} · {scenario.title}</span></div>
         <div className="status-strip"><span>SCORE <b>{session.score}</b></span><span>BUDGET <b>{session.budget}</b></span><span>TIME <b>{session.time_left}m</b></span><button type="button" onClick={() => setDrawerOpen(true)}>EVIDENCE <b>{session.history.length}</b></button></div>
       </header>
       <StageProgress scenario={scenario} session={session}/>
@@ -218,4 +243,32 @@ export default function App() {
       <footer><p>{scenario.notice}</p><p>React · Three.js · FastAPI / scenario v{scenario.version}</p></footer>
     </main>
   )
+}
+
+export default function App() {
+  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([])
+  const [catalogError, setCatalogError] = useState('')
+  const [catalogLoading, setCatalogLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState(() => window.location.hash.slice(1))
+
+  useEffect(() => {
+    const onHashChange = () => setSelectedId(window.location.hash.slice(1))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    api.scenarios().then((items) => { if (active) setScenarios(items) })
+      .catch((cause) => { if (active) setCatalogError(cause instanceof Error ? cause.message : '시나리오 목록을 열지 못했어.') })
+      .finally(() => { if (active) setCatalogLoading(false) })
+    return () => { active = false }
+  }, [])
+
+  const select = (id: string) => { window.location.hash = id; setSelectedId(id) }
+  const back = () => { window.history.pushState(null, '', window.location.pathname + window.location.search); setSelectedId('') }
+  const validSelection = scenarios.some((item) => item.id === selectedId)
+
+  if (selectedId && (validSelection || catalogLoading)) return <ScenarioExperience key={selectedId} scenarioId={selectedId} onBack={back}/>
+  return <ModuleHome scenarios={scenarios} loading={catalogLoading} error={selectedId && !validSelection ? '선택한 시나리오를 찾지 못했어. 아래 목록에서 다시 골라줘.' : catalogError} onSelect={select}/>
 }

@@ -17,9 +17,25 @@ export type ScenarioStage = {
 
 export type Scenario = {
   id: string
+  module_no: string
+  process: string
   title: string
+  tagline: string
+  skills: string[]
+  badge: string
   version: string
   notice: string
+  coach_prompt: string
+  experiment_label: string
+  signal: {
+    title: string
+    aria: string
+    start: string
+    end: string
+    warning: number
+    risk_from: number
+    bars: number[]
+  }
   incident: {
     case_id: string
     role: string
@@ -27,12 +43,15 @@ export type Scenario = {
     facts: Array<{ label: string; value: string; note: string }>
     unknowns: string[]
     decision: string
+    choices: { hold: [string, string]; release: [string, string] }
   }
   stages: ScenarioStage[]
   tools: Record<string, Tool>
   required_analysis_kinds: string[]
   limits: { budget: number; time: number }
 }
+
+export type ScenarioSummary = Pick<Scenario, 'id' | 'module_no' | 'process' | 'title' | 'tagline' | 'skills' | 'badge' | 'version'>
 
 export type HistoryItem = {
   stage: StageId

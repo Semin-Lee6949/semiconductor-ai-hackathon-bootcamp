@@ -1,4 +1,4 @@
-import type { Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenario, SessionState } from './types'
+import type { Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenario, ScenarioSummary, SessionState } from './types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -18,8 +18,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  scenario: () => request<Scenario>('scenario/photo-cd-drift'),
-  createSession: () => request<SessionState>('sessions', { method: 'POST' }),
+  scenarios: () => request<ScenarioSummary[]>('scenarios'),
+  scenario: (scenarioId: string) => request<Scenario>(`scenario/${encodeURIComponent(scenarioId)}`),
+  createSession: (scenarioId: string) => request<SessionState>(`sessions?scenario_id=${encodeURIComponent(scenarioId)}`, { method: 'POST' }),
   session: (sessionId: string) => request<SessionState>(`sessions/${sessionId}`),
   decide: (sessionId: string, decision: Decision) =>
     request<DecisionResult>(`sessions/${sessionId}/decisions`, {

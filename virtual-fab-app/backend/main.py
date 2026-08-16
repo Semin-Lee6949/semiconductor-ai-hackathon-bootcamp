@@ -38,11 +38,33 @@ TOOLS: dict[str, dict[str, Any]] = {
     "electrical": {"label": "I–V · Vth", "kind": "electrical", "cost": 10, "time": 8, "destructive": False},
 }
 
-SCENARIO = {
+BASE_STAGES = [
+    {"id": "incident", "label": "문제 발생", "station": "alert"},
+    {"id": "coach", "label": "LLM Coach", "station": "coach", "brief": "AI에게 정답이 아니라 경쟁 가설·반증 증거·누락 변수를 질문한다."},
+    {"id": "data", "label": "데이터 판단", "station": "data", "brief": "Train 데이터의 결측·중복·단위·설비 편중과 위치별 분포를 확인한다."},
+    {"id": "experiment", "label": "실험계획", "station": "doe", "brief": "대조군·요인·수준·반복·판정기준을 고정한다."},
+    {"id": "analysis", "label": "분석 툴", "station": "analysis", "brief": "구조·화학·전기 분석을 비용·시간·정보가치로 선택한다."},
+    {"id": "validation", "label": "검증", "station": "validation", "brief": "Holdout과 재실험 결과로 조치 범위를 결정한다."},
+]
+
+
+def scenario_stages(incident_brief: str) -> list[dict[str, str]]:
+    return [{**stage, **({"brief": incident_brief} if stage["id"] == "incident" else {})} for stage in BASE_STAGES]
+
+
+PHOTO_SCENARIO = {
     "id": "photo-cd-drift",
+    "module_no": "01",
+    "process": "PHOTO",
     "title": "사라진 선폭의 비밀",
-    "version": "0.3.0",
+    "tagline": "평균 CD는 정상인데 Edge 결함이 급증했다.",
+    "skills": ["공간 분포", "DOE", "CD 계측"],
+    "badge": "LIVE · 검증 완료",
+    "version": "0.4.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
+    "coach_prompt": "Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.",
+    "experiment_label": "Dose·Focus·PEB Screening",
+    "signal": {"title": "합성 Train 데이터 · wafer edge 결함률", "aria": "웨이퍼 중심보다 가장자리에서 결함률이 증가하는 합성 데이터 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 54, "risk_from": 9, "bars": [31, 33, 34, 35, 37, 39, 42, 46, 50, 55, 62, 69, 76, 82]},
     "incident": {
         "case_id": "VF-PH-01",
         "role": "입사 3개월 차 Photo 공정기술 엔지니어",
@@ -54,19 +76,75 @@ SCENARIO = {
         ],
         "unknowns": ["Photo 공정의 실제 변화", "설비·위치 편중", "계측기 편향 또는 데이터 품질 문제"],
         "decision": "평균 CD를 근거로 진행할 것인가, Lot을 보류하고 공간 분포부터 확인할 것인가?",
+        "choices": {"hold": ["Lot 보류", "분포와 위치 패턴부터 확인"], "release": ["공정 진행", "평균 CD가 규격 안이므로 통과"]},
     },
-    "stages": [
-        {"id": "incident", "label": "문제 발생", "station": "alert", "brief": "전체 평균은 합성 규격 안이지만 edge 결함률은 경고선을 넘었다. 후속 공정 투입 전 첫 조치를 결정해야 한다."},
-        {"id": "coach", "label": "LLM Coach", "station": "coach", "brief": "AI에게 정답이 아니라 경쟁 가설·반증 증거·누락 변수를 질문한다."},
-        {"id": "data", "label": "데이터 판단", "station": "data", "brief": "Train 데이터의 결측·중복·단위·Tool 편중과 위치별 분포를 확인한다."},
-        {"id": "experiment", "label": "실험계획", "station": "doe", "brief": "대조군·요인·수준·반복·판정기준을 고정한다."},
-        {"id": "analysis", "label": "분석 툴", "station": "analysis", "brief": "구조·화학·전기 분석을 비용·시간·정보가치로 선택한다."},
-        {"id": "validation", "label": "검증", "station": "validation", "brief": "Holdout과 재실험 결과로 조치 범위를 결정한다."},
-    ],
+    "stages": scenario_stages("전체 평균은 합성 규격 안이지만 edge 결함률은 경고선을 넘었다. 후속 공정 투입 전 첫 조치를 결정해야 한다."),
     "tools": TOOLS,
     "required_analysis_kinds": ["dimension", "structure"],
     "limits": {"budget": 80, "time": 60},
 }
+
+DRY_ETCH_SCENARIO = {
+    "id": "dry-etch-profile", "module_no": "02", "process": "DRY ETCH", "title": "기울어진 Sidewall", "tagline": "식각 깊이는 맞지만 Sidewall 각도가 무너졌다.",
+    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "coach_prompt": "Dry Etch 깊이는 정상인데 Sidewall angle과 edge residue가 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·RF Bias·Gas Ratio Screening",
+    "signal": {"title": "합성 Train 데이터 · edge residue index", "aria": "웨이퍼 중심에서 가장자리로 갈수록 잔류물 지수가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 56, "risk_from": 9, "bars": [27, 28, 29, 31, 33, 35, 39, 43, 49, 57, 63, 70, 78, 86]},
+    "incident": {"case_id": "VF-DE-02", "role": "Dry Etch 공정기술 엔지니어", "deadline": "후속 세정·계측 판정까지 75분",
+        "facts": [{"label": "평균 식각 깊이", "value": "119.8 nm", "note": "합성 규격 115–125 nm 안"}, {"label": "Sidewall angle", "value": "82.4°", "note": "최근 기준 88.5°, 경고 85°"}, {"label": "Edge residue", "value": "2.7%", "note": "최근 기준 0.6%"}],
+        "unknowns": ["RF bias·압력·가스비 변화", "Chamber seasoning 또는 부산물", "단면 시편·계측 편향"], "decision": "깊이 평균만 보고 진행할 것인가, Lot을 보류하고 Profile과 잔류물 원인을 분리할 것인가?",
+        "choices": {"hold": ["Lot 보류", "Profile·위치 분포부터 확인"], "release": ["공정 진행", "평균 깊이가 규격 안이므로 통과"]}},
+    "stages": scenario_stages("식각 깊이는 규격 안이지만 Sidewall과 edge residue가 동시에 악화됐다. 평균 깊이가 가리는 구조 이상을 먼저 판단한다."), "tools": TOOLS, "required_analysis_kinds": ["structure", "chemistry"], "limits": {"budget": 85, "time": 75},
+}
+
+SPUTTER_SCENARIO = {
+    "id": "sputter-sheet-resistance", "module_no": "03", "process": "SPUTTER", "title": "같은 두께, 다른 저항", "tagline": "막 두께는 정상인데 Sheet resistance가 흔들린다.",
+    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "coach_prompt": "Sputter 막 두께는 정상인데 sheet resistance가 edge에서 상승한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Power·Pressure·Ar Flow Screening",
+    "signal": {"title": "합성 Train 데이터 · sheet resistance", "aria": "웨이퍼 중심에서 가장자리로 갈수록 면저항이 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 58, "risk_from": 10, "bars": [34, 35, 34, 36, 37, 39, 42, 44, 47, 51, 59, 65, 73, 80]},
+    "incident": {"case_id": "VF-SP-03", "role": "Sputter 박막 공정 엔지니어", "deadline": "후속 Patterning 투입까지 70분",
+        "facts": [{"label": "평균 막 두께", "value": "102.1 nm", "note": "합성 규격 98–106 nm 안"}, {"label": "Edge 면저항", "value": "1.42 Ω/□", "note": "Center 1.10 Ω/□"}, {"label": "입자 계수", "value": "+18%", "note": "최근 기준 대비 증가"}],
+        "unknowns": ["Target erosion·plasma 분포", "압력·wafer 온도 영향", "4-point probe 또는 두께 모델 편향"], "decision": "두께 평균만 보고 진행할 것인가, 전기특성과 조성의 위치 분포를 확인할 것인가?",
+        "choices": {"hold": ["Lot 보류", "면저항·조성 분포부터 확인"], "release": ["공정 진행", "평균 두께가 규격 안이므로 통과"]}},
+    "stages": scenario_stages("막 두께는 규격 안이지만 면저항과 입자 신호가 함께 변했다. 두께·조성·전기특성 중 무엇이 실제 변했는지 분리한다."), "tools": TOOLS, "required_analysis_kinds": ["electrical", "chemistry"], "limits": {"budget": 80, "time": 70},
+}
+
+CVD_SCENARIO = {
+    "id": "cvd-film-uniformity", "module_no": "04", "process": "CVD", "title": "막은 쌓였지만 같지 않다", "tagline": "평균 두께 뒤에 균일도와 막질 이상이 숨어 있다.",
+    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "coach_prompt": "CVD 평균 두께는 정상인데 wafer 균일도와 굴절률이 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Temperature·Pressure·Gas Ratio Screening",
+    "signal": {"title": "합성 Train 데이터 · thickness non-uniformity", "aria": "웨이퍼 중심에서 가장자리로 갈수록 두께 불균일도가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 53, "risk_from": 8, "bars": [24, 26, 29, 30, 33, 37, 42, 48, 55, 61, 68, 74, 81, 88]},
+    "incident": {"case_id": "VF-CV-04", "role": "CVD 박막 공정기술 엔지니어", "deadline": "후속 Lithography 투입까지 90분",
+        "facts": [{"label": "평균 막 두께", "value": "201.4 nm", "note": "합성 규격 195–205 nm 안"}, {"label": "WIWNU", "value": "6.8%", "note": "경고선 3.0%"}, {"label": "굴절률 Edge", "value": "1.91", "note": "Center 1.97"}],
+        "unknowns": ["Showerhead·가스 분포", "온도·전구체 고갈", "Ellipsometry 광학모델 편향"], "decision": "평균 두께만 보고 진행할 것인가, 균일도와 막질 변화를 먼저 확인할 것인가?",
+        "choices": {"hold": ["Lot 보류", "두께·막질 분포부터 확인"], "release": ["공정 진행", "평균 두께가 규격 안이므로 통과"]}},
+    "stages": scenario_stages("평균 막 두께는 정상이나 wafer 내 균일도와 굴절률이 동시에 벗어났다. 증착량과 막질 변화를 분리한다."), "tools": TOOLS, "required_analysis_kinds": ["dimension", "chemistry"], "limits": {"budget": 85, "time": 90},
+}
+
+CMP_SCENARIO = {
+    "id": "cmp-dishing", "module_no": "05", "process": "CMP", "title": "평탄화 뒤의 함몰", "tagline": "평균 제거량은 맞지만 Dense pattern이 꺼졌다.",
+    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "coach_prompt": "CMP 평균 제거량은 정상인데 dense pattern dishing과 edge 잔막이 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·Platen Speed·Slurry Flow Screening",
+    "signal": {"title": "합성 Train 데이터 · pattern dishing", "aria": "패턴 밀도가 높아질수록 디싱 값이 증가하는 막대그래프", "start": "ISO", "end": "DENSE", "warning": 55, "risk_from": 9, "bars": [22, 25, 28, 31, 34, 38, 41, 46, 51, 58, 66, 73, 80, 87]},
+    "incident": {"case_id": "VF-CM-05", "role": "CMP 공정기술 엔지니어", "deadline": "세정·후속 계측까지 65분",
+        "facts": [{"label": "평균 제거량", "value": "298 nm", "note": "합성 규격 290–310 nm 안"}, {"label": "Dense dishing", "value": "38 nm", "note": "경고선 20 nm"}, {"label": "Edge 잔막", "value": "+24%", "note": "최근 기준 대비 증가"}],
+        "unknowns": ["Pad conditioning·마모", "Slurry 유량·압력·회전", "Pattern density·Profile 계측 편향"], "decision": "평균 제거량만 보고 진행할 것인가, 패턴 밀도별 Profile과 잔막을 확인할 것인가?",
+        "choices": {"hold": ["Lot 보류", "Pattern별 Profile부터 확인"], "release": ["공정 진행", "평균 제거량이 규격 안이므로 통과"]}},
+    "stages": scenario_stages("평균 제거량은 정상이나 dense pattern의 dishing과 edge 잔막이 함께 증가했다. 패턴 의존성과 장비 요인을 분리한다."), "tools": TOOLS, "required_analysis_kinds": ["dimension", "structure"], "limits": {"budget": 80, "time": 65},
+}
+
+DEVICE_SCENARIO = {
+    "id": "device-vth-shift", "module_no": "06", "process": "DEVICE", "title": "오른쪽으로 밀린 I–V", "tagline": "On-current는 통과했지만 Vth와 Off-current가 변했다.",
+    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.4.0", "notice": PHOTO_SCENARIO["notice"],
+    "coach_prompt": "소자 On-current는 정상인데 Vth shift와 Off-current가 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Stress Voltage·Time·Temperature Screening",
+    "signal": {"title": "합성 Train 데이터 · Vth shift after stress", "aria": "스트레스 시간이 증가할수록 문턱전압 이동이 증가하는 막대그래프", "start": "INITIAL", "end": "STRESS", "warning": 57, "risk_from": 9, "bars": [20, 23, 26, 29, 33, 37, 41, 46, 52, 59, 66, 72, 79, 85]},
+    "incident": {"case_id": "VF-DV-06", "role": "소자·신뢰성 평가 엔지니어", "deadline": "Reliability review까지 80분",
+        "facts": [{"label": "On-current", "value": "9.8 μA", "note": "합성 하한 9.0 μA 통과"}, {"label": "Vth shift", "value": "+1.15 V", "note": "경고선 +0.50 V"}, {"label": "Off-current", "value": "6.2×", "note": "초기 대비 증가"}],
+        "unknowns": ["Charge trapping·결함 생성", "Contact·공정 편차", "Sweep rate·hysteresis 계측 영향"], "decision": "On-current만 보고 통과할 것인가, 스트레스 조건과 I–V 열화 메커니즘을 먼저 확인할 것인가?",
+        "choices": {"hold": ["판정 보류", "I–V·Stress 분포부터 확인"], "release": ["평가 통과", "On-current가 기준 안이므로 진행"]}},
+    "stages": scenario_stages("On-current는 합성 기준을 통과했지만 Vth shift와 Off-current가 악화됐다. 동작 성능과 열화 안정성을 분리해 판단한다."), "tools": TOOLS, "required_analysis_kinds": ["electrical", "structure"], "limits": {"budget": 80, "time": 80},
+}
+
+SCENARIOS = {scenario["id"]: scenario for scenario in [PHOTO_SCENARIO, DRY_ETCH_SCENARIO, SPUTTER_SCENARIO, CVD_SCENARIO, CMP_SCENARIO, DEVICE_SCENARIO]}
 
 
 class DecisionRequest(BaseModel):
@@ -135,11 +213,11 @@ def load_session(session_id: str) -> SessionState | None:
 
 init_db()
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.3.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.4.0")
 
 
 CHOICE_LABELS = {
-    "hold": "Lot 보류 후 분포 확인", "release_by_mean": "평균 CD만 보고 진행",
+    "hold": "판정 보류 후 분포 확인", "release_by_mean": "대표 평균값만 보고 진행",
     "modify": "AI 제안을 수정해 사용", "accept": "AI 제안을 그대로 채택", "reject": "근거 부족으로 보류",
     "distribution": "위치·Tool·Lot 분포 분석", "mean_only": "전체 평균만 확인",
     "screening": "대조군 포함 Screening DOE", "ofat": "한 변수 확인 실험", "immediate": "검증 없이 Recipe 변경",
@@ -148,7 +226,14 @@ CHOICE_LABELS = {
 }
 
 
-def deepseek_generate(prompt: str, user_id: str) -> dict[str, Any]:
+def scenario_for(state: SessionState) -> dict[str, Any]:
+    scenario = SCENARIOS.get(state.scenario_id)
+    if not scenario:
+        raise HTTPException(409, "이 세션의 시나리오를 더 이상 찾을 수 없습니다.")
+    return scenario
+
+
+def deepseek_generate(prompt: str, user_id: str, scenario: dict[str, Any]) -> dict[str, Any]:
     if not DEEPSEEK_API_KEY:
         raise HTTPException(503, "DeepSeek API 키가 아직 설정되지 않았습니다. 외부 AI 복사·붙여넣기를 이용하세요.")
     body = json.dumps({
@@ -157,7 +242,7 @@ def deepseek_generate(prompt: str, user_id: str) -> dict[str, Any]:
             {
                 "role": "system",
                 "content": (
-                    "당신은 반도체 Photo 공정 학습자의 소크라테스식 멘토다. "
+                    f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
                     "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
                     "정답을 단정하지 말고 경쟁 가설 3개, 각 가설을 반증할 최소 증거, "
                     "가장 먼저 할 저비용 측정을 한국어로 간결하게 제안한다."
@@ -166,7 +251,11 @@ def deepseek_generate(prompt: str, user_id: str) -> dict[str, Any]:
             {
                 "role": "user",
                 "content": (
-                    "교육용 관찰: 전체 평균 CD 54.9 nm는 합성 규격 53–57 nm 안이지만, wafer edge 결함률은 최근 기준 0.8%에서 3.2%로 증가했다. 후속 Etch 투입까지 60분이며 아직 공정 변화·설비 편중·계측 편향은 확인하지 않았다.\n"
+                    "교육용 관찰: "
+                    + "; ".join(f"{fact['label']} {fact['value']} ({fact['note']})" for fact in scenario["incident"]["facts"])
+                    + f". 제한시간은 {scenario['incident']['deadline']}이다. 미확인 항목은 "
+                    + ", ".join(scenario["incident"]["unknowns"])
+                    + ".\n"
                     f"학습자 질문: {prompt}"
                 ),
             },
@@ -211,6 +300,7 @@ def svg_data_uri(svg: str) -> str:
 
 
 def build_report(state: SessionState, request: ReportRequest) -> str:
+    scenario = scenario_for(state)
     safe_presenter = html.escape(request.presenter)
     safe_role = html.escape(request.target_role)
     safe_opinion = html.escape(request.opinion).replace("\n", "<br>")
@@ -228,7 +318,7 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     safe_prompt = html.escape(prompt_text).replace("\n", "<br>")
     safe_model = html.escape(model_text)
     choice_rows = "".join(
-        f"<li><b>{html.escape(next(stage['label'] for stage in SCENARIO['stages'] if stage['id'] == item['stage']))}</b>"
+        f"<li><b>{html.escape(next(stage['label'] for stage in scenario['stages'] if stage['id'] == item['stage']))}</b>"
         f"<span>{html.escape(CHOICE_LABELS.get(item['choice'], item['choice']))}</span></li>"
         for item in state.history
     )
@@ -244,14 +334,21 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
       <g fill='#ffb21d'><circle cx='125' cy='154' r='34'/><rect x='295' y='92' width='50' height='105'/><path d='M480 235l35-76 35 76z'/></g>
       <g font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='#dff6f6'><text x='83' y='320'>DIMENSION</text><text x='274' y='320'>STRUCTURE</text><text x='472' y='320'>VERIFY</text></g></svg>""")
     verdict = html.escape(state.verdict or "판정 없음")
+    safe_title = html.escape(scenario["title"])
+    safe_process = html.escape(scenario["process"])
+    safe_tagline = html.escape(scenario["tagline"])
+    situation_facts = " ".join(
+        f"{html.escape(fact['label'])} <b>{html.escape(fact['value'])}</b> ({html.escape(fact['note'])})."
+        for fact in scenario["incident"]["facts"]
+    )
     return f"""<!doctype html><html lang='ko'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>Virtual Fab 면접 PT · {safe_presenter}</title><style>
 *{{box-sizing:border-box}}:root{{--ink:#071d24;--cyan:#00a8b5;--amber:#ffb21d;--paper:#f6f9f8}}body{{margin:0;background:var(--ink);font-family:'Malgun Gothic',sans-serif;color:var(--ink);overflow:hidden}}
 .slide{{display:none;width:100vw;height:100vh;padding:7vh 7vw;background:var(--paper);position:relative}}.slide.active{{display:grid}}h1{{font-size:clamp(42px,6vw,88px);line-height:1.04;margin:0;max-width:13ch}}h2{{font-size:clamp(32px,4vw,64px);margin:0 0 4vh}}p,li{{font-size:clamp(17px,1.7vw,28px);line-height:1.6}}.dark{{background:var(--ink);color:#effafa}}.accent{{color:var(--amber)}}.grid{{grid-template-columns:1.1fr .9fr;gap:5vw;align-items:center}}img{{width:100%;max-height:62vh;object-fit:contain}}.metric{{display:flex;gap:4vw;border-top:3px solid var(--cyan);padding-top:3vh}}.metric b{{font-size:clamp(34px,5vw,72px);display:block;color:var(--amber)}}ul{{list-style:none;padding:0}}li{{display:grid;grid-template-columns:180px 1fr;gap:24px;border-top:1px solid #aababc;padding:1.5vh 0}}blockquote{{font-size:clamp(22px,2.5vw,42px);line-height:1.5;margin:0;border-top:5px solid var(--amber);padding-top:4vh}}.label{{position:absolute;top:3vh;left:7vw;font-size:14px;letter-spacing:.12em;color:var(--cyan);font-weight:700}}.nav{{position:fixed;right:24px;bottom:20px;display:flex;gap:8px;z-index:5}}button{{border:0;padding:12px 18px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}}.counter{{position:fixed;left:24px;bottom:24px;color:#9bc0c3;z-index:5}}small{{position:absolute;bottom:3vh;left:7vw;color:#637e83}}@media(max-width:760px){{.grid{{grid-template-columns:1fr}}.slide{{padding:8vh 6vw;overflow:auto}}li{{grid-template-columns:1fr;gap:4px}}}}@media print{{body{{overflow:visible}}.slide{{display:grid;page-break-after:always}}.nav,.counter{{display:none}}}}
 </style></head><body>
-<section class='slide dark active'><span class='label'>VIRTUAL FAB · INTERVIEW BRIEF</span><div><h1>사라진 선폭의 비밀</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
-<section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>평균은 통과했지만<br>Edge는 경고했다</h2><p>합성 평균 CD 54.9 nm는 규격 53–57 nm 안이었다. 그러나 edge 결함률은 최근 기준 0.8%에서 3.2%로 상승했고, 후속 Etch 투입까지 60분만 남았다.</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 wafer edge 결함 도식'></section>
-<section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·Tool 편중과 Center–Edge 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
+<section class='slide dark active'><span class='label'>VIRTUAL FAB · {safe_process} · INTERVIEW BRIEF</span><div><h1>{safe_title}</h1><p class='accent'>{safe_presenter} · {safe_role}</p><p>AI를 사용했지만 판단을 위임하지 않은 데이터 기반 문제해결 기록</p></div><small>교육용 합성 시나리오 · 실제 회사 Recipe 또는 현장 성과가 아님</small></section>
+<section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>{safe_tagline}</h2><p>{situation_facts}</p><p><b>제한:</b> {html.escape(scenario['incident']['deadline'])}</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 공정 이상 신호 도식'></section>
+<section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·설비 편중과 조건별 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
 <section class='slide'><span class='label'>AI COLLABORATION · {safe_model}</span><div><h2>질문과 외부 AI 답변을 함께 기록했다</h2><p><b>PROMPT</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 공정 원리·합성 데이터·측정 한계와 대조하고 채택·수정·기각했다.</p></div></section>
 <section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
@@ -284,6 +381,7 @@ def final_verdict(state: SessionState) -> str:
 
 
 def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, Any]:
+    scenario = scenario_for(state)
     expected = current_stage(state)
     if state.completed:
         raise HTTPException(409, "이미 완료된 세션입니다.")
@@ -297,7 +395,7 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
         if request.choice not in {"hold", "release_by_mean"}:
             raise HTTPException(422, "지원하지 않는 초기 조치입니다.")
         state.score += 10 if request.choice == "hold" else -12
-        state.evidence.append("평균과 위치별 분포 분리" if request.choice == "hold" else "평균 CD만 확인")
+        state.evidence.append("평균과 조건별 분포 분리" if request.choice == "hold" else "대표 평균값만 확인")
         feedback = "Lot을 보류하고 관찰과 원인 추정을 분리했습니다." if request.choice == "hold" else "평균은 정상이나 edge 산포가 다음 단계로 넘어갑니다."
     elif request.stage == "coach":
         if (len(str(request.payload.get("prompt", ""))) < 20
@@ -312,7 +410,7 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
             raise HTTPException(422, "지원하지 않는 데이터 판단입니다.")
         state.score += 18 if request.choice == "distribution" else -10
         state.evidence.append("Tool·Lot·위치별 분포" if request.choice == "distribution" else "전체 평균")
-        feedback = "edge·Tool 편중과 경쟁 가설을 확보했습니다." if request.choice == "distribution" else "평균만으로는 공간 패턴을 설명할 수 없습니다."
+        feedback = "설비·Lot·조건별 편중과 경쟁 가설을 확보했습니다." if request.choice == "distribution" else "평균만으로는 조건별 패턴을 설명할 수 없습니다."
     elif request.stage == "experiment":
         if request.choice not in {"screening", "ofat", "immediate"}:
             raise HTTPException(422, "지원하지 않는 실험계획입니다.")
@@ -332,7 +430,7 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
         if cost > state.budget or duration > state.time_left:
             raise HTTPException(422, "분석 예산 또는 시간을 초과했습니다.")
         kinds = {tool["kind"] for tool in selected}
-        coverage = set(SCENARIO["required_analysis_kinds"]).issubset(kinds)
+        coverage = set(scenario["required_analysis_kinds"]).issubset(kinds)
         overanalysis = len(selected) > 4 or cost > 65 or duration > 50
         state.budget -= cost
         state.time_left -= duration
@@ -371,14 +469,26 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": "virtual-fab"}
 
 
-@app.get("/api/scenario/photo-cd-drift")
-def get_scenario() -> dict[str, Any]:
-    return SCENARIO
+@app.get("/api/scenarios")
+def list_scenarios() -> list[dict[str, Any]]:
+    fields = ("id", "module_no", "process", "title", "tagline", "skills", "badge", "version")
+    return [{field: scenario[field] for field in fields} for scenario in SCENARIOS.values()]
+
+
+@app.get("/api/scenario/{scenario_id}")
+def get_scenario(scenario_id: str) -> dict[str, Any]:
+    scenario = SCENARIOS.get(scenario_id)
+    if not scenario:
+        raise HTTPException(404, "시나리오를 찾을 수 없습니다.")
+    return scenario
 
 
 @app.post("/api/sessions", response_model=SessionState)
-def create_session() -> SessionState:
-    state = SessionState(id=str(uuid4()))
+def create_session(scenario_id: str = "photo-cd-drift") -> SessionState:
+    scenario = SCENARIOS.get(scenario_id)
+    if not scenario:
+        raise HTTPException(404, "시나리오를 찾을 수 없습니다.")
+    state = SessionState(id=str(uuid4()), scenario_id=scenario_id, budget=scenario["limits"]["budget"], time_left=scenario["limits"]["time"])
     save_session(state)
     return state
 
@@ -398,7 +508,7 @@ def deepseek(session_id: str, request: DeepSeekRequest) -> dict[str, Any]:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     if state.completed or current_stage(state) != "coach":
         raise HTTPException(409, "LLM Coach 단계에서만 DeepSeek을 호출할 수 있습니다.")
-    return deepseek_generate(request.prompt, session_id.replace("-", ""))
+    return deepseek_generate(request.prompt, session_id.replace("-", ""), scenario_for(state))
 
 
 @app.post("/api/sessions/{session_id}/decisions")
@@ -413,9 +523,11 @@ def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
 
 @app.post("/api/sessions/{session_id}/restart", response_model=SessionState)
 def restart(session_id: str) -> SessionState:
-    if not load_session(session_id):
+    previous = load_session(session_id)
+    if not previous:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    state = SessionState(id=session_id)
+    scenario = scenario_for(previous)
+    state = SessionState(id=session_id, scenario_id=previous.scenario_id, budget=scenario["limits"]["budget"], time_left=scenario["limits"]["time"])
     save_session(state)
     return state
 

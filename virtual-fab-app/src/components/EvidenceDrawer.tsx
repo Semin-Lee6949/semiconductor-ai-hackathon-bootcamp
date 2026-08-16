@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import type { Scenario, SessionState } from '../types'
 
 const CHOICE_LABELS: Record<string, string> = {
-  hold: 'Lot 보류 후 분포 확인', release_by_mean: '평균 CD만 보고 진행',
+  hold: '판정 보류 후 분포 확인', release_by_mean: '대표 평균값만 보고 진행',
   modify: 'AI 제안을 수정해 사용', accept: 'AI 제안을 그대로 채택', reject: '근거 부족으로 보류',
   distribution: '위치·Tool·Lot 분포 분석', mean_only: '전체 평균만 확인',
   screening: '대조군 포함 Screening DOE', ofat: '한 변수씩 확인', immediate: '즉시 Recipe 변경',

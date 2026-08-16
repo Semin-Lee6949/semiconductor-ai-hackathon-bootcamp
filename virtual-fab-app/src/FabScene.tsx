@@ -75,7 +75,7 @@ function Station({
   )
 }
 
-const EXHIBIT_LABELS = ['EDGE CD WAFER', 'EXTERNAL AI WORKBENCH', 'WAFER MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
+const EXHIBIT_LABELS = ['PROCESS SIGNAL', 'EXTERNAL AI WORKBENCH', 'DISTRIBUTION MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
 const OPERATOR_LINES = [
   '평균보다 분포를 먼저 볼까?',
   'AI 초안을 무엇으로 반증하지?',
@@ -187,10 +187,11 @@ function StageExhibit({ stageIndex }: { stageIndex: number }) {
 
 export function FabScene({ scenario, session, onStationSelect }: { scenario: Scenario; session: SessionState; onStationSelect: (index: number) => void }) {
   const stageIndex = session.stage_index
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const pathPoints = useMemo(() => scenario.stages.map((stage) => STATION_LAYOUT[stage.station]), [scenario])
   return (
     <div className="scene-wrap" aria-label="가상 팹 공정 스테이션">
-      <Canvas camera={{ position: [10, 9, 11], fov: 38 }} dpr={[1, 1.65]}>
+      <Canvas camera={{ position: [10, 9, 11], fov: 38 }} dpr={[1, 1.65]} frameloop={reducedMotion ? 'demand' : 'always'}>
         <color attach="background" args={['#e8eff0']} />
         <ambientLight intensity={1.7} />
         <directionalLight position={[5, 10, 6]} intensity={2.2} castShadow />
@@ -221,7 +222,7 @@ export function FabScene({ scenario, session, onStationSelect }: { scenario: Sce
         <ContactShadows position={[0, 0.01, 0]} opacity={0.18} scale={16} blur={2.8} far={8} />
         <OrbitControls enablePan={false} minDistance={9} maxDistance={18} minPolarAngle={0.72} maxPolarAngle={1.2} target={[0, 0.5, 0]} />
       </Canvas>
-      <div className="exhibit-label"><span>ACTIVE MODEL</span><b>{EXHIBIT_LABELS[stageIndex]}</b></div>
+      <div className="exhibit-label"><span>ACTIVE MODEL · {scenario.process}</span><b>{EXHIBIT_LABELS[stageIndex]}</b></div>
       <div className="mission-hud"><span>MISSION {String(stageIndex + 1).padStart(2, '0')}</span><b>{scenario.stages[stageIndex].label}</b><small>{session.completed ? 'CLEAR' : 'IN PROGRESS'} · XP {session.score}/100</small><div><i style={{ transform: `scaleX(${session.score / 100})` }}/></div></div>
       <div className="scene-help">드래그해 회전 · 휠로 확대 · 현재 스테이션 클릭</div>
     </div>
