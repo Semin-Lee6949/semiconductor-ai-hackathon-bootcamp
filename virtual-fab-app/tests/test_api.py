@@ -21,7 +21,7 @@ def decide(session_id: str, stage: str, choice: str, payload=None):
 def test_controlled_path_solves_scenario():
     session_id = new_session()
     assert decide(session_id, "incident", "hold").status_code == 200
-    assert decide(session_id, "coach", "modify", {"prompt": "경쟁 가설 세 개와 반증 증거를 질문해줘.", "human_check": "교재 원문과 Tool별 데이터로 다시 확인한다.", "llm_response": "경쟁 가설과 반증 증거를 구분하고 최소 측정부터 확인하세요."}).status_code == 200
+    assert decide(session_id, "coach", "modify", {"prompt": "경쟁 가설 세 개와 반증 증거를 질문해줘.", "human_check": "교재 원문과 Tool별 데이터로 다시 확인한다.", "llm_response": "경쟁 가설과 반증 증거를 구분하고 최소 측정부터 확인하세요.", "llm_model": "Gemini"}).status_code == 200
     assert decide(session_id, "data", "distribution").status_code == 200
     assert decide(session_id, "experiment", "screening", {"repeats": 3}).status_code == 200
     analysis = decide(session_id, "analysis", "select", {"tools": ["optical", "sem"]})
@@ -39,6 +39,9 @@ def test_controlled_path_solves_scenario():
     assert "virtual-fab-interview-slides.html" in report.headers["content-disposition"]
     assert "data:image/svg+xml;base64" in report.text
     assert "테스트 지원자" in report.text
+    assert "Gemini" in report.text
+    assert "경쟁 가설 세 개와 반증 증거" in report.text
+    assert "최소 측정부터 확인" in report.text
 
 
 def test_analysis_budget_is_enforced():

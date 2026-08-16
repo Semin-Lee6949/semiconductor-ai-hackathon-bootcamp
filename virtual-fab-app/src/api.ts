@@ -1,4 +1,4 @@
-import type { CoachResponse, Decision, DecisionResult, ReportPayload, Scenario, SessionState } from './types'
+import type { Decision, DecisionResult, ReportPayload, Scenario, SessionState } from './types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -20,11 +20,6 @@ export const api = {
     request<DecisionResult>(`sessions/${sessionId}/decisions`, {
       method: 'POST',
       body: JSON.stringify({ ...decision, payload: decision.payload ?? {} }),
-    }),
-  coach: (sessionId: string, question: string) =>
-    request<CoachResponse>(`sessions/${sessionId}/coach`, {
-      method: 'POST',
-      body: JSON.stringify({ question }),
     }),
   report: async (sessionId: string, payload: ReportPayload) => {
     const response = await fetch(`${BASE}api/sessions/${sessionId}/report`, {

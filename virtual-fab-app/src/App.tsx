@@ -4,7 +4,7 @@ import { EvidenceDrawer } from './components/EvidenceDrawer'
 import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
 import { useFabSession } from './hooks/useFabSession'
-import type { CoachResponse, Decision, Scenario, SessionState, StageId } from './types'
+import type { Decision, Scenario, SessionState, StageId } from './types'
 import './styles.css'
 
 const CHOICE_LABELS: Record<string, string> = {
@@ -41,7 +41,7 @@ function ResourceMeter({ label, value, limit, unit }: { label: string; value: nu
   return <div className={`resource-meter ${risk ? 'over' : ''}`}><div><span>{label}</span><b>{value}{unit} / {limit}{unit}</b></div><div className="meter-track"><span style={{ '--meter-ratio': ratio / 100 } as CSSProperties} /></div></div>
 }
 
-function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario: Scenario; state: SessionState; onSubmit: (decision: Decision) => Promise<void>; onCoach: (question: string) => Promise<CoachResponse>; busy: boolean }) {
+function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario; state: SessionState; onSubmit: (decision: Decision) => Promise<void>; busy: boolean }) {
   const stage = scenario.stages[state.stage_index]
   const [choice, setChoice] = useState('')
   const [prompt, setPrompt] = useState('Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.')
@@ -51,10 +51,9 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
   const [baseline, setBaseline] = useState('0.62')
   const [holdout, setHoldout] = useState('0.78')
   const [direction, setDirection] = useState('higher')
-  const [mentorResponse, setMentorResponse] = useState('')
-  const [mentorModel, setMentorModel] = useState('')
-  const [coachBusy, setCoachBusy] = useState(false)
-  const [coachError, setCoachError] = useState('')
+  const [externalResponse, setExternalResponse] = useState('')
+  const [externalModel, setExternalModel] = useState('Gemini')
+  const [copyStatus, setCopyStatus] = useState('')
 
   useEffect(() => setChoice(''), [stage.id])
 
@@ -71,20 +70,16 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
     event.preventDefault()
     if (!choice) return
     const payload: Record<string, unknown> = {}
-    if (stage.id === 'coach') Object.assign(payload, { prompt, human_check: humanCheck, llm_response: mentorResponse, llm_model: mentorModel })
+    if (stage.id === 'coach') Object.assign(payload, { prompt, human_check: humanCheck, llm_response: externalResponse, llm_model: externalModel })
     if (stage.id === 'experiment') payload.repeats = repeats
     if (stage.id === 'analysis') payload.tools = tools
     if (stage.id === 'validation') payload.metrics = { baseline, holdout, direction }
     await onSubmit({ stage: stage.id as StageId, choice, payload })
   }
 
-  const askCoach = async () => {
-    setCoachBusy(true); setCoachError('')
-    try {
-      const result = await onCoach(prompt)
-      setMentorResponse(result.response); setMentorModel(result.model)
-    } catch (cause) { setCoachError(cause instanceof Error ? cause.message : 'Ollama 응답을 받지 못했어.') }
-    finally { setCoachBusy(false) }
+  const copyPrompt = async () => {
+    try { await navigator.clipboard.writeText(prompt); setCopyStatus('프롬프트를 복사했어. 외부 AI에서 실행한 뒤 답변을 붙여넣어.') }
+    catch { setCopyStatus('자동 복사가 막혔어. 질문 상자를 직접 선택해 복사해줘.') }
   }
 
   return (
@@ -93,13 +88,14 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
       <p className="brief">{stage.brief}</p>
       {stage.id === 'incident' && <><SignalPlot /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>Lot 보류<br/><small>분포와 위치 패턴부터 확인</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>공정 진행<br/><small>평균 CD가 규격 안이므로 통과</small></ChoiceButton></div></>}
       {stage.id === 'coach' && <>
-        <label>LLM에게 보낼 질문<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
-        <button type="button" className="ollama-call" onClick={askCoach} disabled={coachBusy || prompt.length < 20}>{coachBusy ? '서버 Ollama가 질문 생성 중… 약 40~60초' : '검증 프레임 + Ollama 질문 생성'}</button>
-        {mentorResponse && <div className="mentor-answer"><div><b>LOCAL LLM</b><span>{mentorModel}</span></div><p>{mentorResponse}</p></div>}
-        {coachError && <p className="inline-error">{coachError}</p>}
+        <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
+        <button type="button" className="prompt-copy" onClick={copyPrompt} disabled={prompt.length < 20}>질문 프롬프트 복사</button>
+        {copyStatus && <p className="copy-status" role="status">{copyStatus}</p>}
+        <div className="external-ai-grid"><label>사용한 외부 AI<select value={externalModel} onChange={(event) => setExternalModel(event.target.value)}><option>Gemini</option><option>ChatGPT</option><option>Claude</option><option>Perplexity</option><option>기타</option></select></label><label>결과 출처 기록<input value={externalModel} readOnly /></label></div>
+        <label>외부 AI 분석 답변 붙여넣기<textarea className="external-response" value={externalResponse} onChange={(event) => setExternalResponse(event.target.value)} placeholder="Gemini·ChatGPT·Claude 등에서 받은 답변을 원문 그대로 붙여넣어. 다음 칸에서 사람의 검증 계획을 별도로 적어." /></label>
         <label>사람의 검증 계획<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} /></label>
         <div className="choice-grid three"><ChoiceButton value="modify" selected={choice} onClick={setChoice}>수정 채택</ChoiceButton><ChoiceButton value="accept" selected={choice} onClick={setChoice}>그대로 채택</ChoiceButton><ChoiceButton value="reject" selected={choice} onClick={setChoice}>근거 부족</ChoiceButton></div>
-        <p className="field-note">검증 프레임은 코드가 고정하고, 서버 Ollama는 사고를 확장할 질문만 만든다. CPU 추론에 약 40~60초가 걸리며 판단 책임은 사용자에게 있다.</p>
+        <p className="field-note">질문·모델명·붙여넣은 답변·사람의 검증계획을 함께 저장한다. 실제 회사 Recipe·Spec·기밀자료는 외부 AI에 입력하지 마.</p>
       </>}
       {stage.id === 'data' && <><SignalPlot /><div className="checklist"><span>결측·중복·단위</span><span>Tool·Lot 편중</span><span>Center–Edge 분포</span><span>Train–Holdout 분리</span></div><div className="choice-grid"><ChoiceButton value="distribution" selected={choice} onClick={setChoice}>분포로 판단</ChoiceButton><ChoiceButton value="mean_only" selected={choice} onClick={setChoice}>평균으로 판단</ChoiceButton></div></>}
       {stage.id === 'experiment' && <>
@@ -117,7 +113,9 @@ function DecisionPanel({ scenario, state, onSubmit, onCoach, busy }: { scenario:
         {validationPreview && <div className={`validation-preview ${validationPreview.improved ? 'improved' : 'degraded'}`} role="status"><span>LIVE HOLDOUT PREVIEW</span><b>{validationPreview.delta >= 0 ? '+' : ''}{validationPreview.delta.toFixed(3)}</b><p>{validationPreview.improved ? '설정한 개선 방향과 일치해. 적용 범위를 선택해.' : '개선 방향과 불일치해. 조치보다 가설·실험을 다시 의심해야 해.'}</p></div>}
         <div className="choice-list"><ChoiceButton value="controlled" selected={choice} onClick={setChoice}>한정 적용 + 모니터링</ChoiceButton><ChoiceButton value="direct" selected={choice} onClick={setChoice}>전체 Lot 즉시 적용</ChoiceButton><ChoiceButton value="release" selected={choice} onClick={setChoice}>검증 없이 해제</ChoiceButton></div>
       </>}
-      <button className="commit" disabled={!choice || busy || (stage.id === 'coach' && !mentorResponse)}>{busy ? '판단 기록 중…' : '판단을 기록하고 다음 스테이션으로'}</button>
+      <button className="commit" disabled={!choice || busy || (stage.id === 'coach' && externalResponse.trim().length < 20)}>
+        {busy ? '판단 기록 중…' : stage.id === 'coach' ? '질문·답변·판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
+      </button>
     </form>
   )
 }
@@ -185,7 +183,7 @@ export default function App() {
         <aside className="workbench">
           <div className="stage-transition" key={session.completed ? 'result' : scenario.stages[session.stage_index].id}>{session.completed
               ? <ResultPanel scenario={scenario} session={session} busy={busy} onRestart={restart}/>
-              : <DecisionPanel scenario={scenario} state={session} onSubmit={decide} onCoach={(question) => api.coach(session.id, question)} busy={busy}/>
+              : <DecisionPanel scenario={scenario} state={session} onSubmit={decide} busy={busy}/>
           }</div>
           {error && <div className="error" role="alert"><b>기록 실패</b><span>{error}</span></div>}
         </aside>

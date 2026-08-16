@@ -75,7 +75,7 @@ function Station({
   )
 }
 
-const EXHIBIT_LABELS = ['EDGE CD WAFER', 'OLLAMA EVIDENCE MENTOR', 'WAFER MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
+const EXHIBIT_LABELS = ['EDGE CD WAFER', 'EXTERNAL AI WORKBENCH', 'WAFER MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
 const OPERATOR_LINES = [
   '평균보다 분포를 먼저 볼까?',
   'AI 초안을 무엇으로 반증하지?',
@@ -139,7 +139,7 @@ function MentorConsole() {
     <mesh position={[0,.45,0]}><boxGeometry args={[2.6,.75,1.4]}/><meshStandardMaterial color="#173d46" metalness={.2}/></mesh>
     <mesh position={[0,1.25,.28]} rotation={[-.18,0,0]}><boxGeometry args={[2.15,1.15,.1]}/><meshStandardMaterial color="#00a8b5" emissive="#004f57" emissiveIntensity={.55}/></mesh>
     {nodes.map((position,index)=><mesh key={index} position={position}><sphereGeometry args={[.13,16,16]}/><meshStandardMaterial color={index===2?'#ffb21d':'#dffcff'} emissive="#006e76" emissiveIntensity={.5}/></mesh>)}
-    <Html position={[0,1.28,.38]} center distanceFactor={9}><div className="console-copy"><b>OLLAMA</b><span>가설 → 반증 → 증거</span></div></Html>
+    <Html position={[0,1.28,.38]} center distanceFactor={9}><div className="console-copy"><b>AI WORKBENCH</b><span>질문 복사 → 외부 분석 → 답변 저장</span></div></Html>
   </group>
 }
 

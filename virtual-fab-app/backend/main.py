@@ -2,12 +2,8 @@ from __future__ import annotations
 
 import base64
 import html
-import json
-import os
 from pathlib import Path
 from typing import Any, Literal
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
@@ -17,9 +13,6 @@ from pydantic import BaseModel, Field
 
 APP_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = APP_DIR / "dist"
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
-
 STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
 
 TOOLS: dict[str, dict[str, Any]] = {
@@ -58,10 +51,6 @@ class DecisionRequest(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
-class CoachRequest(BaseModel):
-    question: str = Field(min_length=20, max_length=1000)
-
-
 class ReportRequest(BaseModel):
     opinion: str = Field(min_length=40, max_length=3000)
     presenter: str = Field(default="지원자", max_length=80)
@@ -96,41 +85,6 @@ CHOICE_LABELS = {
 }
 
 
-def ollama_chat(question: str) -> str:
-    system_prompt = """당신은 반도체 공정 학습자의 소크라테스식 멘토다.
-숨은 원인이나 정답을 단정하지 않는다. 실제 회사 수치와 비밀은 쓰지 않는다.
-학습자가 다음 행동을 스스로 결정하도록 데이터 확인 질문 한 개만 한국어 60자 이내로 작성한다."""
-    payload = json.dumps({
-        "model": OLLAMA_MODEL,
-        "stream": False,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"관찰: 현상 후 wafer edge CD 산포와 결함률이 증가했지만 평균 CD는 규격 안이다.\n학습자 질문: {question}"},
-        ],
-        "options": {"temperature": 0.1, "num_ctx": 768, "num_predict": 60},
-    }).encode("utf-8")
-    request = Request(f"{OLLAMA_URL}/api/chat", data=payload, headers={"Content-Type": "application/json"})
-    try:
-        with urlopen(request, timeout=180) as response:
-            result = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise HTTPException(503, f"로컬 LLM 응답을 받지 못했습니다: {exc}") from exc
-    content = str(result.get("message", {}).get("content", "")).strip()
-    if not content:
-        raise HTTPException(503, "로컬 LLM이 빈 응답을 반환했습니다.")
-    evidence_framework = """EVIDENCE FRAMEWORK · 검증 규칙
-H1 Dose/Focus | Focus map·위치별 CD로 공정 window 이탈 여부를 반증
-H2 PR두께/PEB/현상 | 두께·Bake·현상 조건별 대조군 반복으로 반증
-H3 계측기/Tool편향 | 동일 시편 교차 계측과 Tool별 bias로 반증
-DATA QUALITY | 결측·단위·wafer 위치·Tool imbalance를 먼저 확인
-NEXT | Optical CD 재측정과 Tool split을 최소 비용 첫 행동으로 검토
-
-OLLAMA DRAFT · 로컬 모델 생성
-"""
-    critique = "\nCRITIQUE · 이 초안의 모호한 표현을 측정 변수·비교군·기각 기준으로 다시 써보세요."
-    return evidence_framework + content.strip('"') + critique
-
-
 def svg_data_uri(svg: str) -> str:
     encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
     return f"data:image/svg+xml;base64,{encoded}"
@@ -148,7 +102,11 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     tools = [TOOLS[item]["label"] for item in analysis.get("tools", []) if item in TOOLS]
     metrics = validation.get("payload", {}).get("metrics", {})
     mentor_text = str(coach.get("payload", {}).get("llm_response", "기록 없음"))[:1500]
+    prompt_text = str(coach.get("payload", {}).get("prompt", "기록 없음"))[:1200]
+    model_text = str(coach.get("payload", {}).get("llm_model", "외부 AI"))[:80]
     safe_mentor = html.escape(mentor_text).replace("\n", "<br>")
+    safe_prompt = html.escape(prompt_text).replace("\n", "<br>")
+    safe_model = html.escape(model_text)
     choice_rows = "".join(
         f"<li><b>{html.escape(next(stage['label'] for stage in SCENARIO['stages'] if stage['id'] == item['stage']))}</b>"
         f"<span>{html.escape(CHOICE_LABELS.get(item['choice'], item['choice']))}</span></li>"
@@ -175,7 +133,7 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
 <section class='slide grid'><span class='label'>S · SITUATION</span><div><h2>평균은 정상이지만<br>분포는 경고했다</h2><p>현상 후 wafer edge CD 산포와 결함률이 증가했다. 평균값만 보면 놓칠 수 있는 공간 패턴을 문제로 정의했다.</p><p><b>초기 판단:</b> {html.escape(CHOICE_LABELS.get(incident.get('choice',''), '기록 없음'))}</p></div><img src='{wafer_svg}' alt='합성 wafer edge 결함 도식'></section>
 <section class='slide'><span class='label'>T · TASK</span><div><h2>정답보다 입증 순서를 설계했다</h2><ul><li><b>데이터</b><span>결측·중복·단위·Tool 편중과 Center–Edge 분포 확인</span></li><li><b>실험</b><span>대조군·요인·반복·판정기준을 먼저 고정</span></li><li><b>책임</b><span>AI 제안과 사람의 검증 계획을 분리</span></li></ul></div></section>
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
-<section class='slide'><span class='label'>AI COLLABORATION</span><div><h2>검증 프레임과 Ollama 질문을 분리했다</h2><blockquote>{safe_mentor}</blockquote><p>검증 규칙은 코드가 보장하고, 로컬 모델 질문은 공정 원리·합성 데이터·측정 한계로 다시 검토했다.</p></div></section>
+<section class='slide'><span class='label'>AI COLLABORATION · {safe_model}</span><div><h2>질문과 외부 AI 답변을 함께 기록했다</h2><p><b>PROMPT</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 공정 원리·합성 데이터·측정 한계와 대조하고 채택·수정·기각했다.</p></div></section>
 <section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
 <section class='slide dark'><span class='label'>R · RESULT</span><div><h2>{verdict}</h2><div class='metric'><span><b>{state.score}</b>점수</span><span><b>{state.budget}</b>남은 예산</span><span><b>{state.time_left}</b>남은 시간</span></div><p>Baseline {html.escape(str(metrics.get('baseline','-')))} → Holdout {html.escape(str(metrics.get('holdout','-')))}</p></div><small>이 수치는 교육용 합성 입력에 대한 시나리오 결과다.</small></section>
 <section class='slide'><span class='label'>MY DISCUSSION</span><div><h2>내 판단과 한계</h2><blockquote>{safe_opinion}</blockquote></div></section>
@@ -293,17 +251,6 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": "virtual-fab"}
 
 
-@app.get("/api/llm/health")
-def llm_health() -> dict[str, str]:
-    try:
-        with urlopen(f"{OLLAMA_URL}/api/tags", timeout=3) as response:
-            result = json.loads(response.read().decode("utf-8"))
-        names = {item.get("name") for item in result.get("models", [])}
-        return {"status": "ok" if OLLAMA_MODEL in names else "model_missing", "model": OLLAMA_MODEL}
-    except (URLError, TimeoutError, json.JSONDecodeError):
-        return {"status": "offline", "model": OLLAMA_MODEL}
-
-
 @app.get("/api/scenario/photo-cd-drift")
 def get_scenario() -> dict[str, Any]:
     return SCENARIO
@@ -322,16 +269,6 @@ def get_session(session_id: str) -> SessionState:
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     return state
-
-
-@app.post("/api/sessions/{session_id}/coach")
-def coach(session_id: str, request: CoachRequest) -> dict[str, str]:
-    state = SESSIONS.get(session_id)
-    if not state:
-        raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    if current_stage(state) != "coach" or state.completed:
-        raise HTTPException(409, "LLM Coach 단계에서만 질문할 수 있습니다.")
-    return {"response": ollama_chat(request.question), "model": OLLAMA_MODEL}
 
 
 @app.post("/api/sessions/{session_id}/decisions")

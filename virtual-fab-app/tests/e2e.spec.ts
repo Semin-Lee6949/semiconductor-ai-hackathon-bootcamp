@@ -3,11 +3,6 @@ import { expect, test } from '@playwright/test'
 test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
-  await page.route('**/api/sessions/*/coach', async (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ model: 'qwen2.5:1.5b', response: '가설 1은 Dose 변화, 가설 2는 현상 균일도, 가설 3은 측정 편향입니다. 각각을 대조군과 위치별 분포로 반증하세요.' }),
-  }))
   await page.goto('/')
   await expect(page.getByText('사라진 선폭의 비밀')).toBeVisible()
   await expect(page.locator('.station-tag')).toHaveCount(6)
@@ -31,12 +26,17 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: /EVIDENCE/ }).click()
   await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('Lot 보류 후 분포 확인')
   await page.getByRole('button', { name: 'Evidence 닫기' }).click()
-  await expect(page.getByText('OLLAMA EVIDENCE MENTOR', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: /검증 프레임 \+ Ollama 질문 생성/ }).click()
-  await expect(page.locator('.mentor-answer')).toContainText('가설 1은 Dose 변화')
+  await expect(page.getByText('EXTERNAL AI WORKBENCH', { exact: true })).toBeVisible()
+  await page.getByLabel('외부 AI 분석 답변 붙여넣기').fill('가설 1은 Dose 변화, 가설 2는 현상 균일도, 가설 3은 측정 편향입니다. 각각을 대조군과 위치별 분포로 반증합니다.')
+  await page.screenshot({ path: testInfo.outputPath('external-ai-stage.png'), fullPage: true })
   await page.getByRole('button', { name: '수정 채택' }).click()
-  await page.getByRole('button', { name: /판단을 기록하고/ }).click()
+  await page.getByRole('button', { name: /질문·답변·판단을 저장하고/ }).click()
   await expect(page.getByText('WAFER MAP', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /EVIDENCE/ }).click()
+  await page.getByText('Gemini 질문·답변').click()
+  await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('경쟁 가설 3개와 각 가설을 반증할')
+  await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('가설 1은 Dose 변화')
+  await page.getByRole('button', { name: 'Evidence 닫기' }).click()
   await page.getByRole('button', { name: '분포로 판단' }).click()
   await page.getByRole('button', { name: /판단을 기록하고/ }).click()
   await expect(page.getByText('SCREENING DOE', { exact: true })).toBeVisible()
