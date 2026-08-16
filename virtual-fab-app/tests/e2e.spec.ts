@@ -118,6 +118,17 @@ test('open a new dry etch case from the module home', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Profile·위치 분포부터 확인/ })).toBeVisible()
 })
 
+test('return to a completed stage from the top step rail', async ({ page }) => {
+  await page.goto('/#sputter-sheet-resistance')
+  await page.getByRole('button', { name: /Lot 보류/ }).click()
+  await page.getByRole('button', { name: /판단을 기록하고/ }).click()
+  await expect(page.getByRole('heading', { name: '데이터·AI 공동분석' })).toBeVisible()
+  await page.getByRole('button', { name: /문제 발생 단계로 돌아가기/ }).click()
+  await expect(page.getByText('CASE VF-SP-03')).toBeVisible()
+  await expect(page.getByText('문제 발생 단계로 돌아왔어. 이후 판단 1개를 되돌렸고')).toBeVisible()
+  await expect(page.getByRole('button', { name: /EVIDENCE/ })).toContainText('0')
+})
+
 test('continue personal AI dialogue inside an automatic response popup', async ({ page }) => {
   const mockResponse = '가설 1은 챔버 위치 편차, 가설 2는 RF 조건 변화, 가설 3은 측정 편향이다. 위치별 분포와 대조군으로 각각 반증한다.'
   await page.route('**/api/sessions/*/llm/check', (route) => route.fulfill({

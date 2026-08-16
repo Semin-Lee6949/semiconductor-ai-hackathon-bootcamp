@@ -331,7 +331,7 @@ function ModuleHome({ scenarios, loading, error, onSelect }: { scenarios: Scenar
 }
 
 function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack: () => void }) {
-  const { scenario, session, feedback, error, busy, decide, restart, setFeedback } = useFabSession(scenarioId)
+  const { scenario, session, feedback, error, busy, decide, rewind, restart, setFeedback } = useFabSession(scenarioId)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   if (!scenario || !session) return <main className="loading"><div className="loader"/><p>{error || '가상 팹을 준비하고 있어…'}</p></main>
@@ -342,7 +342,7 @@ function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack
         <div><button type="button" className="brand brand-button" onClick={onBack}>VIRTUAL FAB</button><span className="scenario-name">{scenario.process} · {scenario.title}</span></div>
         <div className="status-strip"><span>SCORE <b>{session.score}</b></span><span>BUDGET <b>{session.budget}</b></span><span>TIME <b>{session.time_left}m</b></span><button type="button" onClick={() => setDrawerOpen(true)}>EVIDENCE <b>{session.history.length}</b></button></div>
       </header>
-      <StageProgress scenario={scenario} session={session}/>
+      <StageProgress scenario={scenario} session={session} busy={busy} onRewind={rewind}/>
       <section className="workspace">
         <div className="visual-column">
           <FabScene scenario={scenario} session={session} onStationSelect={(index) => setFeedback(index === session.stage_index ? `${scenario.stages[index].label} 스테이션이 열렸어.` : index < session.stage_index ? '이미 완료한 스테이션이야. 기록은 아래에서 확인해.' : '앞 단계의 근거를 먼저 남겨야 열려.')} />

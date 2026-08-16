@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError, api } from '../api'
-import type { Decision, Scenario, SessionState } from '../types'
+import type { Decision, Scenario, SessionState, StageId } from '../types'
 
 export function useFabSession(scenarioId: string) {
   const storageKey = `virtual-fab:${scenarioId}:session`
@@ -76,5 +76,15 @@ export function useFabSession(scenarioId: string) {
     finally { setBusy(false) }
   }, [session])
 
-  return { scenario, session, feedback, error, busy, decide, restart, setFeedback }
+  const rewind = useCallback(async (stage: StageId) => {
+    if (!session) return
+    setBusy(true); setError('')
+    try {
+      const result = await api.rewind(session.id, stage)
+      setSession(result.state); setFeedback(result.feedback)
+    } catch (cause) { setError(cause instanceof Error ? cause.message : '이전 단계로 돌아가지 못했어.') }
+    finally { setBusy(false) }
+  }, [session])
+
+  return { scenario, session, feedback, error, busy, decide, rewind, restart, setFeedback }
 }

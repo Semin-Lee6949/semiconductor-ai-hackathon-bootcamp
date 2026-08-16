@@ -96,6 +96,38 @@ def test_controlled_path_solves_scenario():
     assert report.text.count("<section class='slide") == 15
 
 
+def test_rewind_restores_stage_state_and_discards_later_decisions():
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    client.get(f"/api/sessions/{session_id}/dataset.csv")
+    decide(session_id, "investigation", "distribution", investigation_payload())
+    decide(session_id, "experiment", "screening", {"repeats": 3})
+    analysis = decide(session_id, "analysis", "select", {"tools": ["optical", "sem"]}).json()["state"]
+    assert analysis["budget"] == 61
+    assert analysis["time_left"] == 47
+
+    response = client.post(f"/api/sessions/{session_id}/rewind", json={"stage": "analysis"})
+    assert response.status_code == 200
+    state = response.json()["state"]
+    assert state["stage_index"] == 3
+    assert state["completed"] is False
+    assert state["history"][-1]["stage"] == "experiment"
+    assert len(state["history"]) == 3
+    assert state["budget"] == 80
+    assert state["time_left"] == 60
+    assert state["dataset_downloaded"] is True
+    assert len(state["ai_conversation"]) == 8
+    assert "이후 판단 1개" in response.json()["feedback"]
+
+
+def test_rewind_rejects_current_or_future_stage():
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    response = client.post(f"/api/sessions/{session_id}/rewind", json={"stage": "investigation"})
+    assert response.status_code == 409
+    assert "완료한 이전 단계" in response.json()["detail"]
+
+
 def test_catalog_and_all_scenarios_create_independent_sessions():
     catalog = client.get("/api/scenarios")
     assert catalog.status_code == 200

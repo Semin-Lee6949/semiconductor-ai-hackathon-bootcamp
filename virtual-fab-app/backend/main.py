@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import csv
+from copy import deepcopy
 import hashlib
 import html
 import io
@@ -225,6 +226,10 @@ class DecisionRequest(BaseModel):
     stage: Literal["incident", "investigation", "experiment", "analysis", "validation"]
     choice: str = Field(min_length=1, max_length=80)
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class RewindRequest(BaseModel):
+    stage: Literal["incident", "investigation", "experiment", "analysis", "validation"]
 
 
 class DeepSeekRequest(BaseModel):
@@ -1076,6 +1081,50 @@ def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
         with RATE_LOCK:
             VERIFIED_BYOK.pop(session_id, None)
     return result
+
+
+@app.post("/api/sessions/{session_id}/rewind")
+def rewind(session_id: str, request: RewindRequest) -> dict[str, Any]:
+    previous = load_session(session_id)
+    if not previous:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    scenario = scenario_for(previous)
+    target_index = STAGES.index(request.stage)
+    completed_count = len(previous.history)
+    if target_index >= completed_count:
+        raise HTTPException(409, "완료한 이전 단계만 다시 열 수 있습니다.")
+
+    retained_records = deepcopy(previous.history[:target_index])
+    state = SessionState(
+        id=session_id,
+        scenario_id=previous.scenario_id,
+        scenario_version=scenario["version"],
+        seed=previous.seed,
+        budget=scenario["limits"]["budget"],
+        time_left=scenario["limits"]["time"],
+        dataset_downloaded=previous.dataset_downloaded,
+        ai_conversation=deepcopy(previous.ai_conversation),
+        llm_check_attempts=previous.llm_check_attempts,
+        llm_call_count=previous.llm_call_count,
+    )
+    for record in retained_records:
+        apply_decision(state, DecisionRequest(
+            stage=record["stage"],
+            choice=record["choice"],
+            payload=deepcopy(record.get("payload", {})),
+        ))
+
+    state.completed = False
+    state.verdict = None
+    save_session(state)
+    with RATE_LOCK:
+        VERIFIED_BYOK.pop(session_id, None)
+    removed_count = completed_count - target_index
+    stage_label = scenario["stages"][target_index]["label"]
+    return {
+        "state": state.model_dump(),
+        "feedback": f"{stage_label} 단계로 돌아왔어. 이후 판단 {removed_count}개를 되돌렸고, 데이터와 AI 문답은 보존했어.",
+    }
 
 
 @app.post("/api/sessions/{session_id}/restart", response_model=SessionState)
