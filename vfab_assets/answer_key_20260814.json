@@ -1,0 +1,23 @@
+{
+  "seed": 20260814,
+  "culprit_tool": "PHOTO_C",
+  "decoy_tool": "PHOTO_B",
+  "edge_drop_nm": 3.13,
+  "decoy_uniform_shift_nm": 0.71,
+  "onset_lot": "LOT-005",
+  "edge_radius_mm": 110.0,
+  "traps": {
+    "missing_slot": 15,
+    "missing_rows": 99,
+    "unit_error_rows": 44,
+    "duplicate_rows": 29
+  },
+  "expected_findings": [
+    "평균 CD 는 규격(42.0~48.0nm) 안이다. 평균만으로는 이상이 보이지 않는다.",
+    "Tool 평균만 비교하면 PHOTO_B 가 가장 높아 원인으로 오인하기 쉽다. 이는 전면 균일 shift 이며 결함과 무관하다.",
+    "진짜 원인은 PHOTO_C 의 radius>=110.0mm edge 영역 CD 저하(3.13nm)다.",
+    "이 현상은 LOT-005 부터 시작한다. 시간축을 봐야 drift 를 확인할 수 있다.",
+    "결함 증가는 edge 영역에 집중되어 CD 저하와 공간적으로 일치한다."
+  ],
+  "notice": "교육용 합성 데이터. 실제 공정·Spec·회사 데이터가 아니다."
+}

@@ -175,16 +175,22 @@ systemctl --user restart virtual-fab.service
 4. `prefers-reduced-motion` 사용자는 긴 시네마틱을 건너뛴다.
 5. 공개 전 build → pytest → 필요한 E2E → HTTPS·API health·브라우저 콘솔 순으로 검증한다.
 
-## 8. 다음 재개 작업 — 좌측 3D 입체감과 최종본
+## 8. 다음 재개 작업 — P0 진단·채점 완성 후 3D
 
-다음 대화에서는 기능을 더 늘리기보다 현재 버전을 기준으로 좌측 Three.js 장면의 입체감을 개선한 뒤 최종본을 만든다.
+Claude 레드팀 검수 `BATON_VFAB_CLAUDE_AUDIT_2026-08-16.md`의 출시 불가 판정 3건을 수용한다. 3D 작업은 아래 1–3 완료 전 보류한다.
 
-1. 현재 기본 48:52 가변 분할과 오른쪽 데이터·프롬프트 UI는 유지한다.
-2. 좌측 장면의 카메라 원근, 장비 높이·실루엣, 재질 명암, 접지 그림자, 환경광·포인트광을 함께 조정한다.
-3. 캐릭터와 공정 장비가 같은 바닥에 놓인 느낌, 전후 깊이, 선택 스테이션의 시각적 초점을 강화한다.
-4. 과한 glow·반사·장식 대신 클린룸 재질과 작업용 가독성을 우선한다.
-5. 데스크톱 기본 48:52와 좌측 38% 축소 상태, 모바일 상태를 한 번에 비교한다.
-6. Three.js 성능, `prefers-reduced-motion`, 텍스트·카드 겹침, 브라우저 콘솔 오류를 확인한 후 최종 배포한다.
+1. **P0-A 데이터**: `vfab_assets/generate_photo_cd.py`를 세션 seed와 연결하고, 진짜 원인·미끼 Tool·onset Lot·결측·단위·중복 함정이 있는 PHOTO 데이터를 제공한다.
+2. **필수 데이터 UI**: Tool / Lot / `radius_mm` bin / slot / 시간 그룹핑을 제공한다. radius bin이 없으면 edge 원인을 찾을 수 없으므로 P0-A 완료로 보지 않는다.
+3. **P0-B 채점·P0-C 자원**: `vfab_assets/INTEGRATION_SPEC.md`의 7문항·배점·미끼 0점 규칙을 서버에서 판정하고, 서버 Holdout과 실질적인 예산·시간 트레이드오프를 연결한다. 정답키는 프런트로 보내지 않는다.
+4. **3D 입체감**: 위 단계가 완료된 뒤에만 카메라 원근, 장비 실루엣, 재질 명암, 접지 그림자와 조명을 개선한다.
+
+정본 자산:
+
+- `vfab_assets/INTEGRATION_SPEC.md` — 현재 구현 정본
+- `vfab_assets/generate_photo_cd.py` — seed 기반 결정적 생성기
+- `vfab_assets/answer_key_20260814.json` — 서버 채점 fixture
+- `vfab_assets/photo_cd_20260814.csv` — MD5 `3d9b9acaff67c29fe0f53cf7cc1d8b13`
+- `vfab_assets/UPGRADE_SPEC_v2.md` — 4단계 3D 설계. P0-A·P0-B 완료 전 열거나 적용하지 않는다.
 
 ## 9. 건드리지 말 것
 
