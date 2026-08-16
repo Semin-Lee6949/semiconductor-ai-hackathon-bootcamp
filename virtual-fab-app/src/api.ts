@@ -1,4 +1,4 @@
-import type { Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenario, ScenarioSummary, SessionState } from './types'
+import type { BYOKConnection, BYOKCredentials, BYOKResponse, Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenario, ScenarioSummary, SessionState } from './types'
 
 const BASE = import.meta.env.BASE_URL
 
@@ -31,6 +31,16 @@ export const api = {
     request<DeepSeekResponse>(`sessions/${sessionId}/deepseek`, {
       method: 'POST',
       body: JSON.stringify({ prompt }),
+    }),
+  checkPersonalAI: (sessionId: string, credentials: BYOKCredentials) =>
+    request<BYOKConnection>(`sessions/${sessionId}/llm/check`, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    }),
+  generatePersonalAI: (sessionId: string, credentials: BYOKCredentials, prompt: string) =>
+    request<BYOKResponse>(`sessions/${sessionId}/llm/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ ...credentials, prompt }),
     }),
   report: async (sessionId: string, payload: ReportPayload) => {
     const response = await fetch(`${BASE}api/sessions/${sessionId}/report`, {

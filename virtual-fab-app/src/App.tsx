@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'rea
 import { api } from './api'
 import { CleanroomLobby } from './CleanroomLobby'
 import { EvidenceDrawer } from './components/EvidenceDrawer'
+import { PersonalAIConnector } from './components/PersonalAIConnector'
 import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
 import { useFabSession } from './hooks/useFabSession'
@@ -66,8 +67,6 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [externalResponse, setExternalResponse] = useState('')
   const [externalModel, setExternalModel] = useState('Gemini')
   const [copyStatus, setCopyStatus] = useState('')
-  const [deepseekBusy, setDeepseekBusy] = useState(false)
-  const [deepseekError, setDeepseekError] = useState('')
   const [tokenUsage, setTokenUsage] = useState<number | null>(null)
 
   useEffect(() => setChoice(''), [stage.id])
@@ -97,16 +96,6 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     catch { setCopyStatus('자동 복사가 막혔어. 질문 상자를 직접 선택해 복사해줘.') }
   }
 
-  const askDeepSeek = async () => {
-    setDeepseekBusy(true); setDeepseekError(''); setTokenUsage(null)
-    try {
-      const result = await api.deepseek(state.id, prompt)
-      setExternalResponse(result.response); setExternalModel(result.model); setTokenUsage(result.usage.total_tokens)
-    } catch (cause) {
-      setDeepseekError(cause instanceof Error ? cause.message : 'DeepSeek API 호출에 실패했어.')
-    } finally { setDeepseekBusy(false) }
-  }
-
   return (
     <form className="decision-panel" onSubmit={submit}>
       <div className="stage-heading"><span>{String(state.stage_index + 1).padStart(2, '0')}</span><h2>{stage.label}</h2></div>
@@ -114,11 +103,11 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
       {stage.id === 'incident' && <><IncidentBrief scenario={scenario}/><SignalPlot scenario={scenario} /><div className="choice-grid"><ChoiceButton value="hold" selected={choice} onClick={setChoice}>{scenario.incident.choices.hold[0]}<br/><small>{scenario.incident.choices.hold[1]}</small></ChoiceButton><ChoiceButton value="release_by_mean" selected={choice} onClick={setChoice}>{scenario.incident.choices.release[0]}<br/><small>{scenario.incident.choices.release[1]}</small></ChoiceButton></div></>}
       {stage.id === 'coach' && <>
         <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
-        <div className="ai-action-grid"><button type="button" className="deepseek-call" onClick={askDeepSeek} disabled={deepseekBusy || prompt.length < 20}>{deepseekBusy ? 'DeepSeek 분석 중…' : 'DeepSeek API로 분석'}</button><button type="button" className="prompt-copy secondary" onClick={copyPrompt} disabled={prompt.length < 20}>다른 AI용 프롬프트 복사</button></div>
-        {deepseekError && <p className="inline-error" role="alert">{deepseekError}</p>}
+        <PersonalAIConnector sessionId={state.id} prompt={prompt} callsUsed={state.llm_call_count} onResult={(result) => { setExternalResponse(result.response); setExternalModel(`${result.provider_label} · ${result.model}`); setTokenUsage(result.usage.total_tokens) }}/>
+        <button type="button" className="prompt-copy secondary full-width-action" onClick={copyPrompt} disabled={prompt.length < 20}>개인 키 없이 외부 AI용 프롬프트 복사</button>
         {copyStatus && <p className="copy-status" role="status">{copyStatus}</p>}
-        <div className="external-ai-grid"><label>사용한 외부 AI<select value={externalModel} onChange={(event) => setExternalModel(event.target.value)}><option>Gemini</option><option>ChatGPT</option><option>Claude</option><option>Perplexity</option><option>deepseek-v4-flash</option><option>deepseek-v4-pro</option><option>기타</option></select></label><label>결과 출처 기록<input value={externalModel} readOnly /></label></div>
-        {tokenUsage !== null && <p className="usage-note">DEEPSEEK USAGE · 총 {tokenUsage.toLocaleString()} tokens</p>}
+        <div className="external-ai-grid"><label>사용한 외부 AI<input value={externalModel} onChange={(event) => setExternalModel(event.target.value)} /></label><label>결과 출처 기록<input value={externalModel} readOnly /></label></div>
+        {tokenUsage !== null && <p className="usage-note">AI USAGE · 총 {tokenUsage.toLocaleString()} tokens</p>}
         <label>외부 AI 분석 답변 붙여넣기<textarea className="external-response" value={externalResponse} onChange={(event) => setExternalResponse(event.target.value)} placeholder="Gemini·ChatGPT·Claude 등에서 받은 답변을 원문 그대로 붙여넣어. 다음 칸에서 사람의 검증 계획을 별도로 적어." /></label>
         <label>사람의 검증 계획<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} /></label>
         <div className="choice-grid three"><ChoiceButton value="modify" selected={choice} onClick={setChoice}>수정 채택</ChoiceButton><ChoiceButton value="accept" selected={choice} onClick={setChoice}>그대로 채택</ChoiceButton><ChoiceButton value="reject" selected={choice} onClick={setChoice}>근거 부족</ChoiceButton></div>

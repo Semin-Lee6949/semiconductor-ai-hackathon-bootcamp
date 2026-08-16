@@ -151,3 +151,84 @@ def test_legacy_session_gets_a_stable_seed_and_current_version():
     assert first is not None and second is not None
     assert first.seed == second.seed
     assert first.scenario_version == main.PHOTO_SCENARIO["version"]
+
+
+def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    api_key = "test-personal-key-abcdefghijklmnopqrstuvwxyz"
+    credentials = {"provider": "openai", "model": "gpt-5", "api_key": api_key}
+
+    monkeypatch.setattr(main, "check_llm_connection", lambda provider, model, key: {
+        "status": "connected", "provider": provider, "provider_label": "OpenAI", "model": model,
+    })
+    monkeypatch.setattr(main, "generate_with_byok", lambda provider, model, key, prompt, scenario: {
+        "response": "경쟁 가설과 반증 증거를 분리하고 가장 저비용인 측정부터 확인하세요.",
+        "provider": provider,
+        "provider_label": "OpenAI",
+        "model": model,
+        "usage": {"prompt_tokens": 80, "completion_tokens": 40, "total_tokens": 120},
+    })
+
+    unverified = client.post(
+        f"/api/sessions/{session_id}/llm/generate",
+        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
+    )
+    assert unverified.status_code == 409
+
+    checked = client.post(f"/api/sessions/{session_id}/llm/check", json=credentials)
+    assert checked.status_code == 200
+    assert checked.json()["status"] == "connected"
+
+    generated = client.post(
+        f"/api/sessions/{session_id}/llm/generate",
+        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
+    )
+    assert generated.status_code == 200
+    assert generated.json()["usage"]["total_tokens"] == 120
+
+    second = client.post(
+        f"/api/sessions/{session_id}/llm/generate",
+        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
+    )
+    assert second.status_code == 200
+    limited = client.post(
+        f"/api/sessions/{session_id}/llm/generate",
+        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
+    )
+    assert limited.status_code == 429
+
+    with sqlite3.connect(main.DB_PATH) as connection:
+        stored = connection.execute("SELECT state_json FROM sessions WHERE id = ?", (session_id,)).fetchone()[0]
+    assert api_key not in stored
+    assert "api_key" not in stored
+    assert main.load_session(session_id).llm_call_count == 2
+
+
+def test_byok_is_blocked_over_public_http():
+    public_client = TestClient(main.app, base_url="http://waterfirst.pro")
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    response = public_client.post(
+        f"/api/sessions/{session_id}/llm/check",
+        json={"provider": "gemini", "model": "gemini-3.5-flash", "api_key": "test-personal-key-abcdefghijklmnopqrstuvwxyz"},
+    )
+    assert response.status_code == 426
+
+
+def test_all_provider_responses_are_normalized(monkeypatch):
+    scenario = main.PHOTO_SCENARIO
+    prompt = "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."
+    cases = {
+        "openai": ("gpt-5", {"output": [{"type": "message", "content": [{"type": "output_text", "text": "OpenAI 답변"}]}], "usage": {"input_tokens": 11, "output_tokens": 7, "total_tokens": 18}}),
+        "anthropic": ("claude-opus-4-6", {"content": [{"type": "text", "text": "Anthropic 답변"}], "usage": {"input_tokens": 12, "output_tokens": 8}}),
+        "gemini": ("gemini-3.5-flash", {"candidates": [{"content": {"parts": [{"text": "Gemini 답변"}]}}], "usageMetadata": {"promptTokenCount": 13, "candidatesTokenCount": 9, "totalTokenCount": 22}}),
+        "deepseek": ("deepseek-v4-flash", {"choices": [{"message": {"content": "DeepSeek 답변"}}], "usage": {"prompt_tokens": 14, "completion_tokens": 10, "total_tokens": 24}}),
+    }
+    for provider, (model, provider_response) in cases.items():
+        monkeypatch.setattr(main, "provider_json_request", lambda url, headers, body=None, response=provider_response: response)
+        result = main.generate_with_byok(provider, model, "test-personal-key-abcdefghijklmnopqrstuvwxyz", prompt, scenario)
+        assert result["provider"] == provider
+        assert result["model"] == model
+        assert result["response"].endswith("답변")
+        assert result["usage"]["total_tokens"] > 0

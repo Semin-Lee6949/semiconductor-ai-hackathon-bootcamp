@@ -37,16 +37,17 @@ React·Three.js·FastAPI로 만든 첫 번째 반도체 공정 문제해결 시�
 - 캐릭터 말풍선은 단계별 핵심 사고 질문을 제시하며 정답을 알려주지 않는다.
 - Mission HUD가 현재 Quest, 진행 상태, XP를 React 세션 상태와 동기화한다.
 
-## DeepSeek API와 외부 AI fallback
+## 개인 API 연결(BYOK)과 향후 운영자 API 전환
 
-기본 자동 분석은 `deepseek-v4-flash` 비사고 모드를 사용하고 출력은 최대 500토큰으로 제한한다. 서버 `.env`에만 키를 저장하며 브라우저와 GitHub에는 노출하지 않는다.
+무료 파일럿은 학습자가 OpenAI·Google Gemini·Anthropic·DeepSeek 중 하나를 고르고 자신의 API 키로 연결하는 BYOK 방식이다. 제공사와 모델 ID를 선택한 뒤 모델 조회 API로 연결을 확인하고, 확인된 조합에서만 현재 공정 프롬프트를 보낼 수 있다.
 
-```bash
-cp .env.example .env
-# .env의 DEEPSEEK_API_KEY 값을 서버에서만 입력
-```
+- 개인 키는 React 메모리와 해당 요청 안에서만 사용하며 `localStorage`, SQLite, Evidence trail, 보고서, 로그에 저장하지 않는다.
+- 새로고침·Coach 단계 이탈·서버 재시작 시 연결 확인 상태가 폐기된다.
+- BYOK 엔드포인트는 HTTPS 또는 localhost에서만 열리고, 세션당 연결 확인 5회·분석 2회·IP당 분당 10회·30초 timeout을 적용한다.
+- 프롬프트와 화면에 공개된 교육용 합성 관찰은 사용자가 선택한 제공사로 전송된다. 실제 회사 Recipe·Spec·로그·개인정보는 입력하지 않는다.
+- 개인 키를 쓰지 않으려면 기존처럼 프롬프트를 복사해 외부 AI에서 실행하고 답변을 붙여넣을 수 있다.
 
-API 키 미설정·잔액 부족·응답 지연 때는 질문 프롬프트를 복사하여 Gemini·ChatGPT·Claude 등에 입력하고 답변을 붙여넣는 방식으로 그대로 진행한다.
+유료 서비스 전환 후에는 운영자 전용 키를 서버 `.env`에 저장하고 사용자에게 키 입력을 요구하지 않는 hosted mode로 교체한다. 현재의 `DEEPSEEK_API_KEY` 경로는 이 전환을 위한 서버 전용 fallback이며 브라우저에 노출하지 않는다.
 
 저장 항목은 `prompt`, `llm_model`, `llm_response`, `human_check`이며 FastAPI 세션의 Evidence trail과 최종 면접 슬라이드에 함께 남는다. 회사 Recipe·Spec·로그, 개인정보, API 키는 외부 서비스에 입력하지 않는다.
 
@@ -74,6 +75,7 @@ npx playwright test
 
 - 모든 수치와 데이터는 교육용 합성값이다.
 - DeepSeek 또는 외부 AI의 답변은 정답이 아니다. 학습자가 출처·측정 원리·데이터와 대조해 직접 검증해야 한다.
+- 공개 주소가 HTTPS가 아니면 개인 API 키 입력과 전송은 차단되고 수동 프롬프트 복사만 사용할 수 있다.
 - 세션은 SQLite에 저장되어 서버 재시작 후에도 복원된다. 최근 24시간·최대 500개 세션만 유지한다.
 - 모든 실행은 `scenario_version + seed`를 저장하고 각 판단에 같은 식별정보와 순번을 남긴다. 같은 seed로 생성한 실행은 같은 입력에서 같은 점수와 판정을 재현한다.
 - 완료 후 다른 경로로 재실험하면 seed를 유지해 판단 경로만 비교할 수 있다.

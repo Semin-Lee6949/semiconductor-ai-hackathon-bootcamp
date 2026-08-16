@@ -75,6 +75,8 @@ export type SessionState = {
   budget: number
   time_left: number
   score: number
+  llm_check_attempts: number
+  llm_call_count: number
   evidence: string[]
   history: HistoryItem[]
   completed: boolean
@@ -93,6 +95,26 @@ export type DeepSeekResponse = {
   response: string
   model: string
   usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+}
+
+export type AIProvider = 'openai' | 'anthropic' | 'gemini' | 'deepseek'
+
+export type BYOKCredentials = {
+  provider: AIProvider
+  model: string
+  api_key: string
+}
+
+export type BYOKConnection = {
+  status: 'connected'
+  provider: AIProvider
+  provider_label: string
+  model: string
+}
+
+export type BYOKResponse = DeepSeekResponse & {
+  provider: AIProvider
+  provider_label: string
 }
 
 export type ReportPayload = {

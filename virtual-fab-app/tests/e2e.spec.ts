@@ -23,6 +23,7 @@ async function enterCleanroom(page: import('@playwright/test').Page) {
 }
 
 test('complete the evidence-led scenario', async ({ page }, testInfo) => {
+  test.setTimeout(180_000)
   const errors: string[] = []
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
   await page.goto('/#photo-cd-drift')
@@ -51,8 +52,12 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   await expect(page.getByRole('dialog', { name: 'Evidence trail' })).toContainText('판정 보류 후 분포 확인')
   await page.getByRole('button', { name: 'Evidence 닫기' }).click()
   await expect(page.getByText('EXTERNAL AI WORKBENCH', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'DeepSeek API로 분석' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '다른 AI용 프롬프트 복사' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '내 AI 연결' })).toBeVisible()
+  await expect(page.getByLabel('AI 제공사')).toHaveValue('gemini')
+  await expect(page.getByLabel('개인 API 키')).toHaveAttribute('type', 'password')
+  await expect(page.getByRole('button', { name: '1. 연결 확인' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '2. 이 프롬프트로 분석' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '개인 키 없이 외부 AI용 프롬프트 복사' })).toBeVisible()
   await page.getByLabel('외부 AI 분석 답변 붙여넣기').fill('가설 1은 Dose 변화, 가설 2는 현상 균일도, 가설 3은 측정 편향입니다. 각각을 대조군과 위치별 분포로 반증합니다.')
   await page.screenshot({ path: testInfo.outputPath('external-ai-stage.png'), fullPage: true })
   await page.getByRole('button', { name: '수정 채택' }).click()

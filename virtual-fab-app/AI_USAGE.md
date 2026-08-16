@@ -6,6 +6,7 @@
 - 최종 실행 결과는 Python API 테스트, TypeScript 빌드, Playwright 데스크톱·모바일 테스트로 검증했다.
 - 시나리오 버전·seed·판단 순번을 세션과 Evidence trail에 기록하는 재현성 설계 및 테스트 초안에 AI를 활용했다.
 - 사용자 제공 데스크톱 화면을 근거로 입실 안내 카드 안전영역과 상단 단계 레일 가독성을 조정하고, Playwright 회귀 검사를 추가하는 데 AI를 활용했다.
+- OpenAI·Gemini·Anthropic·DeepSeek 개인 API 연결, 비밀키 비저장, HTTPS 강제, 호출 제한과 제공사별 응답 정규화 코드 및 보안 테스트 초안에 AI를 활용했다.
 
 ## 사람의 검증 책임
 

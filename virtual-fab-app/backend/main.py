@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import html
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
@@ -11,13 +13,14 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Literal
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.parse import quote
+from urllib.request import Request as URLRequest, urlopen
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request as FastAPIRequest
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
 APP_DIR = Path(__file__).resolve().parents[1]
 DIST_DIR = APP_DIR / "dist"
@@ -26,7 +29,12 @@ DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 DB_PATH = Path(os.getenv("VIRTUAL_FAB_DB", str(APP_DIR / ".runtime" / "sessions.sqlite3")))
 DB_LOCK = Lock()
+RATE_LOCK = Lock()
+LLM_RATE_WINDOW: dict[str, list[float]] = {}
+VERIFIED_BYOK: dict[str, tuple[str, str, str]] = {}
 STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
+AI_PROVIDERS = {"openai": "OpenAI", "anthropic": "Anthropic", "gemini": "Google Gemini", "deepseek": "DeepSeek"}
+MODEL_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$")
 
 TOOLS: dict[str, dict[str, Any]] = {
     "optical": {"label": "광학현미경 · Optical CD", "kind": "dimension", "cost": 4, "time": 3, "destructive": False},
@@ -158,6 +166,16 @@ class DeepSeekRequest(BaseModel):
     prompt: str = Field(min_length=20, max_length=2000)
 
 
+class BYOKConnectionRequest(BaseModel):
+    provider: Literal["openai", "anthropic", "gemini", "deepseek"]
+    model: str = Field(min_length=1, max_length=100)
+    api_key: SecretStr
+
+
+class BYOKGenerateRequest(BYOKConnectionRequest):
+    prompt: str = Field(min_length=20, max_length=2000)
+
+
 class ReportRequest(BaseModel):
     opinion: str = Field(min_length=40, max_length=3000)
     presenter: str = Field(default="지원자", max_length=80)
@@ -173,6 +191,8 @@ class SessionState(BaseModel):
     budget: int = 80
     time_left: int = 60
     score: int = 0
+    llm_check_attempts: int = 0
+    llm_call_count: int = 0
     evidence: list[str] = Field(default_factory=list)
     history: list[dict[str, Any]] = Field(default_factory=list)
     completed: bool = False
@@ -244,6 +264,168 @@ def scenario_for(state: SessionState) -> dict[str, Any]:
     return scenario
 
 
+def validate_byok_request(request: BYOKConnectionRequest) -> tuple[str, str]:
+    model = request.model.strip()
+    api_key = request.api_key.get_secret_value().strip()
+    if not MODEL_ID_PATTERN.fullmatch(model):
+        raise HTTPException(422, "모델 ID 형식을 확인하세요.")
+    if not 20 <= len(api_key) <= 300:
+        raise HTTPException(422, "API 키 형식을 확인하세요.")
+    return model, api_key
+
+
+def byok_fingerprint(api_key: str) -> str:
+    return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
+
+
+def require_secure_byok(request: FastAPIRequest) -> None:
+    hostname = (request.url.hostname or "").lower()
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower()
+    secure = request.url.scheme == "https" or forwarded_proto == "https"
+    if not secure and hostname not in {"127.0.0.1", "localhost", "testserver"}:
+        raise HTTPException(426, "개인 API 키 연결은 HTTPS에서만 사용할 수 있습니다.")
+
+
+def enforce_llm_rate_limit(request: FastAPIRequest) -> None:
+    client = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    with RATE_LOCK:
+        recent = [stamp for stamp in LLM_RATE_WINDOW.get(client, []) if now - stamp < 60]
+        if len(recent) >= 10:
+            raise HTTPException(429, "AI 연결 요청이 너무 많습니다. 1분 뒤 다시 시도하세요.")
+        recent.append(now)
+        LLM_RATE_WINDOW[client] = recent
+
+
+def provider_json_request(url: str, headers: dict[str, str], body: dict[str, Any] | None = None) -> dict[str, Any]:
+    encoded = json.dumps(body).encode("utf-8") if body is not None else None
+    request = URLRequest(url, data=encoded, headers={"Content-Type": "application/json", **headers})
+    try:
+        with urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        if exc.code in {401, 403}:
+            message = "API 키 인증에 실패했습니다. 키의 상태와 권한을 확인하세요."
+        elif exc.code == 404:
+            message = "이 계정에서 모델 ID를 찾을 수 없습니다. 모델명을 확인하세요."
+        elif exc.code == 429:
+            message = "제공사의 사용량 또는 결제 한도에 도달했습니다."
+        else:
+            message = f"제공사 API 요청에 실패했습니다 ({exc.code})."
+        raise HTTPException(502, message) from exc
+    except (URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise HTTPException(502, "제공사 API 응답을 30초 안에 확인하지 못했습니다.") from exc
+
+
+def check_llm_connection(provider: str, model: str, api_key: str) -> dict[str, str]:
+    encoded_model = quote(model.removeprefix("models/"), safe="-._:")
+    if provider == "openai":
+        result = provider_json_request(
+            f"https://api.openai.com/v1/models/{encoded_model}",
+            {"Authorization": f"Bearer {api_key}"},
+        )
+        resolved = str(result.get("id") or model)
+    elif provider == "anthropic":
+        result = provider_json_request(
+            f"https://api.anthropic.com/v1/models/{encoded_model}",
+            {"x-api-key": api_key, "anthropic-version": "2023-06-01"},
+        )
+        resolved = str(result.get("id") or model)
+    elif provider == "gemini":
+        result = provider_json_request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}",
+            {"x-goog-api-key": api_key},
+        )
+        resolved = str(result.get("name") or model).removeprefix("models/")
+    else:
+        result = provider_json_request(
+            "https://api.deepseek.com/models",
+            {"Authorization": f"Bearer {api_key}"},
+        )
+        available = {str(item.get("id")) for item in result.get("data", [])}
+        if model not in available:
+            raise HTTPException(422, "이 DeepSeek 키에서 선택한 모델을 찾을 수 없습니다.")
+        resolved = model
+    return {"status": "connected", "provider": provider, "provider_label": AI_PROVIDERS[provider], "model": resolved}
+
+
+def coach_messages(prompt: str, scenario: dict[str, Any]) -> tuple[str, str]:
+    system = (
+        f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
+        "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
+        "정답을 단정하지 말고 경쟁 가설 3개, 각 가설을 반증할 최소 증거, "
+        "가장 먼저 할 저비용 측정을 한국어로 간결하게 제안한다."
+    )
+    user = (
+        "교육용 관찰: "
+        + "; ".join(f"{fact['label']} {fact['value']} ({fact['note']})" for fact in scenario["incident"]["facts"])
+        + f". 제한시간은 {scenario['incident']['deadline']}이다. 미확인 항목은 "
+        + ", ".join(scenario["incident"]["unknowns"])
+        + f".\n학습자 질문: {prompt}"
+    )
+    return system, user
+
+
+def normalize_usage(prompt_tokens: int = 0, completion_tokens: int = 0, total_tokens: int = 0) -> dict[str, int]:
+    return {
+        "prompt_tokens": int(prompt_tokens or 0),
+        "completion_tokens": int(completion_tokens or 0),
+        "total_tokens": int(total_tokens or (prompt_tokens or 0) + (completion_tokens or 0)),
+    }
+
+
+def generate_with_byok(provider: str, model: str, api_key: str, prompt: str, scenario: dict[str, Any]) -> dict[str, Any]:
+    system, user = coach_messages(prompt, scenario)
+    if provider == "openai":
+        result = provider_json_request(
+            "https://api.openai.com/v1/responses",
+            {"Authorization": f"Bearer {api_key}"},
+            {"model": model, "input": [{"role": "system", "content": system}, {"role": "user", "content": user}], "max_output_tokens": 500},
+        )
+        texts = [
+            str(content.get("text", ""))
+            for item in result.get("output", []) if item.get("type") == "message"
+            for content in item.get("content", []) if content.get("type") == "output_text"
+        ]
+        content = "\n".join(text for text in texts if text).strip()
+        usage_raw = result.get("usage", {})
+        usage = normalize_usage(usage_raw.get("input_tokens", 0), usage_raw.get("output_tokens", 0), usage_raw.get("total_tokens", 0))
+    elif provider == "anthropic":
+        result = provider_json_request(
+            "https://api.anthropic.com/v1/messages",
+            {"x-api-key": api_key, "anthropic-version": "2023-06-01"},
+            {"model": model, "max_tokens": 500, "system": system, "messages": [{"role": "user", "content": user}]},
+        )
+        content = "\n".join(str(block.get("text", "")) for block in result.get("content", []) if block.get("type") == "text").strip()
+        usage_raw = result.get("usage", {})
+        usage = normalize_usage(usage_raw.get("input_tokens", 0), usage_raw.get("output_tokens", 0))
+    elif provider == "gemini":
+        encoded_model = quote(model.removeprefix("models/"), safe="-._:")
+        result = provider_json_request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{encoded_model}:generateContent",
+            {"x-goog-api-key": api_key},
+            {"systemInstruction": {"parts": [{"text": system}]}, "contents": [{"role": "user", "parts": [{"text": user}]}], "generationConfig": {"maxOutputTokens": 500, "temperature": 0.2}},
+        )
+        candidates = result.get("candidates", [])
+        parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+        content = "\n".join(str(part.get("text", "")) for part in parts if part.get("text")).strip()
+        usage_raw = result.get("usageMetadata", {})
+        usage = normalize_usage(usage_raw.get("promptTokenCount", 0), usage_raw.get("candidatesTokenCount", 0), usage_raw.get("totalTokenCount", 0))
+    else:
+        result = provider_json_request(
+            "https://api.deepseek.com/chat/completions",
+            {"Authorization": f"Bearer {api_key}"},
+            {"model": model, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}], "thinking": {"type": "disabled"}, "temperature": 0.2, "max_tokens": 500},
+        )
+        choices = result.get("choices", [])
+        content = str(choices[0].get("message", {}).get("content", "")).strip() if choices else ""
+        usage_raw = result.get("usage", {})
+        usage = normalize_usage(usage_raw.get("prompt_tokens", 0), usage_raw.get("completion_tokens", 0), usage_raw.get("total_tokens", 0))
+    if not content:
+        raise HTTPException(502, "선택한 AI가 빈 답변을 반환했습니다.")
+    return {"response": content, "provider": provider, "provider_label": AI_PROVIDERS[provider], "model": model, "usage": usage}
+
+
 def deepseek_generate(prompt: str, user_id: str, scenario: dict[str, Any]) -> dict[str, Any]:
     if not DEEPSEEK_API_KEY:
         raise HTTPException(503, "DeepSeek API 키가 아직 설정되지 않았습니다. 외부 AI 복사·붙여넣기를 이용하세요.")
@@ -276,13 +458,13 @@ def deepseek_generate(prompt: str, user_id: str, scenario: dict[str, Any]) -> di
         "max_tokens": 500,
         "user_id": user_id,
     }).encode("utf-8")
-    request = Request(
+    request = URLRequest(
         DEEPSEEK_URL,
         data=body,
         headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
     )
     try:
-        with urlopen(request, timeout=90) as response:
+        with urlopen(request, timeout=30) as response:
             result = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         detail = "인증 또는 잔액을 확인하세요." if exc.code in {401, 402, 403} else "잠시 후 다시 시도하세요."
@@ -528,13 +710,62 @@ def get_session(session_id: str) -> SessionState:
     return state
 
 
+@app.post("/api/sessions/{session_id}/llm/check")
+def check_personal_llm(session_id: str, request: BYOKConnectionRequest, http_request: FastAPIRequest) -> dict[str, str]:
+    require_secure_byok(http_request)
+    enforce_llm_rate_limit(http_request)
+    state = load_session(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if state.completed or current_stage(state) != "coach":
+        raise HTTPException(409, "LLM Coach 단계에서만 개인 AI를 연결할 수 있습니다.")
+    if state.llm_check_attempts >= 5:
+        raise HTTPException(429, "이 세션의 연결 확인 한도에 도달했습니다.")
+    model, api_key = validate_byok_request(request)
+    state.llm_check_attempts += 1
+    save_session(state)
+    result = check_llm_connection(request.provider, model, api_key)
+    with RATE_LOCK:
+        if len(VERIFIED_BYOK) >= 500 and session_id not in VERIFIED_BYOK:
+            VERIFIED_BYOK.pop(next(iter(VERIFIED_BYOK)))
+        VERIFIED_BYOK[session_id] = (request.provider, result["model"], byok_fingerprint(api_key))
+    return result
+
+
+@app.post("/api/sessions/{session_id}/llm/generate")
+def generate_personal_llm(session_id: str, request: BYOKGenerateRequest, http_request: FastAPIRequest) -> dict[str, Any]:
+    require_secure_byok(http_request)
+    enforce_llm_rate_limit(http_request)
+    state = load_session(session_id)
+    if not state:
+        raise HTTPException(404, "세션을 찾을 수 없습니다.")
+    if state.completed or current_stage(state) != "coach":
+        raise HTTPException(409, "LLM Coach 단계에서만 개인 AI를 호출할 수 있습니다.")
+    if state.llm_call_count >= 2:
+        raise HTTPException(429, "이 세션의 AI 분석 한도 2회에 도달했습니다.")
+    model, api_key = validate_byok_request(request)
+    with RATE_LOCK:
+        verified = VERIFIED_BYOK.get(session_id)
+    expected = (request.provider, model, byok_fingerprint(api_key))
+    if verified != expected:
+        raise HTTPException(409, "먼저 현재 제공사·모델·API 키의 연결을 확인하세요.")
+    state.llm_call_count += 1
+    save_session(state)
+    return generate_with_byok(request.provider, model, api_key, request.prompt, scenario_for(state))
+
+
 @app.post("/api/sessions/{session_id}/deepseek")
-def deepseek(session_id: str, request: DeepSeekRequest) -> dict[str, Any]:
+def deepseek(session_id: str, request: DeepSeekRequest, http_request: FastAPIRequest) -> dict[str, Any]:
+    enforce_llm_rate_limit(http_request)
     state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     if state.completed or current_stage(state) != "coach":
         raise HTTPException(409, "LLM Coach 단계에서만 DeepSeek을 호출할 수 있습니다.")
+    if state.llm_call_count >= 2:
+        raise HTTPException(429, "이 세션의 AI 분석 한도 2회에 도달했습니다.")
+    state.llm_call_count += 1
+    save_session(state)
     return deepseek_generate(request.prompt, session_id.replace("-", ""), scenario_for(state))
 
 
@@ -545,6 +776,9 @@ def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     result = apply_decision(state, request)
     save_session(state)
+    if request.stage == "coach":
+        with RATE_LOCK:
+            VERIFIED_BYOK.pop(session_id, None)
     return result
 
 
@@ -565,6 +799,8 @@ def restart(session_id: str) -> SessionState:
         time_left=scenario["limits"]["time"],
     )
     save_session(state)
+    with RATE_LOCK:
+        VERIFIED_BYOK.pop(session_id, None)
     return state
 
 
