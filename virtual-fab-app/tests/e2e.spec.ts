@@ -39,6 +39,13 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   if (testInfo.project.name === 'mobile') {
     await expect(page.locator('.workbench')).toBeVisible()
     await expect(page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })).toBeHidden()
+    await page.getByRole('button', { name: /Lot 보류/ }).click()
+    await page.getByRole('button', { name: /판단을 기록하고/ }).click()
+    await expect(page.getByRole('heading', { name: '데이터·AI 공동분석' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '서버 CSV 불러오기·미리보기' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '내 AI 연결' })).toBeVisible()
+    await expect(page.getByRole('region', { name: '다음 단계 진행 조건' })).toContainText('1/4 완료')
+    await expect(page.getByRole('button', { name: '다음 단계 조건 3개 남음' })).toBeDisabled()
     expect(errors).toEqual([])
     return
   }

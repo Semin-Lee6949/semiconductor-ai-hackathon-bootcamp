@@ -141,6 +141,14 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     const improved = direction === 'higher' ? delta > 0 : delta < 0
     return { delta, improved }
   }, [baseline, holdout, direction])
+  const investigationRequirements = [
+    { label: '서버 데이터 미리보기', detail: datasetDownloaded ? '완료' : 'CSV를 먼저 불러와', ready: datasetDownloaded },
+    { label: 'AI 심층 문답', detail: `${conversation.length}/${MIN_DEEP_DIALOGUE_TURNS}회`, ready: conversation.length >= MIN_DEEP_DIALOGUE_TURNS },
+    { label: '사람의 검증 기록', detail: `${humanCheck.trim().length}/20자`, ready: humanCheck.trim().length >= 20 },
+    { label: '최종 데이터 판단', detail: choice ? '선택 완료' : '근거를 선택해', ready: Boolean(choice) },
+  ]
+  const investigationReadyCount = investigationRequirements.filter((item) => item.ready).length
+  const investigationMissingCount = investigationRequirements.length - investigationReadyCount
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -295,8 +303,12 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
         {validationPreview && <div className={`validation-preview ${validationPreview.improved ? 'improved' : 'degraded'}`} role="status"><span>LIVE HOLDOUT PREVIEW</span><b>{validationPreview.delta >= 0 ? '+' : ''}{validationPreview.delta.toFixed(3)}</b><p>{validationPreview.improved ? '설정한 개선 방향과 일치해. 적용 범위를 선택해.' : '개선 방향과 불일치해. 조치보다 가설·실험을 다시 의심해야 해.'}</p></div>}
         <div className="choice-list"><ChoiceButton value="controlled" selected={choice} onClick={setChoice}>한정 적용 + 모니터링</ChoiceButton><ChoiceButton value="direct" selected={choice} onClick={setChoice}>전체 Lot 즉시 적용</ChoiceButton><ChoiceButton value="release" selected={choice} onClick={setChoice}>검증 없이 해제</ChoiceButton></div>
       </>}
+      {stage.id === 'investigation' && <section className={`next-step-gate ${investigationMissingCount === 0 ? 'ready' : ''}`} aria-labelledby="next-step-gate-title">
+        <header><b id="next-step-gate-title">다음 단계 진행 조건</b><span>{investigationReadyCount}/4 완료</span></header>
+        <ul>{investigationRequirements.map((item) => <li key={item.label} className={item.ready ? 'ready' : ''}><span aria-hidden="true">{item.ready ? '✓' : '○'}</span><b>{item.label}</b><small>{item.detail}</small></li>)}</ul>
+      </section>}
       <button className="commit" disabled={!choice || busy || (stage.id === 'investigation' && (!datasetDownloaded || conversation.length < MIN_DEEP_DIALOGUE_TURNS || humanCheck.trim().length < 20))}>
-        {busy ? '판단 기록 중…' : stage.id === 'investigation' ? '데이터·AI 문답·내 판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
+        {busy ? '판단 기록 중…' : stage.id === 'investigation' ? investigationMissingCount > 0 ? `다음 단계 조건 ${investigationMissingCount}개 남음` : '데이터·AI 문답·내 판단을 저장하고 다음으로' : '판단을 기록하고 다음 스테이션으로'}
       </button>
     </form>
   )

@@ -1200,5 +1200,13 @@ if DIST_DIR.exists():
     def spa(path: str) -> FileResponse:
         candidate = (DIST_DIR / path).resolve()
         if path and DIST_DIR.resolve() in candidate.parents and candidate.is_file():
-            return FileResponse(candidate)
-        return FileResponse(DIST_DIR / "index.html")
+            headers = {"Cache-Control": "no-store, no-cache, must-revalidate"} if candidate.suffix == ".html" else None
+            return FileResponse(candidate, headers=headers)
+        return FileResponse(
+            DIST_DIR / "index.html",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
