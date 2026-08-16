@@ -1,12 +1,23 @@
 import { expect, test } from '@playwright/test'
 
+async function enterCleanroom(page: import('@playwright/test').Page) {
+  await expect(page.getByRole('heading', { name: '가상 팹 접속' })).toBeVisible()
+  await page.getByRole('button', { name: /출입 등록 시작/ }).click()
+  await expect(page.getByRole('heading', { name: '손 씻기' })).toBeVisible()
+  await page.getByRole('button', { name: /세정 완료/ }).click()
+  await expect(page.getByRole('heading', { name: '마스크 착용' })).toBeVisible()
+  await page.getByRole('button', { name: /마스크 착용/ }).click()
+  await expect(page.getByRole('heading', { name: '방진복 착용' })).toBeVisible()
+  await page.getByRole('button', { name: /방진복 착용/ }).click()
+  await expect(page.getByRole('heading', { name: '에어샤워 통과' })).toBeVisible()
+  await page.getByRole('button', { name: /에어샤워 가동/ }).click()
+  await expect(page.getByRole('heading', { name: /사건이 기다리는 공정룸/ })).toBeVisible()
+}
+
 test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()) })
-  await page.goto('/')
-  await expect(page.getByRole('heading', { name: /공정을 외우지 말고/ })).toBeVisible()
-  await expect(page.locator('.module-card')).toHaveCount(6)
-  await page.getByRole('button', { name: /PHOTO 사라진 선폭의 비밀/ }).click()
+  await page.goto('/#photo-cd-drift')
   await expect(page.getByText('사라진 선폭의 비밀')).toBeVisible()
   await expect(page.getByText('CASE VF-PH-01')).toBeVisible()
   await expect(page.getByText('후속 Etch 투입까지 60분')).toBeVisible()
@@ -68,7 +79,11 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
 
 test('open a new dry etch case from the module home', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /DRY ETCH 기울어진 Sidewall/ }).click()
+  await page.screenshot({ path: test.info().outputPath('cleanroom-entry.png'), fullPage: true })
+  await enterCleanroom(page)
+  await page.screenshot({ path: test.info().outputPath('process-hall.png'), fullPage: true })
+  await expect(page.locator('.module-card')).toHaveCount(6)
+  await page.getByRole('button', { name: 'DRY ETCH 기울어진 Sidewall 시나리오 시작' }).click()
   await expect(page.getByText('기울어진 Sidewall')).toBeVisible()
   await expect(page.getByText('CASE VF-DE-02')).toBeVisible()
   await expect(page.getByText('119.8 nm')).toBeVisible()

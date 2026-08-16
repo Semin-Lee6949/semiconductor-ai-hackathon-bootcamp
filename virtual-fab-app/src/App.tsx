@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { api } from './api'
+import { CleanroomLobby } from './CleanroomLobby'
 import { EvidenceDrawer } from './components/EvidenceDrawer'
 import { StageProgress } from './components/StageProgress'
 import { FabScene } from './FabScene'
@@ -189,28 +190,7 @@ function ResultPanel({ scenario, session, busy, onRestart }: { scenario: Scenari
 }
 
 function ModuleHome({ scenarios, loading, error, onSelect }: { scenarios: ScenarioSummary[]; loading: boolean; error: string; onSelect: (id: string) => void }) {
-  return <main className="module-home">
-    <header className="home-nav"><a className="brand" href="./">VIRTUAL FAB</a><span>SCHOLARBRIDGE · SEMICONDUCTOR PROBLEM LAB</span></header>
-    <section className="home-hero">
-      <div className="hero-copy"><span className="eyebrow">PROCESS TROUBLESHOOTING RPG · 06 MODULES</span><h1><span className="hero-line"><span>공정을 외우지 </span><span>말고,</span></span><em className="hero-line"><span>사건을 </span><span>해결하라.</span></em></h1><p>평균값 뒤에 숨은 이상 신호를 찾고, AI와 경쟁 가설을 세우고, 비용 안에서 분석 툴을 고른 뒤 Holdout으로 검증한다.</p></div>
-      <div className="hero-system" aria-label="문제 해결 과정"><span>01 SIGNAL</span><i/><span>02 HYPOTHESIS</span><i/><span>03 EVIDENCE</span><i/><span>04 DECISION</span></div>
-    </section>
-    <section className="module-index" aria-labelledby="module-title">
-      <header><div><span>SELECT A CASE</span><h2 id="module-title">공정별 사고 훈련</h2></div><p>모든 수치와 상황은 교육용 합성 데이터다.<br/>실제 회사 Recipe·Spec·내부 정보는 사용하지 않는다.</p></header>
-      {loading && <div className="catalog-loading">시나리오 목록을 준비하고 있어…</div>}
-      {error && <div className="catalog-error" role="alert">{error}</div>}
-      <div className="module-grid">{scenarios.map((item) => <article className="module-card" key={item.id}>
-        <div className="module-meta"><span>{item.module_no}</span><b>{item.badge}</b></div>
-        <p className="process-code">{item.process}</p>
-        <h3>{item.title}</h3>
-        <p className="module-tagline">{item.tagline}</p>
-        <div className="skill-line">{item.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
-        <button type="button" onClick={() => onSelect(item.id)} aria-label={`${item.process} ${item.title} 시나리오 시작`}><span>시나리오 시작</span><b>↗</b></button>
-      </article>)}</div>
-    </section>
-    <section className="home-principle"><span>TRAINING PRINCIPLE</span><p>AI는 가설을 넓히고, 엔지니어는 증거의 순서와 조치 범위를 책임진다.</p></section>
-    <footer><p>ScholarBridge Virtual Fab · 교육용 MVP</p><p>React · Three.js · FastAPI</p></footer>
-  </main>
+  return <CleanroomLobby scenarios={scenarios} loading={loading} error={error} onSelect={onSelect}/>
 }
 
 function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack: () => void }) {
