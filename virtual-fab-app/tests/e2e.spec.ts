@@ -38,6 +38,7 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
 
   if (testInfo.project.name === 'mobile') {
     await expect(page.locator('.workbench')).toBeVisible()
+    await expect(page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })).toBeHidden()
     expect(errors).toEqual([])
     return
   }
@@ -159,6 +160,40 @@ test('return to a completed stage from the top step rail', async ({ page }) => {
   await expect(page.getByText('CASE VF-SP-03')).toBeVisible()
   await expect(page.getByText('문제 발생 단계로 돌아왔어. 이후 판단 1개를 되돌렸고')).toBeVisible()
   await expect(page.getByRole('button', { name: /EVIDENCE/ })).toContainText('0')
+})
+
+test('resize and persist the desktop visual and workbench split', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'mobile', '데스크톱 전용 분할바')
+  await page.goto('/#photo-cd-drift')
+  const workspace = page.locator('.workspace')
+  const visual = page.locator('.visual-column')
+  const workbench = page.locator('.workbench')
+  const resizer = page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })
+  const workspaceBox = await workspace.boundingBox()
+  const initialVisualBox = await visual.boundingBox()
+  const initialWorkbenchBox = await workbench.boundingBox()
+  const resizerBox = await resizer.boundingBox()
+  expect(workspaceBox && initialVisualBox && initialWorkbenchBox && resizerBox).toBeTruthy()
+  expect((initialVisualBox?.width ?? 0) / (workspaceBox?.width ?? 1)).toBeGreaterThan(0.46)
+  expect((initialVisualBox?.width ?? 0) / (workspaceBox?.width ?? 1)).toBeLessThan(0.5)
+
+  await page.mouse.move((resizerBox?.x ?? 0) + (resizerBox?.width ?? 0) / 2, (resizerBox?.y ?? 0) + 120)
+  await page.mouse.down()
+  await page.mouse.move((workspaceBox?.x ?? 0) + (workspaceBox?.width ?? 0) * 0.38, (resizerBox?.y ?? 0) + 120)
+  await page.mouse.up()
+  await expect(resizer).toHaveAttribute('aria-valuenow', /3[78]/)
+  const narrowedVisualBox = await visual.boundingBox()
+  const widenedWorkbenchBox = await workbench.boundingBox()
+  expect(narrowedVisualBox?.width ?? 0).toBeLessThan(initialVisualBox?.width ?? 0)
+  expect(widenedWorkbenchBox?.width ?? 0).toBeGreaterThan(initialWorkbenchBox?.width ?? 0)
+  await page.screenshot({ path: testInfo.outputPath('resized-workspace.png'), fullPage: true })
+
+  await page.reload()
+  await expect(page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })).toHaveAttribute('aria-valuenow', /3[78]/)
+  await page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' }).dblclick()
+  await expect(page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })).toHaveAttribute('aria-valuenow', '48')
+  await page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' }).press('ArrowRight')
+  await expect(page.getByRole('separator', { name: '3D 화면과 작업창 너비 조절' })).toHaveAttribute('aria-valuenow', '50')
 })
 
 test('continue personal AI dialogue inside an automatic response popup', async ({ page }) => {

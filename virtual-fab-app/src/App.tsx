@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import { api } from './api'
 import { CleanroomLobby } from './CleanroomLobby'
 import { EvidenceDrawer } from './components/EvidenceDrawer'
@@ -25,6 +25,8 @@ const QUESTION_PHASES = [
   { id: 'synthesize', range: '9–15', label: 'PT 심화', goal: '반론·한계·면접 질문까지 선택적으로 보강' },
 ]
 const MIN_DEEP_DIALOGUE_TURNS = 8
+const DEFAULT_VISUAL_WIDTH = 48
+const WORKSPACE_WIDTH_KEY = 'virtual-fab:workspace-visual-width'
 
 function phaseForTurn(turn: number) {
   if (turn <= 2) return QUESTION_PHASES[0]
@@ -351,6 +353,66 @@ function ModuleHome({ scenarios, loading, error, onSelect }: { scenarios: Scenar
 function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack: () => void }) {
   const { scenario, session, feedback, error, busy, decide, rewind, restart, setFeedback } = useFabSession(scenarioId)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const workspaceRef = useRef<HTMLElement>(null)
+  const [resizingWorkspace, setResizingWorkspace] = useState(false)
+  const [visualWidth, setVisualWidth] = useState(() => {
+    const saved = Number(window.localStorage.getItem(WORKSPACE_WIDTH_KEY))
+    return Number.isFinite(saved) && saved >= 32 && saved <= 72 ? saved : DEFAULT_VISUAL_WIDTH
+  })
+
+  const clampVisualWidth = (candidate: number) => {
+    const width = workspaceRef.current?.getBoundingClientRect().width ?? 1440
+    const min = Math.max(32, (340 / width) * 100)
+    const max = Math.min(72, ((width - 402) / width) * 100)
+    return Math.min(Math.max(candidate, min), Math.max(min, max))
+  }
+
+  const visualWidthFromPointer = (clientX: number) => {
+    const bounds = workspaceRef.current?.getBoundingClientRect()
+    if (!bounds) return visualWidth
+    return clampVisualWidth(((clientX - bounds.left) / bounds.width) * 100)
+  }
+
+  const handleResizePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setResizingWorkspace(true)
+  }
+
+  const handleResizePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (resizingWorkspace) setVisualWidth(visualWidthFromPointer(event.clientX))
+  }
+
+  const handleResizePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const nextWidth = visualWidthFromPointer(event.clientX)
+    setVisualWidth(nextWidth)
+    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(nextWidth))
+    setResizingWorkspace(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
+  const handleResizePointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    setResizingWorkspace(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
+  const handleResizeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    let nextWidth = visualWidth
+    if (event.key === 'ArrowLeft') nextWidth -= 2
+    else if (event.key === 'ArrowRight') nextWidth += 2
+    else if (event.key === 'Home') nextWidth = 32
+    else if (event.key === 'End') nextWidth = 72
+    else return
+    event.preventDefault()
+    nextWidth = clampVisualWidth(nextWidth)
+    setVisualWidth(nextWidth)
+    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(nextWidth))
+  }
+
+  const resetWorkspaceWidth = () => {
+    const nextWidth = clampVisualWidth(DEFAULT_VISUAL_WIDTH)
+    setVisualWidth(nextWidth)
+    window.localStorage.setItem(WORKSPACE_WIDTH_KEY, String(nextWidth))
+  }
 
   if (!scenario || !session) return <main className="loading"><div className="loader"/><p>{error || '가상 팹을 준비하고 있어…'}</p></main>
 
@@ -361,11 +423,12 @@ function ScenarioExperience({ scenarioId, onBack }: { scenarioId: string; onBack
         <div className="status-strip"><span>SCORE <b>{session.score}</b></span><span>BUDGET <b>{session.budget}</b></span><span>TIME <b>{session.time_left}m</b></span><button type="button" onClick={() => setDrawerOpen(true)}>EVIDENCE <b>{session.history.length}</b></button></div>
       </header>
       <StageProgress scenario={scenario} session={session} busy={busy} onRewind={rewind}/>
-      <section className="workspace">
+      <section ref={workspaceRef} className={`workspace ${resizingWorkspace ? 'is-resizing' : ''}`} style={{ '--visual-width': `${visualWidth}%` } as CSSProperties}>
         <div className="visual-column">
           <FabScene scenario={scenario} session={session} onStationSelect={(index) => setFeedback(index === session.stage_index ? `${scenario.stages[index].label} 스테이션이 열렸어.` : index < session.stage_index ? '이미 완료한 스테이션이야. 기록은 아래에서 확인해.' : '앞 단계의 근거를 먼저 남겨야 열려.')} />
           <div className="feedback" role="status"><span>LIVE NOTE</span><p>{feedback}</p></div>
         </div>
+        <div className="workspace-resizer" role="separator" aria-label="3D 화면과 작업창 너비 조절" aria-orientation="vertical" aria-valuemin={32} aria-valuemax={72} aria-valuenow={Math.round(visualWidth)} aria-valuetext={`왼쪽 3D 화면 ${Math.round(visualWidth)}%, 오른쪽 작업창 ${Math.round(100 - visualWidth)}%`} tabIndex={0} title="드래그하거나 방향키로 너비 조절 · 더블클릭으로 초기화" onPointerDown={handleResizePointerDown} onPointerMove={handleResizePointerMove} onPointerUp={handleResizePointerUp} onPointerCancel={handleResizePointerCancel} onKeyDown={handleResizeKeyDown} onDoubleClick={resetWorkspaceWidth}><span aria-hidden="true"/></div>
         <aside className="workbench">
           <div className="stage-transition" key={session.completed ? 'result' : scenario.stages[session.stage_index].id}>{session.completed
               ? <ResultPanel scenario={scenario} session={session} busy={busy} onRestart={restart}/>
