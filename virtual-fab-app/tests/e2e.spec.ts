@@ -11,6 +11,8 @@ test('complete the evidence-led scenario', async ({ page }, testInfo) => {
   await page.goto('/')
   await expect(page.getByText('사라진 선폭의 비밀')).toBeVisible()
   await expect(page.locator('.station-tag')).toHaveCount(6)
+  await expect(page.getByText('FAB ROOKIE', { exact: true })).toBeVisible()
+  await expect(page.locator('.mission-hud')).toContainText('MISSION 01')
   await page.waitForTimeout(800)
   await page.screenshot({ path: testInfo.outputPath('first-viewport.png'), fullPage: true })
 

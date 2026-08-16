@@ -1,8 +1,9 @@
 import { ContactShadows, Html, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
+import { MathUtils, Vector3 } from 'three'
 import type { Group, Mesh } from 'three'
-import type { Scenario } from './types'
+import type { Scenario, SessionState } from './types'
 
 const STATION_LAYOUT: Record<string, [number, number, number]> = {
   alert: [-5, 0, -1.8],
@@ -75,6 +76,54 @@ function Station({
 }
 
 const EXHIBIT_LABELS = ['EDGE CD WAFER', 'OLLAMA EVIDENCE MENTOR', 'WAFER MAP', 'SCREENING DOE', 'ANALYSIS TOOL BAY', 'HOLDOUT GATE']
+const OPERATOR_LINES = [
+  '평균보다 분포를 먼저 볼까?',
+  'AI 초안을 무엇으로 반증하지?',
+  '결측·단위·Tool 편중부터!',
+  '대조군과 반복을 고정하자.',
+  '최소 비용의 증거는 무엇일까?',
+  'Holdout이 정말 재현됐나?',
+]
+
+function FabOperator({ target, stageIndex }: { target: [number, number, number]; stageIndex: number }) {
+  const root = useRef<Group>(null)
+  const leftArm = useRef<Group>(null)
+  const rightArm = useRef<Group>(null)
+  const leftLeg = useRef<Group>(null)
+  const rightLeg = useRef<Group>(null)
+  const targetVector = useMemo(() => new Vector3(target[0] + .95, 0, target[2] + .85), [target])
+
+  useFrame(({ clock }, delta) => {
+    if (!root.current) return
+    const distance = root.current.position.distanceTo(targetVector)
+    const walking = distance > .08
+    root.current.position.lerp(targetVector, 1 - Math.exp(-delta * 2.8))
+    if (walking) {
+      const direction = targetVector.clone().sub(root.current.position)
+      root.current.rotation.y = MathUtils.lerp(root.current.rotation.y, Math.atan2(direction.x, direction.z), .12)
+    }
+    const swing = walking ? Math.sin(clock.elapsedTime * 8) * .62 : Math.sin(clock.elapsedTime * 2) * .08
+    if (leftArm.current) leftArm.current.rotation.x = swing
+    if (rightArm.current) rightArm.current.rotation.x = walking ? -swing : -.35 + swing
+    if (leftLeg.current) leftLeg.current.rotation.x = -swing
+    if (rightLeg.current) rightLeg.current.rotation.x = swing
+    root.current.position.y = walking ? Math.abs(Math.sin(clock.elapsedTime * 8)) * .045 : 0
+  })
+
+  return <group ref={root} position={[-7, 0, -3.8]} scale={.78}>
+    <group ref={leftLeg} position={[-.2, .72, 0]}><mesh position={[0,-.35,0]}><boxGeometry args={[.28,.72,.3]}/><meshStandardMaterial color="#dce9e9"/></mesh><mesh position={[0,-.72,.08]}><boxGeometry args={[.34,.18,.48]}/><meshStandardMaterial color="#14343c"/></mesh></group>
+    <group ref={rightLeg} position={ [.2, .72, 0]}><mesh position={[0,-.35,0]}><boxGeometry args={[.28,.72,.3]}/><meshStandardMaterial color="#dce9e9"/></mesh><mesh position={[0,-.72,.08]}><boxGeometry args={[.34,.18,.48]}/><meshStandardMaterial color="#14343c"/></mesh></group>
+    <mesh position={[0,1.25,0]}><cylinderGeometry args={[.42,.52,.9,8]}/><meshStandardMaterial color="#edf6f5" roughness={.72}/></mesh>
+    <mesh position={[0,1.35,-.38]}><boxGeometry args={[.68,.62,.24]}/><meshStandardMaterial color="#b8d6d7"/></mesh>
+    <mesh position={[0,1.13,.43]}><boxGeometry args={[.5,.13,.07]}/><meshStandardMaterial color="#00a8b5" emissive="#004d55" emissiveIntensity={.35}/></mesh>
+    <group ref={leftArm} position={[-.53,1.55,0]}><mesh position={[0,-.38,0]}><boxGeometry args={[.25,.78,.27]}/><meshStandardMaterial color="#e7f1f0"/></mesh><mesh position={[0,-.8,0]}><sphereGeometry args={[.16,12,12]}/><meshStandardMaterial color="#6fc7c8"/></mesh></group>
+    <group ref={rightArm} position={[.53,1.55,0]}><mesh position={[0,-.38,0]}><boxGeometry args={[.25,.78,.27]}/><meshStandardMaterial color="#e7f1f0"/></mesh><mesh position={[0,-.8,0]}><sphereGeometry args={[.16,12,12]}/><meshStandardMaterial color="#6fc7c8"/></mesh></group>
+    <mesh position={[0,2.03,0]}><sphereGeometry args={[.48,16,12]}/><meshStandardMaterial color="#f1f7f6" roughness={.65}/></mesh>
+    <mesh position={[0,2.04,.42]} scale={[1,.72,.28]}><sphereGeometry args={[.34,16,10]}/><meshStandardMaterial color="#173d46" metalness={.25} roughness={.2}/></mesh>
+    <mesh position={[0,2.04,.52]} scale={[.65,.34,.08]}><sphereGeometry args={[.32,12,8]}/><meshStandardMaterial color="#75e4e6" emissive="#006670" emissiveIntensity={.4} transparent opacity={.72}/></mesh>
+    <Html position={[0,2.9,0]} center distanceFactor={9}><div className="operator-dialog"><b>FAB ROOKIE</b><span>{OPERATOR_LINES[stageIndex]}</span></div></Html>
+  </group>
+}
 
 function WaferDisc({ position = [0, 1.35, 0] as [number, number, number], color = '#9fe4e7', defects = false }: { position?: [number, number, number]; color?: string; defects?: boolean }) {
   return <group position={position} rotation={[Math.PI / 2, 0, 0]}>
@@ -136,7 +185,8 @@ function StageExhibit({ stageIndex }: { stageIndex: number }) {
   </group>
 }
 
-export function FabScene({ scenario, stageIndex, onStationSelect }: { scenario: Scenario; stageIndex: number; onStationSelect: (index: number) => void }) {
+export function FabScene({ scenario, session, onStationSelect }: { scenario: Scenario; session: SessionState; onStationSelect: (index: number) => void }) {
+  const stageIndex = session.stage_index
   const pathPoints = useMemo(() => scenario.stages.map((stage) => STATION_LAYOUT[stage.station]), [scenario])
   return (
     <div className="scene-wrap" aria-label="가상 팹 공정 스테이션">
@@ -150,6 +200,7 @@ export function FabScene({ scenario, stageIndex, onStationSelect }: { scenario: 
           <meshStandardMaterial color="#eef3f4" roughness={0.9} />
         </mesh>
         <StageExhibit key={stageIndex} stageIndex={stageIndex} />
+        <FabOperator target={pathPoints[stageIndex]} stageIndex={stageIndex}/>
         {pathPoints.map((point, index) => index < pathPoints.length - 1 && (
           <mesh key={`path-${index}`} position={[(point[0] + pathPoints[index + 1][0]) / 2, 0.015, (point[2] + pathPoints[index + 1][2]) / 2]} rotation={[-Math.PI / 2, 0, Math.atan2(pathPoints[index + 1][2] - point[2], pathPoints[index + 1][0] - point[0])] }>
             <planeGeometry args={[Math.hypot(pathPoints[index + 1][0] - point[0], pathPoints[index + 1][2] - point[2]), 0.08]} />
@@ -171,6 +222,7 @@ export function FabScene({ scenario, stageIndex, onStationSelect }: { scenario: 
         <OrbitControls enablePan={false} minDistance={9} maxDistance={18} minPolarAngle={0.72} maxPolarAngle={1.2} target={[0, 0.5, 0]} />
       </Canvas>
       <div className="exhibit-label"><span>ACTIVE MODEL</span><b>{EXHIBIT_LABELS[stageIndex]}</b></div>
+      <div className="mission-hud"><span>MISSION {String(stageIndex + 1).padStart(2, '0')}</span><b>{scenario.stages[stageIndex].label}</b><small>{session.completed ? 'CLEAR' : 'IN PROGRESS'} · XP {session.score}/100</small><div><i style={{ transform: `scaleX(${session.score / 100})` }}/></div></div>
       <div className="scene-help">드래그해 회전 · 휠로 확대 · 현재 스테이션 클릭</div>
     </div>
   )

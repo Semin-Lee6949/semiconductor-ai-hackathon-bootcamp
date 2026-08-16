@@ -179,7 +179,7 @@ export default function App() {
       <StageProgress scenario={scenario} session={session}/>
       <section className="workspace">
         <div className="visual-column">
-          <FabScene scenario={scenario} stageIndex={session.stage_index} onStationSelect={(index) => setFeedback(index === session.stage_index ? `${scenario.stages[index].label} 스테이션이 열렸어.` : index < session.stage_index ? '이미 완료한 스테이션이야. 기록은 아래에서 확인해.' : '앞 단계의 근거를 먼저 남겨야 열려.')} />
+          <FabScene scenario={scenario} session={session} onStationSelect={(index) => setFeedback(index === session.stage_index ? `${scenario.stages[index].label} 스테이션이 열렸어.` : index < session.stage_index ? '이미 완료한 스테이션이야. 기록은 아래에서 확인해.' : '앞 단계의 근거를 먼저 남겨야 열려.')} />
           <div className="feedback" role="status"><span>LIVE NOTE</span><p>{feedback}</p></div>
         </div>
         <aside className="workbench">
