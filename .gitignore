@@ -13,3 +13,4 @@ virtual-fab-app/dist/
 virtual-fab-app/test-results/
 virtual-fab-app/playwright-report/
 virtual-fab-app/*.tsbuildinfo
+virtual-fab-app/.runtime/

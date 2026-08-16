@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api } from '../api'
+import { ApiError, api } from '../api'
 import type { Decision, Scenario, SessionState } from '../types'
 
 const STORAGE_KEY = 'virtual-fab:photo-cd-drift:session'
@@ -49,7 +49,19 @@ export function useFabSession() {
     try {
       const result = await api.decide(session.id, decision)
       setSession(result.state); setFeedback(result.feedback)
-    } catch (cause) { setError(cause instanceof Error ? cause.message : '판단을 기록하지 못했어.') }
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 404) {
+        try {
+          const next = await api.createSession()
+          setSession(next)
+          window.localStorage.setItem(STORAGE_KEY, next.id)
+          setFeedback('서버 갱신으로 이전 세션이 만료됐어. 새 실험을 만들었으니 첫 단계부터 다시 선택해줘.')
+          setError('')
+        } catch (recoveryCause) {
+          setError(recoveryCause instanceof Error ? recoveryCause.message : '새 세션을 만들지 못했어.')
+        }
+      } else setError(cause instanceof Error ? cause.message : '판단을 기록하지 못했어.')
+    }
     finally { setBusy(false) }
   }, [session])
 

@@ -75,3 +75,12 @@ def test_deepseek_response_includes_model_and_usage(monkeypatch):
     assert response.status_code == 200
     assert response.json()["model"] == "deepseek-v4-flash"
     assert response.json()["usage"]["total_tokens"] == 200
+
+
+def test_session_is_persisted_in_sqlite():
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    restored = main.load_session(session_id)
+    assert restored is not None
+    assert restored.stage_index == 1
+    assert restored.history[0]["choice"] == "hold"

@@ -4,7 +4,10 @@ import base64
 import html
 import json
 import os
+import sqlite3
+import time
 from pathlib import Path
+from threading import Lock
 from typing import Any, Literal
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -20,6 +23,8 @@ DIST_DIR = APP_DIR / "dist"
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
+DB_PATH = Path(os.getenv("VIRTUAL_FAB_DB", str(APP_DIR / ".runtime" / "sessions.sqlite3")))
+DB_LOCK = Lock()
 STAGES = ["incident", "coach", "data", "experiment", "analysis", "validation"]
 
 TOOLS: dict[str, dict[str, Any]] = {
@@ -81,7 +86,42 @@ class SessionState(BaseModel):
     verdict: str | None = None
 
 
-SESSIONS: dict[str, SessionState] = {}
+def init_db() -> None:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(DB_PATH) as connection:
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, state_json TEXT NOT NULL, updated_at INTEGER NOT NULL)"
+        )
+        connection.execute("DELETE FROM sessions WHERE updated_at < ?", (int(time.time()) - 86400,))
+
+
+def save_session(state: SessionState) -> None:
+    with DB_LOCK, sqlite3.connect(DB_PATH, timeout=5) as connection:
+        connection.execute(
+            "INSERT INTO sessions(id, state_json, updated_at) VALUES(?, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET state_json=excluded.state_json, updated_at=excluded.updated_at",
+            (state.id, state.model_dump_json(), int(time.time())),
+        )
+        connection.execute(
+            "DELETE FROM sessions WHERE id NOT IN (SELECT id FROM sessions ORDER BY updated_at DESC LIMIT 500)"
+        )
+
+
+def load_session(session_id: str) -> SessionState | None:
+    with DB_LOCK, sqlite3.connect(DB_PATH, timeout=5) as connection:
+        row = connection.execute("SELECT state_json FROM sessions WHERE id = ?", (session_id,)).fetchone()
+    if not row:
+        return None
+    try:
+        return SessionState.model_validate_json(row[0])
+    except ValueError:
+        with DB_LOCK, sqlite3.connect(DB_PATH, timeout=5) as connection:
+            connection.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+        return None
+
+
+init_db()
 
 app = FastAPI(title="Virtual Fab Scenario API", version="0.2.0")
 
@@ -327,13 +367,13 @@ def get_scenario() -> dict[str, Any]:
 @app.post("/api/sessions", response_model=SessionState)
 def create_session() -> SessionState:
     state = SessionState(id=str(uuid4()))
-    SESSIONS[state.id] = state
+    save_session(state)
     return state
 
 
 @app.get("/api/sessions/{session_id}", response_model=SessionState)
 def get_session(session_id: str) -> SessionState:
-    state = SESSIONS.get(session_id)
+    state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     return state
@@ -341,7 +381,7 @@ def get_session(session_id: str) -> SessionState:
 
 @app.post("/api/sessions/{session_id}/deepseek")
 def deepseek(session_id: str, request: DeepSeekRequest) -> dict[str, Any]:
-    state = SESSIONS.get(session_id)
+    state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     if state.completed or current_stage(state) != "coach":
@@ -351,24 +391,26 @@ def deepseek(session_id: str, request: DeepSeekRequest) -> dict[str, Any]:
 
 @app.post("/api/sessions/{session_id}/decisions")
 def decide(session_id: str, request: DecisionRequest) -> dict[str, Any]:
-    state = SESSIONS.get(session_id)
+    state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
-    return apply_decision(state, request)
+    result = apply_decision(state, request)
+    save_session(state)
+    return result
 
 
 @app.post("/api/sessions/{session_id}/restart", response_model=SessionState)
 def restart(session_id: str) -> SessionState:
-    if session_id not in SESSIONS:
+    if not load_session(session_id):
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     state = SessionState(id=session_id)
-    SESSIONS[session_id] = state
+    save_session(state)
     return state
 
 
 @app.post("/api/sessions/{session_id}/report")
 def report(session_id: str, request: ReportRequest) -> Response:
-    state = SESSIONS.get(session_id)
+    state = load_session(session_id)
     if not state:
         raise HTTPException(404, "세션을 찾을 수 없습니다.")
     if not state.completed:

@@ -2,13 +2,18 @@ import type { Decision, DecisionResult, DeepSeekResponse, ReportPayload, Scenari
 
 const BASE = import.meta.env.BASE_URL
 
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) { super(message); this.name = 'ApiError'; this.status = status }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE}api/${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   })
   const body = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(body.detail ?? `요청 실패 (${response.status})`)
+  if (!response.ok) throw new ApiError(body.detail ?? `요청 실패 (${response.status})`, response.status)
   return body as T
 }
 
