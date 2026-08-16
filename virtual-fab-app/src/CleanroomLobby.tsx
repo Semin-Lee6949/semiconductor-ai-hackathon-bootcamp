@@ -106,6 +106,29 @@ function AirShower({ active, running, entryOpen, exitOpen }: { active: boolean; 
   </group>
 }
 
+function CleanroomThreshold() {
+  const particles = useRef<Group>(null)
+  useFrame(({ clock }) => {
+    if (!particles.current) return
+    particles.current.children.forEach((particle,index) => {
+      particle.position.z = .45 - ((clock.elapsedTime * .58 + index * .27) % 2.7)
+      particle.position.y = .48 + (index % 5) * .5 + Math.sin(clock.elapsedTime * 2.1 + index) * .04
+    })
+  })
+  return <group position={[3.55,0,-2.15]}>
+    <mesh position={[0,.035,-.8]}><boxGeometry args={[2.5,.07,2.7]}/><meshStandardMaterial color="#d8eeee" metalness={.42} roughness={.28} emissive="#1a7d85" emissiveIntensity={.32}/></mesh>
+    {[-.78,0,.78].map((x)=><mesh key={x} position={[x,.08,-.8]}><boxGeometry args={[.035,.012,2.5]}/><meshBasicMaterial color="#7dffff"/></mesh>)}
+    <mesh position={[-1.22,1.7,.42]}><boxGeometry args={[.16,3.4,.18]}/><meshStandardMaterial color="#c3f2f0" emissive="#39d9dd" emissiveIntensity={.75}/></mesh>
+    <mesh position={[1.22,1.7,.42]}><boxGeometry args={[.16,3.4,.18]}/><meshStandardMaterial color="#c3f2f0" emissive="#39d9dd" emissiveIntensity={.75}/></mesh>
+    <mesh position={[0,3.34,.42]}><boxGeometry args={[2.6,.16,.18]}/><meshStandardMaterial color="#d9ffff" emissive="#61f5f1" emissiveIntensity={1.1}/></mesh>
+    {[-.76,.76].map((x)=><group key={x} position={[x,1.12,-1.55]}><mesh><boxGeometry args={[.72,1.65,.62]}/><meshStandardMaterial color="#275e66" metalness={.5}/></mesh><mesh position={[0,.28,.33]}><boxGeometry args={[.42,.34,.035]}/><meshBasicMaterial color="#6df8f4"/></mesh></group>)}
+    {[-.72,0,.72].map((x)=><mesh key={x} position={[x,3.02,-.86]}><boxGeometry args={[.48,.05,1.7]}/><meshBasicMaterial color="#d8ffff"/></mesh>)}
+    <group ref={particles}>{Array.from({length:18},(_,index)=><mesh key={index} position={[(index%6-2.5)*.34,.5+(index%5)*.5,.4-index*.12]}><sphereGeometry args={[.018,6,6]}/><meshBasicMaterial color={index%3===0?'#ffffff':'#76ffff'} transparent opacity={.8}/></mesh>)}</group>
+    <pointLight position={[0,2.1,.2]} color="#9cffff" intensity={18} distance={7}/>
+    <Html position={[0,3.72,.42]} center><span className="threshold-sign">SEMICONDUCTOR CLEANROOM · LINE ACCESS</span></Html>
+  </group>
+}
+
 function Rookie({ step, acting, cinematic, reducedMotion }: { step: number; acting: boolean; cinematic: boolean; reducedMotion: boolean }) {
   const root = useRef<Group>(null)
   const body = useRef<Group>(null)
@@ -260,7 +283,7 @@ function LobbyScene({ step, acting, hall, cinematic, scenarios, onSelect, reduce
     <color attach="background" args={[hall ? '#071c23' : '#dbe8e8']}/>
     <ambientLight intensity={hall ? 1.1 : 2.1}/><directionalLight position={[5,9,6]} intensity={hall ? 2.2 : 3.2}/>
     <FacilityShell hall={hall}/><CameraRig step={step} hall={hall} cinematic={cinematic} reducedMotion={reducedMotion}/>
-    {!hall && <><SinkStation active={step===1} running={step===1 && acting}/><MaskStation active={step===2}/><GownStation active={step===3}/><AirShower active={step===4||cinematic} running={step===4 && acting} entryOpen={step===4&&!acting} exitOpen={cinematic}/><Rookie step={step} acting={acting} cinematic={cinematic} reducedMotion={reducedMotion}/></>}
+    {!hall && <><SinkStation active={step===1} running={step===1 && acting}/><MaskStation active={step===2}/><GownStation active={step===3}/>{cinematic&&<CleanroomThreshold/>}<AirShower active={step===4||cinematic} running={step===4 && acting} entryOpen={step===4&&!acting} exitOpen={cinematic}/><Rookie step={step} acting={acting} cinematic={cinematic} reducedMotion={reducedMotion}/></>}
     {hall && scenarios.map((item,index)=><RoomDoor key={item.id} item={item} index={index} onSelect={() => onSelect(item.id)}/>)}
     <ContactShadows position={[0,.01,0]} opacity={hall ? .32 : .18} scale={18} blur={2.8} far={8}/>
   </Canvas>
@@ -313,9 +336,10 @@ export function CleanroomLobby({ scenarios, loading, error, onSelect }: { scenar
     <section className="lobby-viewport" aria-label="가상 클린룸 입실 화면">
       <LobbyScene step={step} acting={acting} hall={hall} cinematic={cinematic} scenarios={scenarios} onSelect={onSelect} reducedMotion={reducedMotion}/>
       <div className="scanlines" aria-hidden="true"/>
+      {cinematic && <div className="cleanroom-splash" aria-hidden="true"/>}
       <div className="entry-progress" aria-label="클린룸 입실 진행 단계">{ENTRY_STEPS.map((item,index)=><div key={item.code} className={index<step?'done':index===step?'active':''}><span>{String(index+1).padStart(2,'0')}</span><b>{item.code}</b></div>)}</div>
       {step<5 && <section className={`guide-dialog ${acting||moving?'acting':''}`} aria-live="polite"><div className="guide-portrait"><span>{acting||moving?'···':'AI'}</span><b>SAFETY<br/>GUIDE</b></div><div><span>ENTRY PROTOCOL {String(step+1).padStart(2,'0')}</span><h1>{ENTRY_STEPS[step].title}</h1><p>{ENTRY_STEPS[step].copy}</p><button type="button" onClick={advance} disabled={acting||moving} aria-busy={acting||moving}>{moving?'다음 스테이션으로 이동 중…':acting?ACTION_LABELS[step]:ENTRY_STEPS[step].action}<b>{acting||moving?'●':'→'}</b></button></div></section>}
-      {cinematic && <section className="final-entry-cue" aria-live="polite"><h1>이제, 네가 증명할 차례야.</h1><p>공정 데이터가 기다리고 있다.</p></section>}
+      {cinematic && <section className="final-entry-cue" aria-live="polite"><h1>이제, 네가 증명할 차례야.</h1><p>SEMICONDUCTOR CLEANROOM · LINE ACCESS</p><small>공정 데이터가 기다리고 있다.</small></section>}
       {hall && <section className="mission-console"><header><div><span>CLEANROOM ACCESS GRANTED</span><h1>사건이 기다리는 공정룸을 선택해.</h1></div><p>문을 열면 60–90분의 제한시간이 시작돼.<br/>정답이 아니라 증거의 순서를 보여줘.</p></header>
         {loading && <p className="catalog-loading">공정룸을 준비하고 있어…</p>}{error && <p className="catalog-error">{error}</p>}
         <div className="room-grid">{scenarios.map((item)=><button key={item.id} type="button" className={`module-card ${focused?.id===item.id?'focused':''}`} onMouseEnter={()=>setFocusedId(item.id)} onFocus={()=>setFocusedId(item.id)} onClick={()=>onSelect(item.id)} aria-label={`${item.process} ${item.title} 시나리오 시작`}><span>{item.module_no} · {item.process}</span><b>{item.title}</b><small>{item.tagline}</small><i>ENTER ROOM ↗</i></button>)}</div>
