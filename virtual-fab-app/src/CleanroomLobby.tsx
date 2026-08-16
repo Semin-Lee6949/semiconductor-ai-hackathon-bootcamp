@@ -1,7 +1,7 @@
 import { ContactShadows, Html } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Vector3 } from 'three'
+import { MathUtils, Vector3 } from 'three'
 import type { Group, Mesh } from 'three'
 import type { ScenarioSummary } from './types'
 
@@ -14,8 +14,11 @@ const ENTRY_STEPS = [
 ] as const
 
 const ENTRY_POSITIONS: Array<[number, number, number]> = [
-  [-5.6, 0, 1.3], [-3.4, 0, .6], [-1.2, 0, .2], [1.15, 0, .2], [3.55, 0, .1], [0, 0, -2.7],
+  [-5.6, 0, 1.5], [-3.4, 0, 1.52], [-1.2, 0, 1.38], [1.15, 0, 1.46], [3.55, 0, 1.04], [0, 0, -2.7],
 ]
+
+const ACTION_DURATIONS = [650, 1850, 1550, 1950, 2250] as const
+const ACTION_LABELS = ['출입 확인 중…', '손과 손목을 세정 중…', '마스크를 착용 중…', '방진복과 장갑을 착용 중…', '에어샤워 가동 중…'] as const
 
 function CameraRig({ step, reducedMotion }: { step: number; reducedMotion: boolean }) {
   const { camera } = useThree()
@@ -49,14 +52,14 @@ function FacilityShell({ hall }: { hall: boolean }) {
   </group>
 }
 
-function SinkStation({ active }: { active: boolean }) {
+function SinkStation({ active, running }: { active: boolean; running: boolean }) {
   const water = useRef<Mesh>(null)
-  useFrame(({ clock }) => { if (water.current && active) water.current.scale.y = .8 + Math.sin(clock.elapsedTime * 10) * .14 })
+  useFrame(({ clock }) => { if (water.current && running) water.current.scale.y = .8 + Math.sin(clock.elapsedTime * 10) * .14 })
   return <group position={[-3.4,0,.6]}>
     <mesh position={[0,.74,0]}><boxGeometry args={[1.5,.25,1]}/><meshStandardMaterial color="#dbe7e7" metalness={.65} roughness={.18}/></mesh>
     <mesh position={[0,.84,0]}><cylinderGeometry args={[.55,.42,.18,30]}/><meshStandardMaterial color="#88aeb3" metalness={.8}/></mesh>
     <mesh position={[0,1.28,-.35]}><torusGeometry args={[.32,.07,12,28,Math.PI]}/><meshStandardMaterial color="#54777d" metalness={.8}/></mesh>
-    <mesh ref={water} visible={active} position={[0,1.02,-.08]}><cylinderGeometry args={[.025,.04,.55,10]}/><meshStandardMaterial color="#5de9ff" emissive="#008da3" emissiveIntensity={1.2} transparent opacity={.7}/></mesh>
+    <mesh ref={water} visible={running} position={[0,1.02,-.08]}><cylinderGeometry args={[.025,.04,.55,10]}/><meshStandardMaterial color="#5de9ff" emissive="#008da3" emissiveIntensity={1.2} transparent opacity={.7}/></mesh>
     <Html position={[0,1.75,0]} center><span className={`lobby-station-tag ${active ? 'active' : ''}`}>01 · HAND WASH</span></Html>
   </group>
 }
@@ -78,32 +81,153 @@ function GownStation({ active }: { active: boolean }) {
   </group>
 }
 
-function AirShower({ active, open }: { active: boolean; open: boolean }) {
+function AirShower({ active, running, open }: { active: boolean; running: boolean; open: boolean }) {
   const particles = useRef<Group>(null)
-  useFrame(({ clock }) => { if (particles.current && active) particles.current.rotation.y = clock.elapsedTime * 2.4 })
+  useFrame(({ clock }) => { if (particles.current && running) particles.current.rotation.y = clock.elapsedTime * 2.4 })
   return <group position={[3.55,0,.1]}>
     <mesh position={[0,1.65,-.15]}><boxGeometry args={[2.25,3.3,1.8]}/><meshStandardMaterial color="#68858b" metalness={.72} roughness={.23} transparent opacity={.42}/></mesh>
     <mesh position={[-.98,1.65,.78]} rotation={[0,open ? -1.2 : 0,0]}><boxGeometry args={[.12,3.1,1.62]}/><meshStandardMaterial color="#a8f3f1" transparent opacity={.46}/></mesh>
     <mesh position={[.98,1.65,.78]} rotation={[0,open ? 1.2 : 0,0]}><boxGeometry args={[.12,3.1,1.62]}/><meshStandardMaterial color="#a8f3f1" transparent opacity={.46}/></mesh>
-    <group ref={particles}>{Array.from({length:24},(_,i) => { const a=(i/24)*Math.PI*2; return <mesh key={i} visible={active} position={[Math.cos(a)*.65,.4+(i%6)*.45,Math.sin(a)*.5]}><sphereGeometry args={[.025,6,6]}/><meshBasicMaterial color="#aaffff"/></mesh> })}</group>
+    <group ref={particles}>{Array.from({length:24},(_,i) => { const a=(i/24)*Math.PI*2; return <mesh key={i} visible={running} position={[Math.cos(a)*.65,.4+(i%6)*.45,Math.sin(a)*.5]}><sphereGeometry args={[.025,6,6]}/><meshBasicMaterial color="#aaffff"/></mesh> })}</group>
     <Html position={[0,3.75,0]} center><span className={`lobby-station-tag ${active ? 'active' : ''}`}>04 · AIR SHOWER</span></Html>
   </group>
 }
 
-function Rookie({ step }: { step: number }) {
+function Rookie({ step, acting, reducedMotion }: { step: number; acting: boolean; reducedMotion: boolean }) {
   const root = useRef<Group>(null)
+  const body = useRef<Group>(null)
+  const head = useRef<Group>(null)
+  const leftArm = useRef<Group>(null)
+  const rightArm = useRef<Group>(null)
+  const leftForearm = useRef<Group>(null)
+  const rightForearm = useRef<Group>(null)
+  const leftHand = useRef<Mesh>(null)
+  const rightHand = useRef<Mesh>(null)
+  const leftLeg = useRef<Group>(null)
+  const rightLeg = useRef<Group>(null)
+  const actionStarted = useRef(0)
   const target = useMemo(() => new Vector3(...ENTRY_POSITIONS[step]), [step])
-  useFrame(() => { if (root.current) root.current.position.lerp(target, .055) })
-  const masked = step >= 2
-  const gowned = step >= 3
-  return <group ref={root} position={ENTRY_POSITIONS[0]} scale={.72}>
-    <mesh position={[0,.42,0]}><boxGeometry args={[.34,.82,.36]}/><meshStandardMaterial color={gowned ? '#f4fbfb' : '#213f48'}/></mesh>
-    <mesh position={[0,1.18,0]}><cylinderGeometry args={[.42,.48,.9,12]}/><meshStandardMaterial color={gowned ? '#f4fbfb' : '#26a8b2'}/></mesh>
-    <mesh position={[0,1.93,0]}><sphereGeometry args={[.43,18,14]}/><meshStandardMaterial color={gowned ? '#eaf5f4' : '#e6b991'}/></mesh>
-    {gowned && <mesh position={[0,2.02,-.04]}><sphereGeometry args={[.52,18,14]}/><meshStandardMaterial color="#f7ffff" side={1}/></mesh>}
-    {masked && <mesh position={[0,1.86,.38]} scale={[1,.55,.18]}><sphereGeometry args={[.34,14,10]}/><meshStandardMaterial color="#a8eff1"/></mesh>}
-    <mesh position={[-.48,1.18,0]} rotation={[0,0,-.12]}><boxGeometry args={[.22,.9,.24]}/><meshStandardMaterial color={gowned ? '#f4fbfb' : '#26a8b2'}/></mesh>
-    <mesh position={[.48,1.18,0]} rotation={[0,0,.12]}><boxGeometry args={[.22,.9,.24]}/><meshStandardMaterial color={gowned ? '#f4fbfb' : '#26a8b2'}/></mesh>
+
+  useEffect(() => { if (acting) actionStarted.current = performance.now() }, [acting, step])
+
+  useFrame(({ clock }, delta) => {
+    if (!root.current || !body.current) return
+    const distance = root.current.position.distanceTo(target)
+    const walking = distance > .055 && !acting
+    const phase = clock.elapsedTime * 7.2
+    const damp = (current: number, next: number, speed = 9) => MathUtils.lerp(current, next, 1 - Math.exp(-delta * speed))
+    const pose = (part: Group | null, x: number, z: number, speed = 9) => {
+      if (!part) return
+      part.rotation.x = damp(part.rotation.x, x, speed)
+      part.rotation.z = damp(part.rotation.z, z, speed)
+    }
+
+    if (reducedMotion) root.current.position.copy(target)
+    else root.current.position.lerp(target, 1 - Math.exp(-delta * 2.5))
+
+    if (walking) {
+      const direction = target.clone().sub(root.current.position)
+      root.current.rotation.y = damp(root.current.rotation.y, Math.atan2(direction.x, direction.z), 6)
+    } else if (!(step === 4 && acting)) {
+      root.current.rotation.y = damp(root.current.rotation.y, Math.PI, 5)
+    }
+
+    const gait = reducedMotion ? 0 : Math.sin(phase)
+    const idle = reducedMotion ? 0 : Math.sin(clock.elapsedTime * 2.1)
+    body.current.position.y = damp(body.current.position.y, walking ? Math.abs(Math.sin(phase * 2)) * .055 : idle * .012, 12)
+    body.current.rotation.x = damp(body.current.rotation.x, walking ? .08 : 0, 8)
+    if (head.current) head.current.rotation.y = damp(head.current.rotation.y, walking ? gait * .055 : idle * .025, 7)
+
+    pose(leftLeg.current, walking ? gait * .48 : 0, walking ? -.025 : 0)
+    pose(rightLeg.current, walking ? -gait * .48 : 0, walking ? .025 : 0)
+
+    let leftArmX = walking ? -gait * .38 : 0
+    let rightArmX = walking ? gait * .38 : 0
+    let leftArmZ = -.08
+    let rightArmZ = .08
+    let forearmX = walking ? -.18 : 0
+    const actionTime = Math.max(0, (performance.now() - actionStarted.current) / 1000)
+
+    if (acting && step === 1) {
+      leftArmX = -1.12
+      rightArmX = -1.12
+      leftArmZ = -.18
+      rightArmZ = .18
+      forearmX = -1.02
+      body.current.rotation.x = damp(body.current.rotation.x, -.17, 7)
+      if (leftHand.current && rightHand.current && !reducedMotion) {
+        const rub = Math.sin(actionTime * 13) * .055
+        leftHand.current.position.x = -.04 + rub
+        rightHand.current.position.x = .04 - rub
+        leftHand.current.rotation.y = actionTime * 5
+        rightHand.current.rotation.y = -actionTime * 5
+      }
+    } else if (acting && step === 2) {
+      leftArmX = -1.16
+      rightArmX = -1.16
+      leftArmZ = -.22
+      rightArmZ = .22
+      forearmX = -1.34
+    } else if (acting && step === 3) {
+      leftArmZ = -1.32
+      rightArmZ = 1.32
+      leftArmX = -.08
+      rightArmX = -.08
+      forearmX = 0
+    } else if (acting && step === 4) {
+      leftArmZ = -.72
+      rightArmZ = .72
+      leftArmX = -.08
+      rightArmX = -.08
+      forearmX = -.08
+      if (!reducedMotion) root.current.rotation.y += delta * .72
+    }
+
+    pose(leftArm.current, leftArmX, leftArmZ)
+    pose(rightArm.current, rightArmX, rightArmZ)
+    pose(leftForearm.current, forearmX, -.02)
+    pose(rightForearm.current, forearmX, .02)
+  })
+
+  const masked = step > 2 || (step === 2 && acting)
+  const gowned = step > 3 || (step === 3 && acting)
+  const cloth = gowned ? '#f4fbfb' : '#26a8b2'
+  const glove = gowned ? '#d9ffff' : '#e6b991'
+
+  return <group ref={root} position={ENTRY_POSITIONS[0]} rotation={[0,Math.PI,0]} scale={.76}>
+    <group ref={body}>
+      <group ref={leftLeg} position={[-.2,.72,0]}>
+        <mesh position={[0,-.35,0]}><capsuleGeometry args={[.13,.45,6,10]}/><meshStandardMaterial color="#213f48"/></mesh>
+        <mesh position={[0,-.72,.09]} scale={[1,.55,1.55]}><sphereGeometry args={[.16,12,8]}/><meshStandardMaterial color="#18333b"/></mesh>
+      </group>
+      <group ref={rightLeg} position={[.2,.72,0]}>
+        <mesh position={[0,-.35,0]}><capsuleGeometry args={[.13,.45,6,10]}/><meshStandardMaterial color="#213f48"/></mesh>
+        <mesh position={[0,-.72,.09]} scale={[1,.55,1.55]}><sphereGeometry args={[.16,12,8]}/><meshStandardMaterial color="#18333b"/></mesh>
+      </group>
+      <mesh position={[0,.82,0]}><capsuleGeometry args={[.25,.28,6,12]}/><meshStandardMaterial color={gowned ? '#e6f5f4' : '#213f48'}/></mesh>
+      <mesh position={[0,1.33,0]} scale={[1,.95,.7]}><capsuleGeometry args={[.43,.48,7,14]}/><meshStandardMaterial color={cloth}/></mesh>
+      {gowned && <mesh position={[0,1.23,-.02]} scale={[1.06,1.18,.78]}><capsuleGeometry args={[.44,.46,7,14]}/><meshStandardMaterial color="#f4fbfb" transparent opacity={.94}/></mesh>}
+
+      <group ref={leftArm} position={[-.48,1.56,0]}>
+        <mesh position={[0,-.29,0]}><capsuleGeometry args={[.11,.36,6,10]}/><meshStandardMaterial color={cloth}/></mesh>
+        <group ref={leftForearm} position={[0,-.57,0]}><mesh position={[0,-.25,0]}><capsuleGeometry args={[.1,.3,6,10]}/><meshStandardMaterial color={cloth}/></mesh><mesh ref={leftHand} position={[0,-.5,0]} scale={[.8,1.1,.65]}><sphereGeometry args={[.14,12,8]}/><meshStandardMaterial color={glove}/></mesh></group>
+      </group>
+      <group ref={rightArm} position={[.48,1.56,0]}>
+        <mesh position={[0,-.29,0]}><capsuleGeometry args={[.11,.36,6,10]}/><meshStandardMaterial color={cloth}/></mesh>
+        <group ref={rightForearm} position={[0,-.57,0]}><mesh position={[0,-.25,0]}><capsuleGeometry args={[.1,.3,6,10]}/><meshStandardMaterial color={cloth}/></mesh><mesh ref={rightHand} position={[0,-.5,0]} scale={[.8,1.1,.65]}><sphereGeometry args={[.14,12,8]}/><meshStandardMaterial color={glove}/></mesh></group>
+      </group>
+
+      <mesh position={[0,1.77,0]}><cylinderGeometry args={[.12,.14,.18,12]}/><meshStandardMaterial color="#d59d73"/></mesh>
+      <group ref={head} position={[0,2.08,0]}>
+        {gowned && <mesh position={[0,0,-.06]} scale={[1.2,1.18,1.06]}><sphereGeometry args={[.43,18,14]}/><meshStandardMaterial color="#f7ffff"/></mesh>}
+        <mesh><sphereGeometry args={[.38,18,14]}/><meshStandardMaterial color="#e6b991"/></mesh>
+        {!gowned && <mesh position={[0,.2,-.03]} scale={[1.02,.55,1.02]}><sphereGeometry args={[.39,16,10]}/><meshStandardMaterial color="#263b43"/></mesh>}
+        <mesh position={[-.14,.05,.34]}><sphereGeometry args={[.035,8,6]}/><meshBasicMaterial color="#152b32"/></mesh>
+        <mesh position={[.14,.05,.34]}><sphereGeometry args={[.035,8,6]}/><meshBasicMaterial color="#152b32"/></mesh>
+        {gowned && <mesh position={[0,0,.345]}><torusGeometry args={[.34,.045,8,20]}/><meshStandardMaterial color="#cfe7e7"/></mesh>}
+        {masked && <mesh position={[0,-.08,.36]} scale={[1.1,.58,.18]}><sphereGeometry args={[.31,14,10]}/><meshStandardMaterial color="#a8eff1"/></mesh>}
+      </group>
+    </group>
   </group>
 }
 
@@ -118,13 +242,13 @@ function RoomDoor({ item, index, onSelect }: { item: ScenarioSummary; index: num
   </group>
 }
 
-function LobbyScene({ step, scenarios, onSelect, reducedMotion }: { step: number; scenarios: ScenarioSummary[]; onSelect: (id: string) => void; reducedMotion: boolean }) {
+function LobbyScene({ step, acting, scenarios, onSelect, reducedMotion }: { step: number; acting: boolean; scenarios: ScenarioSummary[]; onSelect: (id: string) => void; reducedMotion: boolean }) {
   const hall = step === 5
   return <Canvas camera={{position:[6.8,4.2,8.5],fov:42}} dpr={[1,1.5]} frameloop={reducedMotion ? 'demand' : 'always'}>
     <color attach="background" args={[hall ? '#071c23' : '#dbe8e8']}/>
     <ambientLight intensity={hall ? 1.1 : 2.1}/><directionalLight position={[5,9,6]} intensity={hall ? 2.2 : 3.2}/>
     <FacilityShell hall={hall}/><CameraRig step={step} reducedMotion={reducedMotion}/>
-    {!hall && <><SinkStation active={step===1}/><MaskStation active={step===2}/><GownStation active={step===3}/><AirShower active={step===4} open={step>=4}/><Rookie step={step}/></>}
+    {!hall && <><SinkStation active={step===1} running={step===1 && acting}/><MaskStation active={step===2}/><GownStation active={step===3}/><AirShower active={step===4} running={step===4 && acting} open={false}/><Rookie step={step} acting={acting} reducedMotion={reducedMotion}/></>}
     {hall && scenarios.map((item,index)=><RoomDoor key={item.id} item={item} index={index} onSelect={() => onSelect(item.id)}/>)}
     <ContactShadows position={[0,.01,0]} opacity={hall ? .32 : .18} scale={18} blur={2.8} far={8}/>
   </Canvas>
@@ -132,19 +256,41 @@ function LobbyScene({ step, scenarios, onSelect, reducedMotion }: { step: number
 
 export function CleanroomLobby({ scenarios, loading, error, onSelect }: { scenarios: ScenarioSummary[]; loading: boolean; error: string; onSelect: (id: string) => void }) {
   const [step,setStep] = useState(0)
+  const [acting,setActing] = useState(false)
+  const [moving,setMoving] = useState(false)
   const [focusedId,setFocusedId] = useState('photo-cd-drift')
+  const actionTimer = useRef<number | null>(null)
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const focused = scenarios.find((item)=>item.id===focusedId) ?? scenarios[0]
   const hall = step===5
-  const advance = () => setStep((current)=>Math.min(5,current+1))
+  useEffect(() => () => {
+    if (actionTimer.current !== null) window.clearTimeout(actionTimer.current)
+  }, [])
+
+  const advance = () => {
+    if (acting || moving || step >= 5) return
+    setActing(true)
+    actionTimer.current = window.setTimeout(() => {
+      const nextStep = Math.min(5,step+1)
+      setStep(nextStep)
+      setActing(false)
+      if (nextStep < 5 && !reducedMotion) {
+        setMoving(true)
+        actionTimer.current = window.setTimeout(() => {
+          setMoving(false)
+          actionTimer.current = null
+        }, 1250)
+      } else actionTimer.current = null
+    }, reducedMotion ? 180 : ACTION_DURATIONS[step])
+  }
 
   return <main className={`cleanroom-lobby ${hall?'hall-open':''}`}>
     <header className="game-topbar"><div><b>VIRTUAL FAB</b><span>FACILITY 01 · SCHOLARBRIDGE</span></div><div><span>ACCESS</span><strong>{hall?'GRANTED':`${step}/4`}</strong></div></header>
     <section className="lobby-viewport" aria-label="가상 클린룸 입실 화면">
-      <LobbyScene step={step} scenarios={scenarios} onSelect={onSelect} reducedMotion={reducedMotion}/>
+      <LobbyScene step={step} acting={acting} scenarios={scenarios} onSelect={onSelect} reducedMotion={reducedMotion}/>
       <div className="scanlines" aria-hidden="true"/>
       <div className="entry-progress" aria-label="클린룸 입실 진행 단계">{ENTRY_STEPS.map((item,index)=><div key={item.code} className={index<step?'done':index===step?'active':''}><span>{String(index+1).padStart(2,'0')}</span><b>{item.code}</b></div>)}</div>
-      {!hall && <section className="guide-dialog" aria-live="polite"><div className="guide-portrait"><span>AI</span><b>SAFETY<br/>GUIDE</b></div><div><span>ENTRY PROTOCOL {String(step+1).padStart(2,'0')}</span><h1>{ENTRY_STEPS[step].title}</h1><p>{ENTRY_STEPS[step].copy}</p><button type="button" onClick={advance}>{ENTRY_STEPS[step].action}<b>→</b></button></div></section>}
+      {!hall && <section className={`guide-dialog ${acting||moving?'acting':''}`} aria-live="polite"><div className="guide-portrait"><span>{acting||moving?'···':'AI'}</span><b>SAFETY<br/>GUIDE</b></div><div><span>ENTRY PROTOCOL {String(step+1).padStart(2,'0')}</span><h1>{ENTRY_STEPS[step].title}</h1><p>{ENTRY_STEPS[step].copy}</p><button type="button" onClick={advance} disabled={acting||moving} aria-busy={acting||moving}>{moving?'다음 스테이션으로 이동 중…':acting?ACTION_LABELS[step]:ENTRY_STEPS[step].action}<b>{acting||moving?'●':'→'}</b></button></div></section>}
       {hall && <section className="mission-console"><header><div><span>CLEANROOM ACCESS GRANTED</span><h1>사건이 기다리는 공정룸을 선택해.</h1></div><p>문을 열면 60–90분의 제한시간이 시작돼.<br/>정답이 아니라 증거의 순서를 보여줘.</p></header>
         {loading && <p className="catalog-loading">공정룸을 준비하고 있어…</p>}{error && <p className="catalog-error">{error}</p>}
         <div className="room-grid">{scenarios.map((item)=><button key={item.id} type="button" className={`module-card ${focused?.id===item.id?'focused':''}`} onMouseEnter={()=>setFocusedId(item.id)} onFocus={()=>setFocusedId(item.id)} onClick={()=>onSelect(item.id)} aria-label={`${item.process} ${item.title} 시나리오 시작`}><span>{item.module_no} · {item.process}</span><b>{item.title}</b><small>{item.tagline}</small><i>ENTER ROOM ↗</i></button>)}</div>
