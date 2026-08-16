@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { api } from './api'
 import { CleanroomLobby } from './CleanroomLobby'
 import { EvidenceDrawer } from './components/EvidenceDrawer'
@@ -67,9 +67,16 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [externalResponse, setExternalResponse] = useState('')
   const [externalModel, setExternalModel] = useState('Gemini')
   const [copyStatus, setCopyStatus] = useState('')
+  const [responseCopyStatus, setResponseCopyStatus] = useState('')
   const [tokenUsage, setTokenUsage] = useState<number | null>(null)
+  const responseRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => setChoice(''), [stage.id])
+  useEffect(() => {
+    if (tokenUsage === null) return
+    responseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    responseRef.current?.focus({ preventScroll: true })
+  }, [tokenUsage])
 
   const totals = useMemo(() => tools.reduce((sum, id) => ({ cost: sum.cost + scenario.tools[id].cost, time: sum.time + scenario.tools[id].time }), { cost: 0, time: 0 }), [tools, scenario.tools])
   const validationPreview = useMemo(() => {
@@ -96,6 +103,11 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     catch { setCopyStatus('자동 복사가 막혔어. 질문 상자를 직접 선택해 복사해줘.') }
   }
 
+  const copyResponse = async () => {
+    try { await navigator.clipboard.writeText(externalResponse); setResponseCopyStatus('응답을 복사했어.') }
+    catch { setResponseCopyStatus('자동 복사가 막혔어. 응답 편집칸에서 직접 선택해 복사해줘.') }
+  }
+
   return (
     <form className="decision-panel" onSubmit={submit}>
       <div className="stage-heading"><span>{String(state.stage_index + 1).padStart(2, '0')}</span><h2>{stage.label}</h2></div>
@@ -104,11 +116,15 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
       {stage.id === 'coach' && <>
         <label>외부 AI에 보낼 질문 프롬프트<textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} /></label>
         <PersonalAIConnector sessionId={state.id} prompt={prompt} callsUsed={state.llm_call_count} onResult={(result) => { setExternalResponse(result.response); setExternalModel(`${result.provider_label} · ${result.model}`); setTokenUsage(result.usage.total_tokens) }}/>
+        <section className={`ai-response-editor ${externalResponse ? 'has-response' : ''}`} aria-labelledby="ai-response-title">
+          <header><div><b id="ai-response-title">AI 분석 응답</b><span>확인 · 수정 · 직접 붙여넣기 가능</span></div><button type="button" onClick={copyResponse} disabled={!externalResponse}>응답 복사</button></header>
+          <textarea ref={responseRef} aria-label="외부 AI 분석 답변 붙여넣기" value={externalResponse} onChange={(event) => { setExternalResponse(event.target.value); setResponseCopyStatus('') }} placeholder="AI 연결 응답이 여기에 자동으로 표시돼. 또는 Gemini·ChatGPT·Claude 등에서 받은 답변을 직접 붙여넣어." />
+          {tokenUsage !== null && <p className="response-ready" role="status">{externalModel} 응답이 자동 입력됐어 · 총 {tokenUsage.toLocaleString()} tokens</p>}
+          {responseCopyStatus && <p className="copy-status" role="status">{responseCopyStatus}</p>}
+        </section>
         <button type="button" className="prompt-copy secondary full-width-action" onClick={copyPrompt} disabled={prompt.length < 20}>개인 키 없이 외부 AI용 프롬프트 복사</button>
         {copyStatus && <p className="copy-status" role="status">{copyStatus}</p>}
         <div className="external-ai-grid"><label>사용한 외부 AI<input value={externalModel} onChange={(event) => setExternalModel(event.target.value)} /></label><label>결과 출처 기록<input value={externalModel} readOnly /></label></div>
-        {tokenUsage !== null && <p className="usage-note">AI USAGE · 총 {tokenUsage.toLocaleString()} tokens</p>}
-        <label>외부 AI 분석 답변 붙여넣기<textarea className="external-response" value={externalResponse} onChange={(event) => setExternalResponse(event.target.value)} placeholder="Gemini·ChatGPT·Claude 등에서 받은 답변을 원문 그대로 붙여넣어. 다음 칸에서 사람의 검증 계획을 별도로 적어." /></label>
         <label>사람의 검증 계획<textarea value={humanCheck} onChange={(e) => setHumanCheck(e.target.value)} /></label>
         <div className="choice-grid three"><ChoiceButton value="modify" selected={choice} onClick={setChoice}>수정 채택</ChoiceButton><ChoiceButton value="accept" selected={choice} onClick={setChoice}>그대로 채택</ChoiceButton><ChoiceButton value="reject" selected={choice} onClick={setChoice}>근거 부족</ChoiceButton></div>
         <p className="field-note">질문·모델명·붙여넣은 답변·사람의 검증계획을 함께 저장한다. 실제 회사 Recipe·Spec·기밀자료는 외부 AI에 입력하지 마.</p>
