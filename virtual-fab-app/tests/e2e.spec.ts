@@ -6,6 +6,14 @@ async function enterCleanroom(page: import('@playwright/test').Page) {
   await expect(page.getByRole('heading', { name: '손 씻기' })).toBeVisible()
   await page.getByRole('button', { name: /세정 완료/ }).click()
   await expect(page.getByRole('heading', { name: '마스크 착용' })).toBeVisible()
+  if ((page.viewportSize()?.width ?? 0) > 760) {
+    const guideBox = await page.locator('.guide-dialog').boundingBox()
+    const viewportWidth = page.viewportSize()?.width ?? 0
+    expect(guideBox).not.toBeNull()
+    expect((guideBox?.x ?? 0) + (guideBox?.width ?? 0)).toBeLessThan(viewportWidth * 0.49)
+    const stageFontSize = await page.locator('.entry-progress b').first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize))
+    expect(stageFontSize).toBeGreaterThanOrEqual(12)
+  }
   await page.getByRole('button', { name: /마스크 착용/ }).click()
   await expect(page.getByRole('heading', { name: '방진복 착용' })).toBeVisible()
   await page.getByRole('button', { name: /방진복 착용/ }).click()
