@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 async function enterCleanroom(page: import('@playwright/test').Page) {
-  await expect(page.getByRole('heading', { name: '가상 팹 접속' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '환영합니다' })).toBeVisible()
   await page.getByRole('button', { name: /출입 등록 시작/ }).click()
   await expect(page.getByRole('heading', { name: '손 씻기' })).toBeVisible()
   await page.getByRole('button', { name: /세정 완료/ }).click()

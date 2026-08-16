@@ -6,7 +6,7 @@ import type { Group, Mesh } from 'three'
 import type { ScenarioSummary } from './types'
 
 const ENTRY_STEPS = [
-  { code: 'ACCESS', title: '가상 팹 접속', copy: '오늘의 임무는 공정 순서를 외우는 것이 아니다. 평균값 뒤에 숨은 이상 신호를 데이터로 추적하고, 제한된 시간과 예산 안에서 원인을 좁혀야 한다.', action: '출입 등록 시작' },
+  { code: 'ACCESS', title: '환영합니다', copy: 'SK하이닉스 반도체 팹에 오셨습니다. 이곳은 취업 준비를 위한 교육용 가상 환경입니다. 평균값 뒤에 숨은 이상 신호를 데이터로 추적하고, 제한된 시간과 예산 안에서 원인을 좁혀 보세요.', action: '출입 등록 시작' },
   { code: 'WASH', title: '손 씻기', copy: '손과 손목의 오염원을 제거한다. 실제 클린룸 절차를 단순화한 교육 장면이며, 이 게임의 본체는 입실 뒤 시작되는 불량 원인 진단이다.', action: '세정 완료' },
   { code: 'MASK', title: '마스크 착용', copy: '비말과 호흡 입자의 유입을 줄인다. 마스크가 얼굴을 완전히 덮었는지 확인한 뒤 다음 준비실로 이동한다.', action: '마스크 착용' },
   { code: 'GOWN', title: '방진복 착용', copy: '머리카락과 의복에서 발생하는 입자를 격리한다. 장갑·후드·방진복이 준비되면 오염 구역과 청정 구역의 경계를 통과할 수 있다.', action: '방진복 착용' },
