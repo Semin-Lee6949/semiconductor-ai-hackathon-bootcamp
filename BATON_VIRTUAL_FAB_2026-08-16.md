@@ -14,7 +14,7 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
 
 - 저장소: `/home/waterfirst/.cokacdir/workspace/syctizfu/semiconductor-ai-hackathon-bootcamp`
 - 앱: `virtual-fab-app/`
-- 공개 URL: <http://waterfirst.pro:8510/>
+- 공개 URL: <https://waterfirst.pro/virtual-fab/>
 - 서비스: `systemctl --user status virtual-fab.service`
 - GitHub: <https://github.com/waterfirst/semiconductor-ai-hackathon-bootcamp>
 
@@ -53,6 +53,9 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
 
 ## 4. 마지막 커밋
 
+- `e57aa0b` — OpenAI·Gemini·Anthropic·DeepSeek 개인 API 연결(BYOK), 연결 확인, 프롬프트 분석
+- `2174252` — 데스크톱 캐릭터·좌측 카드 겹침 해소와 상단 단계 글자 확대
+- `91a7852` — 시나리오 seed·버전 기반 재현성과 세션 복원 강화
 - `d1973df` — 클린룸 라인과 스플래시 전환
 - `6d0d8a3` — 환영 문구
 - `5076ef1` — 클린룸 입실 시네마틱
@@ -64,10 +67,11 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
 ## 5. 검증 상태
 
 - `npm run build` 통과
-- Python 테스트 `6 passed`
-- 데스크톱 전체 입실 E2E 통과
-- 직전 PC·모바일 입실 E2E `2 passed`
-- 공개 서버 HTTP 200
+- Python 테스트 `12 passed`
+- 데스크톱 전체 시나리오와 PC·모바일 입실 E2E 통과
+- 공개 HTTPS 서버와 `/api/health` HTTP/2 200
+- 공개 주소에서 보안 컨텍스트·BYOK 입력 활성화·콘솔 오류 0건 확인
+- Let's Encrypt 인증서 자동 갱신 설정(현재 만료일 2026-11-14)
 - Impeccable UI detector: 경고 0
 
 검증 명령:
@@ -92,7 +96,7 @@ systemctl --user restart virtual-fab.service
 2. 외형보다 시나리오·데이터·분기·평가 기준을 우선한다.
 3. 캐릭터나 입실 연출 수정 시 PC와 모바일을 함께 확인한다.
 4. `prefers-reduced-motion` 사용자는 긴 시네마틱을 건너뛴다.
-5. 공개 전 build → pytest → 필요한 E2E → HTTP 200 순으로 검증한다.
+5. 공개 전 build → pytest → 필요한 E2E → HTTPS·API health·브라우저 콘솔 순으로 검증한다.
 
 ## 8. 건드리지 말 것
 

@@ -63,6 +63,13 @@ npm run build
 
 `http://127.0.0.1:8510`에서 실행한다.
 
+## 공개 배포
+
+- 공개 주소: <https://waterfirst.pro/virtual-fab/>
+- Nginx가 TLS를 종료하고 로컬 `127.0.0.1:8510`으로 프록시한다.
+- BYOK 기능은 반드시 위 HTTPS 주소 또는 localhost에서 사용한다.
+- 인증서는 Let's Encrypt/Certbot 자동 갱신 대상으로 등록되어 있다.
+
 ## 검증
 
 ```bash
