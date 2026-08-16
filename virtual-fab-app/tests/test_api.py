@@ -143,6 +143,22 @@ def test_catalog_and_all_scenarios_create_independent_sessions():
         assert len(scenario.json()["keywords"]) == 6
         assert all(keyword["term"] and keyword["meaning"] and keyword["relevance"] for keyword in scenario.json()["keywords"])
         assert scenario.json()["keyword_sources"]
+        session_id = session.json()["id"]
+        assert decide(session_id, "incident", "hold").status_code == 200
+        dataset = client.get(f"/api/sessions/{session_id}/dataset.csv")
+        assert dataset.status_code == 200
+        csv_lines = dataset.text.removeprefix("\ufeff").strip().splitlines()
+        assert len(csv_lines) == 43
+        assert len(csv_lines[0].split(",")) == 9
+        restored = main.load_session(session_id)
+        assert restored is not None and restored.dataset_downloaded is True
+        _, messages = main.coach_messages(
+            f"{scenario.json()['keywords'][0]['term']} 데이터의 영역별 분포를 설명해줘.",
+            main.SCENARIOS[item["id"]],
+            restored,
+        )
+        assert messages[0]["content"].count("SYN-") == 42
+        assert "[서버 첨부 CSV 원문" in messages[0]["content"]
 
 
 def test_analysis_budget_is_enforced():

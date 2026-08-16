@@ -127,6 +127,29 @@ test('open a new dry etch case from the module home', async ({ page }) => {
   await expect(page.getByRole('button', { name: /Profile·위치 분포부터 확인/ })).toBeVisible()
 })
 
+test('preview server CSV in every process scenario', async ({ page }) => {
+  const scenarios = [
+    ['photo-cd-drift', 'PHOTO'],
+    ['dry-etch-profile', 'DRY ETCH'],
+    ['sputter-sheet-resistance', 'SPUTTER'],
+    ['cvd-film-uniformity', 'CVD'],
+    ['cmp-dishing', 'CMP'],
+    ['device-vth-shift', 'DEVICE'],
+  ] as const
+
+  for (const [scenarioId, process] of scenarios) {
+    await page.goto(`/#${scenarioId}`)
+    await page.locator('.choice-grid .choice').first().click()
+    await page.getByRole('button', { name: /판단을 기록하고/ }).click()
+    await expect(page.getByRole('heading', { name: '데이터·AI 공동분석' })).toBeVisible()
+    await page.getByRole('button', { name: '서버 CSV 불러오기·미리보기' }).click()
+    await expect(page.getByText(`CSV DATA PREVIEW · ${process}`)).toBeVisible()
+    await expect(page.locator('.dataset-preview thead th')).toHaveCount(9)
+    await expect(page.locator('.dataset-preview tbody tr')).toHaveCount(42)
+    await expect(page.getByText('AI 데이터 자동 연결됨')).toBeVisible()
+  }
+})
+
 test('return to a completed stage from the top step rail', async ({ page }) => {
   await page.goto('/#sputter-sheet-resistance')
   await page.getByRole('button', { name: /Lot 보류/ }).click()
