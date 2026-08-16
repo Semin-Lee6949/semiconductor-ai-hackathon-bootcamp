@@ -116,6 +116,9 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
   const [datasetDownloaded, setDatasetDownloaded] = useState(state.dataset_downloaded)
   const [datasetBusy, setDatasetBusy] = useState(false)
   const [datasetError, setDatasetError] = useState('')
+  const [datasetBlob, setDatasetBlob] = useState<Blob | null>(null)
+  const [datasetFilename, setDatasetFilename] = useState('virtual-fab-data.csv')
+  const [datasetPreview, setDatasetPreview] = useState<{ headers: string[]; rows: string[][] } | null>(null)
   const [selectedKeywordIds, setSelectedKeywordIds] = useState<string[]>(scenario.keywords.slice(0, 2).map((item) => item.id))
   const [questionGoal, setQuestionGoal] = useState(phaseForTurn(restoredConversation.length + 1).id)
   const datasetSourcePath = `${import.meta.env.BASE_URL}api/sessions/${state.id}/dataset.csv`
@@ -173,17 +176,29 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
     setPrompt(`[문답 ${currentTurn}/15 · ${currentPhase.label}]\n[핵심 키워드] ${selectedTerms.join(', ')}\n[데이터 연결] 이 사이트가 현재 세션의 서버 CSV 원문 42행과 통계 요약을 자동 첨부함. PC 다운로드 경로는 사용하지 말 것\n[현재 관찰] ${facts}\n[질문] ${requests[questionGoal]}\n[출력 형식] 데이터 근거 / 가설 또는 판단 / 반증 기준 / 다음 행동을 구분해 한국어로 답해줘.`)
   }
 
-  const downloadDataset = async () => {
+  const loadDatasetPreview = async () => {
     setDatasetBusy(true); setDatasetError('')
     try {
       const { blob, filename } = await api.dataset(state.id)
-      const url = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
-      anchor.href = url; anchor.download = filename; document.body.appendChild(anchor); anchor.click(); anchor.remove()
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      const lines = (await blob.text()).replace(/^\uFEFF/, '').trim().split(/\r?\n/)
+      const [headerLine, ...dataLines] = lines
+      const headers = headerLine?.split(',') ?? []
+      const rows = dataLines.filter(Boolean).map((line) => line.split(','))
+      if (headers.length === 0 || rows.length === 0) throw new Error('서버 CSV에 표시할 데이터가 없어.')
+      setDatasetBlob(blob)
+      setDatasetFilename(filename)
+      setDatasetPreview({ headers, rows })
       setDatasetDownloaded(true)
-    } catch (cause) { setDatasetError(cause instanceof Error ? cause.message : '합성 데이터를 내려받지 못했어.') }
+    } catch (cause) { setDatasetError(cause instanceof Error ? cause.message : '서버 데이터를 불러오지 못했어.') }
     finally { setDatasetBusy(false) }
+  }
+
+  const saveDatasetFile = () => {
+    if (!datasetBlob) return
+    const url = URL.createObjectURL(datasetBlob)
+    const anchor = document.createElement('a')
+    anchor.href = url; anchor.download = datasetFilename; document.body.appendChild(anchor); anchor.click(); anchor.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const receiveAIResult = (result: import('./types').BYOKResponse) => {
@@ -230,9 +245,10 @@ function DecisionPanel({ scenario, state, onSubmit, busy }: { scenario: Scenario
       {stage.id === 'investigation' && <>
         <SignalPlot scenario={scenario} />
         <section className={`dataset-panel ${datasetDownloaded ? 'ready' : ''}`}>
-          <div><b>STEP 1 · 합성 원시 데이터 확보</b><p>3개 Lot의 위치·Tool·결측 플래그가 포함된 CSV를 내려받아 엑셀·Python 등으로 직접 확인해.</p></div>
-          <button type="button" onClick={downloadDataset} disabled={datasetBusy}>{datasetBusy ? 'CSV 생성 중…' : datasetDownloaded ? 'CSV 다시 다운로드' : '합성 데이터 CSV 다운로드'}</button>
-          <small>{datasetDownloaded ? `다운로드 완료 · scenario v${state.scenario_version} · seed ${state.seed} · AI 질문에 동일 CSV 42행 자동 첨부` : '데이터를 내려받아야 최종 데이터 판단을 기록할 수 있어.'}</small>
+          <div><b>STEP 1 · 서버 데이터 불러오기</b><p>3개 Lot의 위치·Tool·결측 플래그를 화면 표로 먼저 확인해. 필요할 때만 CSV 파일로 저장하면 돼.</p></div>
+          <button type="button" onClick={loadDatasetPreview} disabled={datasetBusy}>{datasetBusy ? '서버 데이터 불러오는 중…' : datasetPreview ? '서버 CSV 다시 불러오기' : '서버 CSV 불러오기·미리보기'}</button>
+          <small>{datasetPreview ? `미리보기 완료 · ${datasetPreview.rows.length}행 × ${datasetPreview.headers.length}열 · scenario v${state.scenario_version} · seed ${state.seed} · AI에 동일 데이터 자동 첨부` : datasetDownloaded ? '서버 데이터가 준비되어 있어. 미리보기를 열어 직접 확인해.' : '서버 데이터를 불러와야 최종 데이터 판단을 기록할 수 있어.'}</small>
+          {datasetPreview && <section className="dataset-preview" aria-labelledby="dataset-preview-title"><header><div><b id="dataset-preview-title">CSV DATA PREVIEW</b><span>{datasetPreview.rows.length} rows · {datasetPreview.headers.length} columns</span></div><button type="button" className="save-csv" onClick={saveDatasetFile}>CSV 파일로 저장</button></header><div className="dataset-table-scroll"><table><caption>현재 세션의 합성 CSV 전체 데이터</caption><thead><tr>{datasetPreview.headers.map((header) => <th key={header} scope="col">{header}</th>)}</tr></thead><tbody>{datasetPreview.rows.map((row, rowIndex) => <tr key={`${row[2]}-${row[5]}-${rowIndex}`}>{row.map((value, columnIndex) => <td key={`${columnIndex}-${value}`}>{value}</td>)}</tr>)}</tbody></table></div></section>}
           {datasetDownloaded && <div className="dataset-ai-note" role="status"><b>AI 데이터 자동 연결됨</b><p>브라우저 보안상 PC의 Downloads 폴더 경로는 찾거나 읽지 않아. 대신 사이트가 아래 서버 데이터 경로에서 동일 seed의 CSV를 확인하고, 원문 42행과 통계 요약을 Gemini 요청에 직접 넣어.</p><code>{datasetSourcePath}</code><small>`C:\Users\…\파일.csv` 경로를 질문에 붙일 필요가 없어.</small></div>}
           {datasetError && <p className="inline-error" role="alert">{datasetError}</p>}
         </section>
