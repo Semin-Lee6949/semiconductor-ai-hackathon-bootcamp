@@ -1,0 +1,16 @@
+[Unit]
+Description=ScholarBridge Virtual Fab FastAPI service
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/waterfirst/.cokacdir/workspace/syctizfu/semiconductor-ai-hackathon-bootcamp/virtual-fab-app
+ExecStart=/home/waterfirst/.cokacdir/workspace/syctizfu/semiconductor-ai-hackathon-bootcamp/virtual-fab-app/.venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 8510 --proxy-headers
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

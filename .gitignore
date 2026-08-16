@@ -8,3 +8,8 @@ __pycache__/
 private_answer_keys/
 student_roster/
 feedback_private/
+virtual-fab-app/node_modules/
+virtual-fab-app/dist/
+virtual-fab-app/test-results/
+virtual-fab-app/playwright-report/
+virtual-fab-app/*.tsbuildinfo
