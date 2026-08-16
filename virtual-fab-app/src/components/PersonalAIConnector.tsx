@@ -12,11 +12,12 @@ const PROVIDERS: Record<AIProvider, { label: string; model: string; keyHint: str
 type Props = {
   sessionId: string
   prompt: string
+  promptReady?: boolean
   callsUsed: number
   onResult: (result: BYOKResponse) => void
 }
 
-export function PersonalAIConnector({ sessionId, prompt, callsUsed, onResult }: Props) {
+export function PersonalAIConnector({ sessionId, prompt, promptReady = true, callsUsed, onResult }: Props) {
   const [provider, setProvider] = useState<AIProvider>('gemini')
   const [model, setModel] = useState(PROVIDERS.gemini.model)
   const [apiKey, setApiKey] = useState('')
@@ -77,9 +78,9 @@ export function PersonalAIConnector({ sessionId, prompt, callsUsed, onResult }: 
     </div>
     <div className="personal-ai-actions">
       <button type="button" className="secondary" onClick={checkConnection} disabled={!secureContext || !keyReady || status === 'checking' || status === 'running' || exhausted}>{status === 'checking' ? '연결 확인 중…' : '1. 연결 확인'}</button>
-      <button type="button" className="deepseek-call" onClick={runPrompt} disabled={!secureContext || status !== 'connected' || prompt.trim().length < 10 || exhausted}>{status === 'running' ? 'AI 답변 생성 중…' : '2. 질문 보내기'}</button>
+      <button type="button" className="deepseek-call" onClick={runPrompt} disabled={!secureContext || status !== 'connected' || prompt.trim().length < 10 || !promptReady || exhausted}>{status === 'running' ? 'AI 답변 생성 중…' : '2. 질문 보내기'}</button>
     </div>
     {message && <p className={status === 'connected' ? 'connection-status' : 'inline-error'} role="status">{message}</p>}
-    <small>연결 확인은 생성 비용을 발생시키지 않아. 문답 비용·쿼터는 개인 제공사 계정에 적용되고 세션당 최대 15회야.</small>
+    <small>{promptReady ? '연결 확인은 생성 비용을 발생시키지 않아. 문답 비용·쿼터는 개인 제공사 계정에 적용되고 세션당 최대 15회야.' : '질문에 위 공정 핵심 키워드를 1개 이상 포함해야 전송할 수 있어.'}</small>
   </section>
 }

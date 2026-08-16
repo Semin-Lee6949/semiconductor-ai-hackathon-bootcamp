@@ -7,7 +7,11 @@ export type AIExchange = {
   provider_label: string
   model: string
   usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number }
+  keywords?: string[]
+  phase?: { id: string; label: string; goal: string }
 }
+
+export type ProcessKeyword = { id: string; term: string; meaning: string; relevance: string }
 
 export type Tool = {
   label: string
@@ -35,6 +39,8 @@ export type Scenario = {
   version: string
   notice: string
   coach_prompt: string
+  keywords: ProcessKeyword[]
+  keyword_sources: Array<{ label: string; url: string }>
   experiment_label: string
   signal: {
     title: string
@@ -127,6 +133,8 @@ export type BYOKResponse = DeepSeekResponse & {
   provider: AIProvider
   provider_label: string
   turn_no?: number
+  keywords?: string[]
+  phase?: { id: string; label: string; goal: string }
 }
 
 export type ReportPayload = {

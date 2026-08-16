@@ -70,7 +70,7 @@ PHOTO_SCENARIO = {
     "tagline": "평균 CD는 정상인데 Edge 결함이 급증했다.",
     "skills": ["공간 분포", "DOE", "CD 계측"],
     "badge": "LIVE · 검증 완료",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "notice": "교육용 합성 시나리오이며 실제 회사 Recipe·현장 경험을 의미하지 않습니다.",
     "coach_prompt": "Photo CD edge 산포의 경쟁 가설 3개와 각 가설을 반증할 최소 증거를 제안해줘.",
     "experiment_label": "Dose·Focus·PEB Screening",
@@ -96,7 +96,7 @@ PHOTO_SCENARIO = {
 
 DRY_ETCH_SCENARIO = {
     "id": "dry-etch-profile", "module_no": "02", "process": "DRY ETCH", "title": "기울어진 Sidewall", "tagline": "식각 깊이는 맞지만 Sidewall 각도가 무너졌다.",
-    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Profile", "Plasma", "SEM"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Dry Etch 깊이는 정상인데 Sidewall angle과 edge residue가 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·RF Bias·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · edge residue index", "aria": "웨이퍼 중심에서 가장자리로 갈수록 잔류물 지수가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 56, "risk_from": 9, "bars": [27, 28, 29, 31, 33, 35, 39, 43, 49, 57, 63, 70, 78, 86]},
     "incident": {"case_id": "VF-DE-02", "role": "Dry Etch 공정기술 엔지니어", "deadline": "후속 세정·계측 판정까지 75분",
@@ -108,7 +108,7 @@ DRY_ETCH_SCENARIO = {
 
 SPUTTER_SCENARIO = {
     "id": "sputter-sheet-resistance", "module_no": "03", "process": "SPUTTER", "title": "같은 두께, 다른 저항", "tagline": "막 두께는 정상인데 Sheet resistance가 흔들린다.",
-    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["박막", "4-Point Probe", "조성"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "Sputter 막 두께는 정상인데 sheet resistance가 edge에서 상승한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Power·Pressure·Ar Flow Screening",
     "signal": {"title": "합성 Train 데이터 · sheet resistance", "aria": "웨이퍼 중심에서 가장자리로 갈수록 면저항이 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 58, "risk_from": 10, "bars": [34, 35, 34, 36, 37, 39, 42, 44, 47, 51, 59, 65, 73, 80]},
     "incident": {"case_id": "VF-SP-03", "role": "Sputter 박막 공정 엔지니어", "deadline": "후속 Patterning 투입까지 70분",
@@ -120,7 +120,7 @@ SPUTTER_SCENARIO = {
 
 CVD_SCENARIO = {
     "id": "cvd-film-uniformity", "module_no": "04", "process": "CVD", "title": "막은 쌓였지만 같지 않다", "tagline": "평균 두께 뒤에 균일도와 막질 이상이 숨어 있다.",
-    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Uniformity", "막질", "Ellipsometry"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CVD 평균 두께는 정상인데 wafer 균일도와 굴절률이 악화된 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Temperature·Pressure·Gas Ratio Screening",
     "signal": {"title": "합성 Train 데이터 · thickness non-uniformity", "aria": "웨이퍼 중심에서 가장자리로 갈수록 두께 불균일도가 증가하는 막대그래프", "start": "CENTER", "end": "EDGE", "warning": 53, "risk_from": 8, "bars": [24, 26, 29, 30, 33, 37, 42, 48, 55, 61, 68, 74, 81, 88]},
     "incident": {"case_id": "VF-CV-04", "role": "CVD 박막 공정기술 엔지니어", "deadline": "후속 Lithography 투입까지 90분",
@@ -132,7 +132,7 @@ CVD_SCENARIO = {
 
 CMP_SCENARIO = {
     "id": "cmp-dishing", "module_no": "05", "process": "CMP", "title": "평탄화 뒤의 함몰", "tagline": "평균 제거량은 맞지만 Dense pattern이 꺼졌다.",
-    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["Dishing", "Pattern Density", "Profile"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "CMP 평균 제거량은 정상인데 dense pattern dishing과 edge 잔막이 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Pressure·Platen Speed·Slurry Flow Screening",
     "signal": {"title": "합성 Train 데이터 · pattern dishing", "aria": "패턴 밀도가 높아질수록 디싱 값이 증가하는 막대그래프", "start": "ISO", "end": "DENSE", "warning": 55, "risk_from": 9, "bars": [22, 25, 28, 31, 34, 38, 41, 46, 51, 58, 66, 73, 80, 87]},
     "incident": {"case_id": "VF-CM-05", "role": "CMP 공정기술 엔지니어", "deadline": "세정·후속 계측까지 65분",
@@ -144,7 +144,7 @@ CMP_SCENARIO = {
 
 DEVICE_SCENARIO = {
     "id": "device-vth-shift", "module_no": "06", "process": "DEVICE", "title": "오른쪽으로 밀린 I–V", "tagline": "On-current는 통과했지만 Vth와 Off-current가 변했다.",
-    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.5.0", "notice": PHOTO_SCENARIO["notice"],
+    "skills": ["I–V", "Vth", "신뢰성"], "badge": "NEW", "version": "0.6.0", "notice": PHOTO_SCENARIO["notice"],
     "coach_prompt": "소자 On-current는 정상인데 Vth shift와 Off-current가 증가한 경쟁 가설 3개와 최소 반증 증거를 제안해줘.", "experiment_label": "Stress Voltage·Time·Temperature Screening",
     "signal": {"title": "합성 Train 데이터 · Vth shift after stress", "aria": "스트레스 시간이 증가할수록 문턱전압 이동이 증가하는 막대그래프", "start": "INITIAL", "end": "STRESS", "warning": 57, "risk_from": 9, "bars": [20, 23, 26, 29, 33, 37, 41, 46, 52, 59, 66, 72, 79, 85]},
     "incident": {"case_id": "VF-DV-06", "role": "소자·신뢰성 평가 엔지니어", "deadline": "Reliability review까지 80분",
@@ -154,7 +154,70 @@ DEVICE_SCENARIO = {
     "stages": scenario_stages("On-current는 합성 기준을 통과했지만 Vth shift와 Off-current가 악화됐다. 동작 성능과 열화 안정성을 분리해 판단한다."), "tools": TOOLS, "required_analysis_kinds": ["electrical", "structure"], "limits": {"budget": 80, "time": 80},
 }
 
+PROCESS_KEYWORDS: dict[str, list[dict[str, str]]] = {
+    "photo-cd-drift": [
+        {"id": "cd", "term": "CD", "meaning": "Critical Dimension · 패턴의 핵심 선폭", "relevance": "평균값과 wafer 위치별 산포를 분리해 봐야 한다."},
+        {"id": "dose", "term": "Dose", "meaning": "감광막에 전달된 노광 에너지", "relevance": "CD 변화 가설을 세울 때 Focus와 함께 비교한다."},
+        {"id": "focus", "term": "Focus", "meaning": "웨이퍼 면에서 영상이 맺히는 초점 상태", "relevance": "위치별 패턴 선명도와 CD 변화를 설명할 수 있다."},
+        {"id": "overlay", "term": "Overlay", "meaning": "서로 다른 층 패턴의 정렬 정확도", "relevance": "CD 불량과 정렬 불량을 혼동하지 않게 한다."},
+        {"id": "cdu", "term": "CDU", "meaning": "Critical Dimension Uniformity · CD 균일도", "relevance": "평균 CD가 정상이어도 분포 불량을 드러낸다."},
+        {"id": "metrology", "term": "Metrology bias", "meaning": "계측 방법·위치 선택에서 생기는 측정 편향", "relevance": "실제 공정 변화와 측정 오류를 분리한다."},
+    ],
+    "dry-etch-profile": [
+        {"id": "rie", "term": "RIE", "meaning": "Reactive Ion Etch · 이온과 화학반응을 이용한 식각", "relevance": "물리·화학 식각 기여도를 나눠 생각하게 한다."},
+        {"id": "sidewall", "term": "Sidewall angle", "meaning": "식각 구조 측벽이 바닥과 이루는 각도", "relevance": "깊이가 같아도 Profile 이상을 직접 나타낸다."},
+        {"id": "selectivity", "term": "Selectivity", "meaning": "목표막과 다른 막 사이의 상대 식각률", "relevance": "마스크·하부막 손상 가능성을 평가한다."},
+        {"id": "rf_bias", "term": "RF bias", "meaning": "웨이퍼로 향하는 이온 에너지에 영향을 주는 바이어스", "relevance": "방향성·측벽·손상 가설과 연결된다."},
+        {"id": "seasoning", "term": "Chamber seasoning", "meaning": "챔버 벽 상태를 안정화하는 전처리·누적막 상태", "relevance": "Lot 간·시간 순서 편차의 후보 원인이다."},
+        {"id": "residue", "term": "Edge residue", "meaning": "웨이퍼 가장자리에 남은 부산물·잔류물 신호", "relevance": "화학종·배기·edge 조건 가설을 구분한다."},
+    ],
+    "sputter-sheet-resistance": [
+        {"id": "pvd", "term": "PVD", "meaning": "Physical Vapor Deposition · target 물질을 물리적으로 증착", "relevance": "Sputter 공정의 기본 전달 메커니즘이다."},
+        {"id": "sheet_r", "term": "Sheet resistance", "meaning": "얇은 막의 면저항", "relevance": "두께뿐 아니라 조성·밀도·연속성 영향을 함께 반영한다."},
+        {"id": "erosion", "term": "Target erosion", "meaning": "Sputter target의 위치별 마모", "relevance": "막 두께와 조성의 공간 편차 후보다."},
+        {"id": "ar_pressure", "term": "Ar pressure", "meaning": "Sputter 플라즈마의 아르곤 압력", "relevance": "입자 산란과 막 특성 변화 가설에 사용한다."},
+        {"id": "step_coverage", "term": "Step coverage", "meaning": "단차 구조 위 막의 피복 균일성", "relevance": "평면 두께만으로 놓치는 구조 위험을 본다."},
+        {"id": "four_probe", "term": "4-point probe", "meaning": "접촉저항 영향을 줄여 면저항을 재는 4탐침 계측", "relevance": "증착 이상과 전기 계측 편향을 분리한다."},
+    ],
+    "cvd-film-uniformity": [
+        {"id": "cvd", "term": "CVD", "meaning": "Chemical Vapor Deposition · 기체 전구체 반응으로 막을 증착", "relevance": "반응·수송·온도 가설의 출발점이다."},
+        {"id": "wiwnu", "term": "WIWNU", "meaning": "Within-Wafer Non-Uniformity · wafer 내 불균일도", "relevance": "정상 평균 뒤의 위치 편차를 수치화한다."},
+        {"id": "ri", "term": "Refractive index", "meaning": "막의 광학적 굴절률", "relevance": "두께와 별개인 조성·밀도·막질 변화를 시사한다."},
+        {"id": "precursor", "term": "Precursor depletion", "meaning": "반응 진행 중 전구체가 위치별로 고갈되는 현상", "relevance": "가스 흐름 방향과 막 균일도 가설을 만든다."},
+        {"id": "showerhead", "term": "Showerhead uniformity", "meaning": "가스 분사부의 위치별 공급 균일성", "relevance": "wafer 공간 패턴과 설비 원인을 연결한다."},
+        {"id": "ellipsometry", "term": "Ellipsometry", "meaning": "편광 변화를 이용해 두께·광학특성을 추정하는 계측", "relevance": "광학모델 편향과 실제 막질 변화를 분리한다."},
+    ],
+    "cmp-dishing": [
+        {"id": "cmp", "term": "CMP", "meaning": "Chemical Mechanical Planarization · 화학·기계 작용으로 평탄화", "relevance": "압력·패드·슬러리의 결합 영향을 본다."},
+        {"id": "dishing", "term": "Dishing", "meaning": "넓거나 조밀한 패턴 영역이 과도하게 함몰되는 현상", "relevance": "평균 제거량이 숨기는 국부 Profile 불량이다."},
+        {"id": "pattern_density", "term": "Pattern density", "meaning": "영역 내 패턴이 차지하는 비율", "relevance": "제거량과 dishing의 구조 의존성을 비교한다."},
+        {"id": "conditioning", "term": "Pad conditioning", "meaning": "연마 패드 표면 상태를 회복·유지하는 과정", "relevance": "시간 순서별 제거율 변화 후보다."},
+        {"id": "slurry", "term": "Slurry flow", "meaning": "연마 입자·화학제가 포함된 슬러리 공급 유량", "relevance": "화학 반응과 제거 균일도 가설에 사용한다."},
+        {"id": "removal_rate", "term": "Removal rate", "meaning": "단위 시간당 막 제거량", "relevance": "평균 제거량과 위치·패턴별 Profile을 함께 본다."},
+    ],
+    "device-vth-shift": [
+        {"id": "vth", "term": "Vth", "meaning": "Threshold voltage · 채널이 형성되기 시작하는 문턱전압", "relevance": "소자 상태 변화의 핵심 전기 지표다."},
+        {"id": "ioff", "term": "Off-current", "meaning": "꺼진 상태에서 흐르는 누설전류", "relevance": "On-current 정상만으로 놓치는 열화를 드러낸다."},
+        {"id": "ion", "term": "On-current", "meaning": "켜진 상태의 구동전류", "relevance": "성능과 누설·안정성을 함께 비교한다."},
+        {"id": "idvg", "term": "Id–Vg", "meaning": "게이트 전압에 따른 드레인 전류 곡선", "relevance": "Vth·subthreshold·hysteresis를 추출하는 기반이다."},
+        {"id": "hysteresis", "term": "Hysteresis", "meaning": "전압 sweep 방향에 따라 측정 곡선이 달라지는 현상", "relevance": "소자 열화와 측정 순서 효과를 분리한다."},
+        {"id": "trapping", "term": "Charge trapping", "meaning": "절연막·계면 결함에 전하가 포획되는 현상", "relevance": "stress 후 Vth 이동의 경쟁 가설이다."},
+    ],
+}
+
+KEYWORD_SOURCES = {
+    "photo-cd-drift": [{"label": "ASML Lithography principles", "url": "https://www.asml.com/en/technology/lithography-principles/measuring-accuracy"}],
+    "dry-etch-profile": [{"label": "Lam Research Etch", "url": "https://www.lamresearch.com/products/our-processes/etch/"}],
+    "sputter-sheet-resistance": [{"label": "Applied Materials Create", "url": "https://www.appliedmaterials.com/us/en/semiconductor/products/create.html"}],
+    "cvd-film-uniformity": [{"label": "Applied Materials Create", "url": "https://www.appliedmaterials.com/us/en/semiconductor/products/create.html"}],
+    "cmp-dishing": [{"label": "Applied Materials process portfolio", "url": "https://www.appliedmaterials.com/us/en/semiconductor.html"}],
+    "device-vth-shift": [{"label": "Keysight Parametric Test", "url": "https://www.keysight.com/gw/en/products/semiconductors/parametric-test-solutions.html"}],
+}
+
 SCENARIOS = {scenario["id"]: scenario for scenario in [PHOTO_SCENARIO, DRY_ETCH_SCENARIO, SPUTTER_SCENARIO, CVD_SCENARIO, CMP_SCENARIO, DEVICE_SCENARIO]}
+for scenario_id, scenario in SCENARIOS.items():
+    scenario["keywords"] = PROCESS_KEYWORDS[scenario_id]
+    scenario["keyword_sources"] = KEYWORD_SOURCES[scenario_id]
 
 
 class DecisionRequest(BaseModel):
@@ -245,7 +308,7 @@ def load_session(session_id: str) -> SessionState | None:
 
 init_db()
 
-app = FastAPI(title="Virtual Fab Scenario API", version="0.5.0")
+app = FastAPI(title="Virtual Fab Scenario API", version="0.6.0")
 
 
 CHOICE_LABELS = {
@@ -386,12 +449,34 @@ def dataset_context(state: SessionState, scenario: dict[str, Any]) -> str:
     )
 
 
+def question_phase(turn_no: int) -> dict[str, str]:
+    if turn_no <= 3:
+        return {"id": "understand", "label": "용어·데이터 이해", "goal": "용어 정의, 열 의미, 단위와 결측을 확인한다."}
+    if turn_no <= 7:
+        return {"id": "hypothesize", "label": "경쟁 가설", "goal": "서로 다른 원인 가설과 각 가설의 예상 데이터 패턴을 만든다."}
+    if turn_no <= 11:
+        return {"id": "falsify", "label": "반증·누락 점검", "goal": "가설을 틀렸다고 판정할 최소 증거와 누락 변수를 찾는다."}
+    if turn_no <= 14:
+        return {"id": "decide", "label": "판단 압축", "goal": "데이터 근거, 실험 우선순위, 리스크와 적용 한계를 정리한다."}
+    return {"id": "synthesize", "label": "PT 최종 요약", "goal": "상황·데이터·AI 활용·사람의 판단·한계를 면접 PT 구조로 요약한다."}
+
+
+def matched_keywords(prompt: str, scenario: dict[str, Any]) -> list[str]:
+    normalized = prompt.casefold()
+    return [item["term"] for item in scenario.get("keywords", []) if item["term"].casefold() in normalized]
+
+
 def coach_messages(prompt: str, scenario: dict[str, Any], state: SessionState | None = None) -> tuple[str, list[dict[str, str]]]:
+    turn_no = (state.llm_call_count + 1) if state else 1
+    phase = question_phase(turn_no)
+    glossary = "; ".join(f"{item['term']}={item['meaning']}" for item in scenario.get("keywords", []))
     system = (
         f"당신은 반도체 {scenario['process']} 공정 학습자의 소크라테스식 멘토다. "
         "교육용 합성 상황만 다루고 실제 회사 Recipe나 수치를 만들지 않는다. "
         "정답을 단정하지 말고 학습자가 다운로드한 합성 데이터의 품질·분포·누락 변수를 먼저 점검하게 한다. "
-        "경쟁 가설과 반증 증거를 구분하고, 앞선 대화의 불확실성을 이어받아 한국어로 간결하게 답한다."
+        "경쟁 가설과 반증 증거를 구분하고, 앞선 대화의 불확실성을 이어받아 한국어로 간결하게 답한다. "
+        f"현재 {turn_no}/15회 단계는 '{phase['label']}'이며 목표는 {phase['goal']} "
+        f"공정 용어 사전은 {glossary}이다. 용어를 사용할 때 질문 맥락에 맞춰 짧게 풀어 쓴다."
     )
     observation = (
         "교육용 관찰: "
@@ -562,9 +647,14 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
     safe_prompt = html.escape(prompt_text).replace("\n", "<br>")
     safe_model = html.escape(model_text)
     conversation_rows = "".join(
-        f"<li><b>Q{index + 1}</b><span>{html.escape(str(exchange.get('question', ''))[:260])}<br><em>{html.escape(str(exchange.get('response', ''))[:420])}</em></span></li>"
+        f"<li><b>Q{exchange.get('turn_no', len(conversation) - len(conversation[-5:]) + index + 1)} · {html.escape(str(exchange.get('phase', {}).get('label', '문답')))}</b><span>{html.escape(str(exchange.get('question', ''))[:260])}<br><em>{html.escape(str(exchange.get('response', ''))[:420])}</em></span></li>"
         for index, exchange in enumerate(conversation[-5:])
     ) or "<li><b>대화</b><span>기록 없음</span></li>"
+    used_terms = list(dict.fromkeys(term for exchange in conversation for term in exchange.get("keywords", []) if isinstance(term, str)))
+    keyword_rows = "".join(
+        f"<li><b>{html.escape(item['term'])}</b><span>{html.escape(item['meaning'])}<br><em>{html.escape(item['relevance'])}</em></span></li>"
+        for item in scenario.get("keywords", []) if item["term"] in used_terms
+    ) or "<li><b>핵심어</b><span>기록 없음</span></li>"
     choice_rows = "".join(
         f"<li><b>{html.escape(next(stage['label'] for stage in scenario['stages'] if stage['id'] == item['stage']))}</b>"
         f"<span>{html.escape(CHOICE_LABELS.get(item['choice'], item['choice']))}</span></li>"
@@ -600,11 +690,12 @@ def build_report(state: SessionState, request: ReportRequest) -> str:
 <section class='slide grid dark'><span class='label'>A · ACTION</span><div><h2>비용이 아니라<br>정보가치를 선택했다</h2><p>선택 도구: {html.escape(' · '.join(tools) or '기록 없음')}</p><div class='metric'><span><b>{analysis.get('cost',0)}</b>비용</span><span><b>{analysis.get('time',0)}</b>분</span></div></div><img src='{tool_svg}' alt='차원 구조 검증 분석 툴 도식'></section>
 <section class='slide'><span class='label'>DATA · AI COLLABORATION · {safe_model}</span><div><h2>데이터를 내려받고 AI와 {len(conversation)}회 검토했다</h2><p><b>마지막 질문</b><br>{safe_prompt}</p><blockquote>{safe_mentor}</blockquote><p>답변은 합성 데이터 품질·분포·측정 한계와 대조하고 사람이 최종 판단했다.</p></div></section>
 <section class='slide'><span class='label'>AI DIALOGUE TRACE · LAST 5</span><div><h2>질문이 판단으로 좁혀진 과정</h2><ul>{conversation_rows}</ul></div></section>
+<section class='slide'><span class='label'>PROCESS KEYWORD MAP</span><div><h2>전문용어를 데이터 판단 언어로 바꿨다</h2><ul>{keyword_rows}</ul></div></section>
 <section class='slide'><span class='label'>DECISION TRAIL</span><div><h2>판단의 흔적</h2><ul>{choice_rows}</ul></div></section>
 <section class='slide dark'><span class='label'>R · RESULT</span><div><h2>{verdict}</h2><div class='metric'><span><b>{state.score}</b>점수</span><span><b>{state.budget}</b>남은 예산</span><span><b>{state.time_left}</b>남은 시간</span></div><p>Baseline {html.escape(str(metrics.get('baseline','-')))} → Holdout {html.escape(str(metrics.get('holdout','-')))}</p></div><small>이 수치는 교육용 합성 입력에 대한 시나리오 결과다.</small></section>
 <section class='slide'><span class='label'>MY DISCUSSION</span><div><h2>내 판단과 한계</h2><blockquote>{safe_opinion}</blockquote></div></section>
 <section class='slide dark'><span class='label'>INTERVIEW CLOSE</span><div><h2>제가 증명한 것은<br><span class='accent'>정답이 아니라 과정</span>입니다</h2><p>문제 정의 → 데이터 다운로드 → AI 문답 → 사람의 판단 → 실험 → 분석 선택 → Holdout 검증</p><p>질문을 받겠습니다.</p></div></section>
-<div class='counter'><span id='current'>1</span> / <span id='total'>10</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
+<div class='counter'><span id='current'>1</span> / <span id='total'>11</span></div><div class='nav'><button onclick='move(-1)'>이전</button><button onclick='move(1)'>다음</button><button onclick='window.print()'>PDF</button></div>
 <script>const s=[...document.querySelectorAll('.slide')];let i=0;function show(n){{i=(n+s.length)%s.length;s.forEach((x,j)=>x.classList.toggle('active',j===i));document.getElementById('current').textContent=i+1}}function move(n){{show(i+n)}}document.addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')move(1);if(e.key==='ArrowLeft')move(-1)}});document.getElementById('total').textContent=s.length;</script>
 </body></html>"""
 
@@ -668,12 +759,16 @@ def apply_decision(state: SessionState, request: DecisionRequest) -> dict[str, A
                     "provider_label": str(exchange.get("provider_label", "외부 AI"))[:80],
                     "model": str(exchange.get("model", "외부 AI"))[:100],
                     "usage": exchange.get("usage", {}),
+                    "keywords": matched_keywords(str(exchange.get("question", "")), scenario),
+                    "phase": question_phase(index + 1),
                 }
                 for index, exchange in enumerate(supplied_conversation[:15]) if isinstance(exchange, dict)
                 and len(str(exchange.get("question", ""))) >= 10 and len(str(exchange.get("response", ""))) >= 20
             ]
         if not state.ai_conversation:
             raise HTTPException(422, "AI와 최소 1회 질문·응답을 기록하세요.")
+        if any(not exchange.get("keywords") for exchange in state.ai_conversation):
+            raise HTTPException(422, "각 AI 질문에 공정 핵심 키워드를 1개 이상 포함하세요.")
         if len(str(request.payload.get("human_check", ""))) < 20:
             raise HTTPException(422, "AI 답변을 어떻게 검증했는지 20자 이상 기록하세요.")
         request.payload["ai_conversation"] = state.ai_conversation
@@ -837,13 +932,19 @@ def generate_personal_llm(session_id: str, request: BYOKGenerateRequest, http_re
     if state.llm_call_count >= 15:
         raise HTTPException(429, "이 세션의 AI 문답 한도 15회에 도달했습니다.")
     model, api_key = validate_byok_request(request)
+    scenario = scenario_for(state)
+    keywords = matched_keywords(request.prompt, scenario)
+    if not keywords:
+        examples = ", ".join(item["term"] for item in scenario["keywords"][:4])
+        raise HTTPException(422, f"질문에 공정 핵심 키워드를 1개 이상 포함하세요: {examples}")
     with RATE_LOCK:
         verified = VERIFIED_BYOK.get(session_id)
     expected = (request.provider, model, byok_fingerprint(api_key))
     if verified != expected:
         raise HTTPException(409, "먼저 현재 제공사·모델·API 키의 연결을 확인하세요.")
-    result = generate_with_byok(request.provider, model, api_key, request.prompt, scenario_for(state), state)
+    result = generate_with_byok(request.provider, model, api_key, request.prompt, scenario, state)
     state.llm_call_count += 1
+    phase = question_phase(state.llm_call_count)
     exchange = {
         "turn_no": state.llm_call_count,
         "question": request.prompt,
@@ -851,10 +952,12 @@ def generate_personal_llm(session_id: str, request: BYOKGenerateRequest, http_re
         "provider_label": result["provider_label"],
         "model": result["model"],
         "usage": result["usage"],
+        "keywords": keywords,
+        "phase": phase,
     }
     state.ai_conversation.append(exchange)
     save_session(state)
-    return {**result, "turn_no": state.llm_call_count}
+    return {**result, "turn_no": state.llm_call_count, "keywords": keywords, "phase": phase}
 
 
 @app.post("/api/sessions/{session_id}/deepseek")
@@ -867,11 +970,16 @@ def deepseek(session_id: str, request: DeepSeekRequest, http_request: FastAPIReq
         raise HTTPException(409, "데이터·AI 공동분석 단계에서만 DeepSeek을 호출할 수 있습니다.")
     if state.llm_call_count >= 15:
         raise HTTPException(429, "이 세션의 AI 문답 한도 15회에 도달했습니다.")
-    result = deepseek_generate(request.prompt, session_id.replace("-", ""), scenario_for(state))
+    scenario = scenario_for(state)
+    keywords = matched_keywords(request.prompt, scenario)
+    if not keywords:
+        examples = ", ".join(item["term"] for item in scenario["keywords"][:4])
+        raise HTTPException(422, f"질문에 공정 핵심 키워드를 1개 이상 포함하세요: {examples}")
+    result = deepseek_generate(request.prompt, session_id.replace("-", ""), scenario)
     state.llm_call_count += 1
-    state.ai_conversation.append({"turn_no": state.llm_call_count, "question": request.prompt, "response": result["response"], "provider_label": "DeepSeek", "model": result["model"], "usage": result["usage"]})
+    state.ai_conversation.append({"turn_no": state.llm_call_count, "question": request.prompt, "response": result["response"], "provider_label": "DeepSeek", "model": result["model"], "usage": result["usage"], "keywords": keywords, "phase": question_phase(state.llm_call_count)})
     save_session(state)
-    return {**result, "turn_no": state.llm_call_count}
+    return {**result, "turn_no": state.llm_call_count, "keywords": keywords, "phase": question_phase(state.llm_call_count)}
 
 
 @app.post("/api/sessions/{session_id}/decisions")

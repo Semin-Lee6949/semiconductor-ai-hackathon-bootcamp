@@ -28,7 +28,11 @@ export function EvidenceDrawer({ open, scenario, session, onClose }: { open: boo
           const stage = scenario.stages.find((candidate) => candidate.id === item.stage)
           const toolLabels = item.tools?.map((id) => scenario.tools[id]?.label).filter(Boolean).join(' + ')
           const conversation = Array.isArray(item.payload?.ai_conversation) ? item.payload.ai_conversation : []
-          return <li key={`${item.stage}-${index}`}><span>{String(item.decision_no ?? index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'investigation' && <details><summary>데이터 다운로드 · AI 문답 {conversation.length}회</summary>{conversation.map((exchange, turn) => <div key={turn}><strong>Q{turn + 1} · {String(exchange.model ?? '외부 AI')}</strong><p>{String(exchange.question ?? '')}</p><strong>RESPONSE</strong><p>{String(exchange.response ?? '')}</p></div>)}</details>}</div></li>
+          return <li key={`${item.stage}-${index}`}><span>{String(item.decision_no ?? index + 1).padStart(2, '0')}</span><div><b>{stage?.label}</b><p>{toolLabels || CHOICE_LABELS[item.choice] || item.choice}</p>{item.cost !== undefined && <small>{item.cost}C · {item.time}m</small>}{item.stage === 'investigation' && <details><summary>데이터 다운로드 · AI 문답 {conversation.length}회</summary>{conversation.map((exchange, turn) => {
+            const phase = exchange.phase && typeof exchange.phase === 'object' ? String(exchange.phase.label ?? '문답') : '문답'
+            const keywords = Array.isArray(exchange.keywords) ? exchange.keywords.map(String).join(' · ') : ''
+            return <div key={turn}><strong>Q{turn + 1} · {phase} · {String(exchange.model ?? '외부 AI')}</strong>{keywords && <small>KEYWORDS · {keywords}</small>}<p>{String(exchange.question ?? '')}</p><strong>RESPONSE</strong><p>{String(exchange.response ?? '')}</p></div>
+          })}</details>}</div></li>
         })}
       </ol>}
       <p className="drawer-note">현재 단계의 입력을 바꾸지 않고 완료된 판단만 보여줘.</p>

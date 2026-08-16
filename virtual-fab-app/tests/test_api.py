@@ -29,13 +29,13 @@ def decide(session_id: str, stage: str, choice: str, payload=None):
 
 def investigation_payload():
     return {
-        "prompt": "CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
+        "prompt": "CD CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
         "human_check": "CSV의 결측 플래그와 Lot·Tool·위치별 분포를 직접 계산해 AI 답변과 대조한다.",
         "llm_response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
         "llm_model": "Gemini",
         "ai_conversation": [{
             "turn_no": 1,
-            "question": "CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
+            "question": "CD CSV의 결측과 위치별 분포를 어떤 순서로 비교해야 하는지 알려줘.",
             "response": "결측을 분리한 뒤 Lot·Tool 층화와 CENTER·EDGE 분포를 비교하세요.",
             "provider_label": "Google Gemini",
             "model": "gemini-3.5-flash",
@@ -66,8 +66,11 @@ def test_controlled_path_solves_scenario():
     assert "data:image/svg+xml;base64" in report.text
     assert "테스트 지원자" in report.text
     assert "Gemini" in report.text
-    assert "CSV의 결측과 위치별 분포" in report.text
+    assert "CD CSV의 결측과 위치별 분포" in report.text
     assert "CENTER·EDGE 분포" in report.text
+    assert "PROCESS KEYWORD MAP" in report.text
+    assert "CD" in report.text
+    assert "id='total'>11" in report.text
 
 
 def test_catalog_and_all_scenarios_create_independent_sessions():
@@ -82,6 +85,9 @@ def test_catalog_and_all_scenarios_create_independent_sessions():
         assert session.status_code == 200
         assert session.json()["scenario_id"] == item["id"]
         assert session.json()["time_left"] == scenario.json()["limits"]["time"]
+        assert len(scenario.json()["keywords"]) == 6
+        assert all(keyword["term"] and keyword["meaning"] and keyword["relevance"] for keyword in scenario.json()["keywords"])
+        assert scenario.json()["keyword_sources"]
 
 
 def test_analysis_budget_is_enforced():
@@ -189,7 +195,7 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
 
     unverified = client.post(
         f"/api/sessions/{session_id}/llm/generate",
-        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
+        json={**credentials, "prompt": "CD 경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
     )
     assert unverified.status_code == 409
 
@@ -199,7 +205,7 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
 
     generated = client.post(
         f"/api/sessions/{session_id}/llm/generate",
-        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
+        json={**credentials, "prompt": "CD 경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 제안해줘."},
     )
     assert generated.status_code == 200
     assert generated.json()["usage"]["total_tokens"] == 120
@@ -207,13 +213,13 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
     for turn in range(2, 16):
         response = client.post(
             f"/api/sessions/{session_id}/llm/generate",
-            json={**credentials, "prompt": f"{turn}번째 질문으로 경쟁 가설과 반증 증거를 다시 비교해줘."},
+            json={**credentials, "prompt": f"{turn}번째 질문으로 CD 경쟁 가설과 반증 증거를 다시 비교해줘."},
         )
         assert response.status_code == 200
         assert response.json()["turn_no"] == turn
     limited = client.post(
         f"/api/sessions/{session_id}/llm/generate",
-        json={**credentials, "prompt": "경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
+        json={**credentials, "prompt": "CD 경쟁 가설 세 개와 각 가설을 반증할 최소 증거를 다시 비교해줘."},
     )
     assert limited.status_code == 429
 
@@ -224,6 +230,22 @@ def test_byok_requires_check_and_never_persists_api_key(monkeypatch):
     restored = main.load_session(session_id)
     assert restored.llm_call_count == 15
     assert len(restored.ai_conversation) == 15
+
+
+def test_byok_rejects_question_without_process_keyword(monkeypatch):
+    session_id = new_session()
+    decide(session_id, "incident", "hold")
+    credentials = {"provider": "gemini", "model": "gemini-3.5-flash", "api_key": "test-personal-key-abcdefghijklmnopqrstuvwxyz"}
+    monkeypatch.setattr(main, "check_llm_connection", lambda provider, model, key: {
+        "status": "connected", "provider": provider, "provider_label": "Google Gemini", "model": model,
+    })
+    assert client.post(f"/api/sessions/{session_id}/llm/check", json=credentials).status_code == 200
+    response = client.post(
+        f"/api/sessions/{session_id}/llm/generate",
+        json={**credentials, "prompt": "원인 가설과 다음 행동을 알려줘."},
+    )
+    assert response.status_code == 422
+    assert "공정 핵심 키워드" in response.json()["detail"]
 
 
 def test_byok_is_blocked_over_public_http():

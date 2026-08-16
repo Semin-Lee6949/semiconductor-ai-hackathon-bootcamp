@@ -50,9 +50,25 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
   - CVD
   - CMP
   - Device Characterization
+- 시나리오별 전문용어 6개:
+  - 용어 뜻과 현재 문제·데이터와의 관련성을 함께 표시
+  - 질문마다 최소 1개 공정 키워드 포함을 프론트엔드와 API에서 검증
+  - 공식 장비·공정 자료 링크 제공
+- 제한된 AI 문답 15회 운영 전략:
+  - 1–3회 용어·데이터 이해
+  - 4–7회 경쟁 가설
+  - 8–11회 반증·누락 점검
+  - 12–14회 판단 압축
+  - 15회 PT 최종 요약
+- 질문 작성기:
+  - 선택 키워드 + 현재 관찰 + 단계 목표 + 출력 형식을 구조화 프롬프트로 조합
+  - 질문·응답·모델·토큰·문답 단계·키워드를 세션에 보존
+  - Evidence trail과 11장 HTML PT에 문답 단계와 공정 키워드 맵 반영
 
 ## 4. 마지막 커밋
 
+- 최신 작업 — 공정별 키워드 사전·15회 문답 전략·질문 작성기·11장 PT 반영
+- `cbfc7c1` — 데이터 판단과 최대 15회 AI 코치 문답 통합, 최종 PT 다운로드 복구
 - `e57aa0b` — OpenAI·Gemini·Anthropic·DeepSeek 개인 API 연결(BYOK), 연결 확인, 프롬프트 분석
 - `2174252` — 데스크톱 캐릭터·좌측 카드 겹침 해소와 상단 단계 글자 확대
 - `91a7852` — 시나리오 seed·버전 기반 재현성과 세션 복원 강화
@@ -67,10 +83,10 @@ SK하이닉스 취업준비생을 위한 **반도체 공정 불량 해결 RPG**�
 ## 5. 검증 상태
 
 - `npm run build` 통과
-- Python 테스트 `14 passed`
-- 데스크톱 전체 시나리오와 PC·모바일 입실 E2E 통과
+- Python 테스트 `15 passed`
+- 데스크톱·모바일 전체 E2E `6 passed`
 - 공개 HTTPS 서버와 `/api/health` HTTP/2 200
-- 공개 주소에서 보안 컨텍스트·BYOK 입력 활성화·콘솔 오류 0건 확인
+- 공개 주소에서 공정 키워드 6개·문답 전략 5단계·구조화 질문 초안·콘솔 오류 0건 확인
 - Let's Encrypt 인증서 자동 갱신 설정(현재 만료일 2026-11-14)
 - Impeccable UI detector: 경고 0
 
@@ -87,7 +103,13 @@ systemctl --user restart virtual-fab.service
 ## 6. 수정 핵심 파일
 
 - `virtual-fab-app/src/CleanroomLobby.tsx`
+- `virtual-fab-app/src/App.tsx`
+- `virtual-fab-app/src/components/EvidenceDrawer.tsx`
+- `virtual-fab-app/src/components/PersonalAIConnector.tsx`
+- `virtual-fab-app/src/types.ts`
 - `virtual-fab-app/src/styles.css`
+- `virtual-fab-app/backend/main.py`
+- `virtual-fab-app/tests/test_api.py`
 - `virtual-fab-app/tests/e2e.spec.ts`
 
 ## 7. 다음 작업 원칙
