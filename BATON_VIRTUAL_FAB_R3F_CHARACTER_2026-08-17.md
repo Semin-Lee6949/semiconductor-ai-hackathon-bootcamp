@@ -104,6 +104,47 @@ cd ~/python/semiconductor-ai-hackathon-bootcamp
 codex -C . --search
 ```
 
+### $200 요금제·멀티에이전트 Full 품질 실행
+
+프로젝트에는 `.codex/config.toml`과 역할별 에이전트 5개가 포함되어 있다. `full`은 승인·샌드박스를 제거하는 의미가 아니라 **`gpt-5.6-sol` + `max` 추론 + 역할별 병렬 검증**을 뜻한다.
+
+```bash
+codex -C . --search \
+  -m gpt-5.6-sol \
+  -c 'model_reasoning_effort="max"' \
+  -s workspace-write \
+  -a on-request
+```
+
+이미지까지 첨부할 경우:
+
+```bash
+codex -C . --search \
+  -m gpt-5.6-sol \
+  -c 'model_reasoning_effort="max"' \
+  -s workspace-write \
+  -a on-request \
+  -i /절대경로/character-reference.png
+```
+
+CLI에서 `/agent`를 입력하면 실행 중이거나 완료된 서브에이전트 스레드를 확인할 수 있다.
+
+### 멀티에이전트 운영 순서
+
+1. 1차 병렬 읽기 작업
+   - `r3f_architect`: 코드·동작·장면 구조 분석
+   - `character_designer`: 서로 다른 캐릭터 디자인 3안
+   - `performance_auditor`: 현재 PC·모바일 성능과 겹침 기준선 측정
+2. 부모 에이전트가 세 결과를 기다린 뒤 하나의 비교안으로 통합한다.
+3. 사용자가 디자인 방향을 선택할 때까지 코드 수정을 시작하지 않는다.
+4. 선택 후 `character_implementer` 한 명만 소스코드를 수정한다.
+5. 구현 완료 후 다음 두 에이전트를 병렬 실행한다.
+   - `performance_auditor`: 전후 성능·레이아웃·모바일 재검증
+   - `regression_reviewer`: 코드·수명주기·회귀·테스트 검수
+6. 부모 에이전트가 결과를 통합하고, 필요한 수정은 다시 `character_implementer` 한 명에게만 전달한다.
+
+여러 writer가 같은 파일을 동시에 수정하도록 하지 않는다.
+
 캐릭터 참고 이미지를 함께 줄 경우:
 
 ```bash
@@ -116,9 +157,15 @@ Codex 입력창에 아래 프롬프트를 그대로 넣는다.
 BATON_VIRTUAL_FAB_R3F_CHARACTER_2026-08-17.md와 AGENTS.md를 먼저 읽어라.
 현재 virtual-fab-app의 FabScene.tsx와 CleanroomLobby.tsx에서 캐릭터 구현과 모바일 렌더링을 조사하라.
 
-바로 코드를 수정하지 말고 먼저 캐릭터 디자인 방향 3가지를 제시하라.
+1차로 r3f_architect, character_designer, performance_auditor 세 서브에이전트를 병렬로 실행하라.
+각 에이전트에 독립적이고 겹치지 않는 조사 범위를 주고, 세 에이전트가 모두 끝날 때까지 기다려라.
+결과를 통합한 뒤 바로 코드를 수정하지 말고 먼저 캐릭터 디자인 방향 3가지를 제시하라.
 각 방향마다 실루엣, 방진복 디테일, 애니메이션, 성능, 구현 위험을 비교하고 하나를 추천하라.
 내가 방향을 선택한 뒤에만 구현하라.
+
+선택 이후에는 character_implementer만 소스코드를 수정하게 하라. 다른 에이전트는 같은 파일을 수정하면 안 된다.
+구현이 끝나면 performance_auditor와 regression_reviewer를 병렬로 실행하고 둘 다 끝날 때까지 기다려라.
+검수 결과에 수정이 필요하면 character_implementer에게만 후속 수정을 맡기고 전체 검증을 반복하라.
 
 구현 범위는 3D 캐릭터와 그 접지·가독성에 한정한다.
 시나리오, CSV, AI 문답, 점수, FastAPI 계약은 변경하지 마라.
@@ -471,4 +518,3 @@ Codex는 작업 종료 시 다음을 보고한다.
   - `virtual-fab-mvp/`
 
 따라서 다른 PC에서 pull하기 전에 이 바톤과 `fee8df7`가 원격에 push됐는지 확인한다.
-
