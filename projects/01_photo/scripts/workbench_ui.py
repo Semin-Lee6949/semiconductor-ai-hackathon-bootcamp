@@ -16,7 +16,7 @@ from model_validation import MODEL2, data_quality_sensitivity, lot_group_validat
 
 PREDICTION = "predicted_resist_line_cd_nm"
 BLIND_REQUIRED = {"sample_id", "pr_tone", "tool_id", "normalized_dose_pct"}
-TABS = ["1 · Engineering Summary", "2 · Data Audit", "3 · Variable Lab & EDA", "4 · Model Lab", "5 · What-if Simulator", "6 · Validation", "7 · Blind Prediction", "8 · Limitations"]
+TABS = ["1 · Engineering Summary", "2 · Data Audit", "3 · Variable Lab & EDA", "4 · Model Lab", "5 · What-if Simulator", "6 · Validation", "7 · Blind Prediction", "8 · Final Engineering Report"]
 PARAMETER_GUIDE = {
     "normalized_dose_pct": ("Normalized Dose", "%", "기준 노광량 대비 실제 노광량의 상대 비율", "PR tone별로 CD 반응 방향과 민감도가 달라지는지 확인합니다.", "같은 Tool·재료에서도 dose 조정에 따라 CD가 일관된 방향으로 움직이는가?"),
     "focus_um": ("Focus Offset", "µm", "기준 초점 위치에서 벗어난 정도", "최적 초점 주변에서는 직선보다 곡률이나 대칭성이 더 중요할 수 있습니다.", "0 근처에서 CD가 안정적인가, 양·음 방향의 비대칭 또는 공정창 축소가 있는가?"),
@@ -46,8 +46,9 @@ def theme():
     .parameter-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.05rem;margin:.55rem 0;box-shadow:0 7px 18px #0b27400b}.parameter-head{display:flex;justify-content:space-between;gap:1rem;align-items:center}.parameter-head b{color:var(--navy);font-size:1rem}.parameter-head em{font-style:normal;color:var(--navy2);background:#e5eef4;border-radius:99px;padding:.18rem .6rem;font-size:.72rem}.parameter-code{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.76rem}.parameter-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.75rem}.parameter-grid div{background:#f7fafc;border-radius:9px;padding:.7rem}.parameter-grid strong{display:block;color:var(--navy2);font-size:.76rem;margin-bottom:.25rem}.parameter-grid span{color:var(--muted);font-size:.8rem;line-height:1.5}
     .finding{background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy2);border-radius:0 12px 12px 0;padding:.9rem 1rem;margin:.55rem 0}.finding b{color:var(--navy)}.finding span{display:block;color:var(--muted);font-size:.84rem;margin-top:.25rem}.decision{background:linear-gradient(135deg,#071a2b,#174d72);color:#fff;border-radius:14px;padding:1rem 1.15rem;margin:.65rem 0}.decision b{color:#9ed7ea}.decision span{display:block;color:#e0edf3;font-size:.86rem;line-height:1.55;margin-top:.25rem}.cannot{background:#fff7f2;border:1px solid #e8c8b8;border-left:5px solid #b85f4b;border-radius:0 12px 12px 0;padding:1rem;color:#744334}
     .engineer{background:linear-gradient(145deg,#f7fbfd,#fff);border:1px solid #cbdde7;border-radius:14px;padding:1rem 1.1rem;margin:1rem 0;box-shadow:0 8px 22px #0b27400d}.engineer-head{color:var(--navy);font-weight:900;margin-bottom:.65rem}.engineer-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}.engineer-grid div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:.72rem}.engineer-grid b{display:block;color:var(--navy2);font-size:.76rem;margin-bottom:.25rem}.engineer-grid span{color:var(--muted);font-size:.81rem;line-height:1.5}.engineer-limit{margin-top:.65rem;color:#835647;font-size:.76rem}
+    .report-flow{display:grid;grid-template-columns:repeat(6,1fr);gap:.45rem;margin:1rem 0}.report-flow div{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy2);border-radius:10px;padding:.7rem;text-align:center;color:var(--navy);font-size:.76rem;font-weight:850}.report-section{background:#fff;border:1px solid var(--line);border-radius:15px;padding:1.15rem;margin:.8rem 0;box-shadow:0 8px 24px #0b27400c}.report-section h4{margin:0 0 .6rem;color:var(--navy)}.report-section p,.report-section li{color:var(--muted);line-height:1.65}.risk-card{background:#fff7f2;border:1px solid #e6c8ba;border-radius:12px;padding:.9rem;margin:.55rem 0}.risk-card b{color:#874c3b}.risk-card span{display:block;color:#735f58;font-size:.83rem;line-height:1.55;margin-top:.25rem}
     .cd-scheme{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.3rem;box-shadow:0 10px 28px #0b274012}.cd-scheme-title{color:var(--navy);font-weight:850;margin-bottom:1rem}.wafer-row{display:grid;grid-template-columns:95px 1fr 100px;gap:1rem;align-items:center;margin:.9rem 0}.wafer-label{color:var(--muted);font-weight:750}.wafer-window{height:58px;background:repeating-linear-gradient(135deg,#edf3f6,#edf3f6 8px,#e5edf1 8px,#e5edf1 16px);border-radius:9px;display:flex;align-items:center;justify-content:center;overflow:hidden}.cd-line{height:38px;border-radius:5px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px #0b274030}.cd-line.ref{background:#8ba1b0}.cd-line.pred{background:linear-gradient(90deg,#174d72,#36a0bd)}.wafer-value{font-weight:900;color:var(--navy);text-align:right}.delta-pill{display:inline-block;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.35rem .75rem;font-weight:800;margin-top:.35rem}
-    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid,.schema-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid,.schema-grid,.parameter-grid,.engineer-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
+    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid,.schema-grid,.report-flow{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid,.schema-grid,.parameter-grid,.engineer-grid,.report-flow{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
     </style>""", unsafe_allow_html=True)
 
 
@@ -340,6 +341,93 @@ def engineering_summary(data, baseline, flags, quality_summary, custom):
     st.caption("요약에서 발견한 질문을 EDA로 확인하고, Custom Model로 비교한 뒤, What-if를 탐색하고 반복·Lot 검증에서 안정성을 확인하세요.")
 
 
+def final_engineering_report(raw, data, duplicates, flags, baseline, quality_summary, repeated, lots, custom, classifier):
+    st.header("Final Engineering Report · 판단과 검증 계획")
+    guide("보고서 읽는 순서", "현황을 숫자로 고정한 뒤, 확실한 관찰과 미확정 가설을 분리하고, 예상 문제상황마다 확인 방법과 완료 기준을 연결합니다.")
+    st.markdown('<div class="report-flow"><div>1 · 문제</div><div>2 · 데이터 신뢰도</div><div>3 · 관찰 신호</div><div>4 · 대안 설명</div><div>5 · 검증</div><div>6 · Action</div></div>', unsafe_allow_html=True)
+
+    n_raw, n_analysis = len(raw), len(data); flagged_n = flags.sample_id.nunique() if not flags.empty else 0
+    missing_cells = int(raw.isna().sum().sum()); flagged_pct = 100 * flagged_n / max(n_analysis, 1); duplicate_pct = 100 * duplicates / max(n_raw, 1)
+    tone = data[data.pr_tone_group.isin(["POSITIVE", "NEGATIVE"])].groupby("pr_tone_group")[TARGET].agg(["count", "mean", "std"])
+    pos_n, neg_n = int(tone.loc["POSITIVE", "count"]), int(tone.loc["NEGATIVE", "count"])
+    pos_share, neg_share = 100 * pos_n / n_analysis, 100 * neg_n / n_analysis
+    std_ratio = float(tone.loc["NEGATIVE", "std"] / tone.loc["POSITIVE", "std"])
+    coef = baseline.coefficients.set_index("term")["coefficient"]
+    pos_slope = float(coef["dose_centered"]); neg_slope = pos_slope + float(coef.get("dose_x_pr_tone_NEGATIVE", 0))
+    tool = data.groupby("tool_id_group")[TARGET].agg(["count", "mean", "std"]); tool_gap = float(tool["mean"].max() - tool["mean"].min()); widest_tool = str(tool["std"].idxmax())
+    m2 = repeated[repeated.model.eq("Model 2")]; repeated_mean = float(m2.validation_r2.mean()); repeated_std = float(m2.validation_r2.std(ddof=1)); pos_ok = int((m2.positive_dose_slope_nm_per_pct_point < 0).sum()); neg_ok = int((m2.negative_dose_slope_nm_per_pct_point > 0).sum())
+    q = quality_summary[quality_summary.metric.eq("validation_r2")].set_index("condition"); q_inc=float(q.loc["A_including_flagged","mean"]); q_exc=float(q.loc["B_excluding_5_flagged_rows","mean"]); q_inc_std=float(q.loc["A_including_flagged","std"]); q_exc_std=float(q.loc["B_excluding_5_flagged_rows","std"])
+    stability_reduction = 100 * (q_inc_std - q_exc_std) / max(q_inc_std, 1e-12)
+    worst = lots.loc[lots.validation_r2.idxmin()]
+
+    st.subheader("1 · 현황 요약")
+    overview = pd.DataFrame([
+        ["원본 → 분석 행", f"{n_raw:,} → {n_analysis:,}", f"완전 중복 추가행 {duplicates}개({duplicate_pct:.2f}%) 제거; 원본 파일은 보존"],
+        ["데이터 품질", f"결측 {missing_cells:,}셀 · 오류 후보 {flagged_n}행({flagged_pct:.2f}%)", "후보는 포함한 채 주 분석, 제외 조건은 민감도 비교만 수행"],
+        ["PR tone 구성", f"Positive {pos_n}행({pos_share:.1f}%) · Negative {neg_n}행({neg_share:.1f}%)", "MISSING/Target 결측 때문에 합계가 분석 행과 다를 수 있음"],
+        ["기준 Model 2", f"R² {baseline.metrics['validation_r2']:.3f} · RMSE {baseline.metrics['validation_rmse_nm']:.3f} nm · MAE {baseline.metrics['validation_mae_nm']:.3f} nm", "단일 고정 분할 결과; 최종 성능으로 과장하지 않음"],
+    ], columns=["항목", "현재 숫자", "판단 기준"])
+    st.dataframe(overview, width="stretch", hide_index=True)
+    engineer_note(f"원본 {n_raw}행 중 중복 {duplicates}행과 오류 후보 {flagged_n}행이 확인됐고, tone 구성은 Positive {pos_share:.1f}%와 Negative {neg_share:.1f}%입니다.", "분석 숫자를 보기 전에 표본 구성과 입력 신뢰도를 고정해야 모델 성능과 공정 차이를 잘못 해석하지 않습니다.", "오류 후보 원자료와 tone×Tool 표본 구성을 먼저 승인한 뒤 모델 결과를 검토합니다.", "오류 후보는 자동 삭제 근거가 아니며 현재 통계는 관찰 데이터 요약입니다.")
+
+    st.subheader("2 · 숫자로 확인된 핵심 관찰")
+    evidence = pd.DataFrame([
+        ["Dose 방향", f"Positive {pos_slope:+.3f} nm/%p · Negative {neg_slope:+.3f} nm/%p", f"반복 방향 {pos_ok}/30, {neg_ok}/30", "tone별 DOE 우선순위 신호"],
+        ["CD 산포", f"Positive σ={tone.loc['POSITIVE','std']:.3f} · Negative σ={tone.loc['NEGATIVE','std']:.3f} nm", f"Negative/Positive={std_ratio:.2f}배 ({(std_ratio-1)*100:+.1f}%)", "모집단 차이 확정 전 구성·극단값 검토"],
+        ["Tool level", f"Tool 평균 최대 차이 {tool_gap:.3f} nm", f"최대 산포 Tool={widest_tool}, σ={tool.loc[widest_tool,'std']:.3f} nm", "Dose와 별도 교란 후보"],
+        ["반복 성능", f"30회 R² {repeated_mean:.3f} ± {repeated_std:.3f}", f"단일 R² {baseline.metrics['validation_r2']:.3f}", "평균과 흔들림을 함께 승인"],
+        ["데이터 품질 민감도", f"후보 포함/제외 R² {q_inc:.3f}/{q_exc:.3f}", f"R² std {q_inc_std:.3f}/{q_exc_std:.3f} ({stability_reduction:.1f}% 감소)", "삭제보다 원자료 확인 우선"],
+    ], columns=["관찰", "결과", "비교 숫자", "엔지니어 판단"])
+    st.dataframe(evidence, width="stretch", hide_index=True)
+
+    st.subheader("3 · 확실한 것과 아직 확신하지 못한 것")
+    st.markdown(f'''<div class="report-section"><h4>현재 데이터에서 반복 확인된 신호</h4><ul>
+    <li>Model 2의 dose 방향은 Positive 음(-) {pos_ok}/30회, Negative 양(+) {neg_ok}/30회 유지됐습니다.</li>
+    <li>Tool 평균 CD 최대 차이는 {tool_gap:.3f} nm이며, {widest_tool}의 기술통계 산포가 가장 큽니다.</li>
+    <li>오류 후보 포함/제외에 따라 반복 R² 평균이 {q_inc:.3f}에서 {q_exc:.3f}으로 달라져 데이터 품질 민감성이 확인됩니다.</li></ul></div>''', unsafe_allow_html=True)
+    st.markdown(f'''<div class="report-section"><h4>아직 확신할 수 없는 것 · 이렇게 확인합니다</h4><ul>
+    <li><b>최적 Dose:</b> 현재 slope만으로 결정하지 않고 tone별 Dose level 반복 DOE에서 CD 평균·σ·IQR·결함을 함께 확인합니다.</li>
+    <li><b>Tool 원인:</b> {widest_tool} 산포가 Tool 자체 때문인지 calibration·PM·Lot 구성 때문인지 동일 tone×dose 조건과 시간 로그로 분리합니다.</li>
+    <li><b>입력 오류:</b> 후보 {flagged_n}행을 삭제하지 않고 설비·recipe 원본과 단위를 대조한 뒤 근거가 있을 때만 버전 관리된 보정본을 만듭니다.</li>
+    <li><b>일반화 성능:</b> 30회 R² 표준편차 {repeated_std:.3f}와 worst Lot fold R² {worst.validation_r2:.3f}을 고려해 unseen Lot에서 재확인합니다.</li></ul></div>''', unsafe_allow_html=True)
+
+    st.subheader("4 · 예상 문제상황과 개선 방법")
+    risks = [
+        ("Tone 혼합으로 방향 상쇄", f"Positive {pos_slope:+.3f}, Negative {neg_slope:+.3f} nm/%p를 한 기울기로 합치면 잘못된 recipe 판단 가능", "tone별 모델·관리도·Process Window 분리"),
+        ("입력 오류로 모델 불안정", f"오류 후보 제외 시 R² std가 {stability_reduction:.1f}% 감소", "원자료 검증, 단위 validation rule, 입력 범위 경고와 변경 로그"),
+        ("Tool baseline drift/편중", f"Tool 평균 gap {tool_gap:.3f} nm, 최대 산포 {widest_tool}", "동일 조건 Tool matching, calibration/PM 전후 trend, Lot-balanced sampling"),
+        ("극단 Lot에서 성능 저하", f"worst fold R² {worst.validation_r2:.3f}, RMSE {worst.validation_rmse_nm:.3f} nm", "큰 잔차 sample과 validation Lot의 재료·장비·recipe metadata 추적"),
+        ("What-if 외삽 오판", "학습 min/max 밖 조건은 데이터 근거가 없음", "관측 범위 안에서 후보를 좁히고 범위 밖은 DOE로 새 데이터 확보"),
+    ]
+    if classifier: risks.append(("PASS/FAIL 분류력 부족", f"Logistic AUC {classifier.metrics['validation_roc_auc']:.3f}, Accuracy {classifier.metrics['validation_accuracy']:.3f} vs majority {classifier.metrics['majority_baseline_accuracy']:.3f}", "기준모델을 넘기 전 배포 금지; label·불균형·누락 변수를 재검토"))
+    for title, signal, improvement in risks: st.markdown(f'<div class="risk-card"><b>{html.escape(title)}</b><span>예상 신호 · {html.escape(signal)}<br>개선 방법 · {html.escape(improvement)}</span></div>', unsafe_allow_html=True)
+
+    st.subheader("5 · 우선순위 Action Plan")
+    actions = pd.DataFrame([
+        ["P0", "입력 오류 후보 원자료 확인", f"{flagged_n}행의 값·단위·소수점·설비 로그 일치", "수정 근거와 원본/보정 버전 기록"],
+        ["P1", "Tool baseline 및 산포 확인", f"{widest_tool} 포함 Tool별 동일 tone×dose 비교", "Tool별 mean/σ와 calibration·PM·Lot 설명 가능"],
+        ["P1", "Tone×Dose DOE", "tone별 최소 3수준 dose와 반복, Tool block", "방향 재현 + 후보 영역의 CD 평균·산포 동시 충족"],
+        ["P2", "Focus 비선형 DOE", "0 주변 대칭 level과 반복", "곡률·비대칭 및 tone/Tool interaction 판단"],
+        ["P3", "최종 Holdout 평가", "모델·변수·전처리 동결 후 정답 공개", "R²/RMSE/MAE와 실패 Lot 기록; 재튜닝 금지"],
+    ], columns=["우선순위", "Action", "확인 방법", "완료 기준"])
+    st.dataframe(actions, width="stretch", hide_index=True)
+
+    custom_text = "Custom Model 미생성"
+    if custom: custom_text = f"{custom.name} Validation R² {custom.metrics['validation_r2']:.3f} (Model 2 대비 {custom.metrics['validation_r2']-baseline.metrics['validation_r2']:+.3f})"
+    final_text = f"""Photo Process Analysis Workbench 최종 요약
+- 분석 데이터: {n_analysis}/{n_raw}행, 입력 오류 후보 {flagged_n}행({flagged_pct:.2f}%)
+- Model 2: Validation R² {baseline.metrics['validation_r2']:.3f}, RMSE {baseline.metrics['validation_rmse_nm']:.3f} nm, MAE {baseline.metrics['validation_mae_nm']:.3f} nm
+- 반복 검증: R² {repeated_mean:.3f} ± {repeated_std:.3f}
+- Dose slope: Positive {pos_slope:+.3f}, Negative {neg_slope:+.3f} nm/%p; 방향 반복 {pos_ok}/30, {neg_ok}/30
+- Tool 평균 CD gap: {tool_gap:.3f} nm; 최대 산포 Tool {widest_tool}
+- 품질 민감도: 오류 후보 포함/제외 R² {q_inc:.3f}/{q_exc:.3f}
+- Custom: {custom_text}
+- 인간 판단: 최적 recipe를 확정하지 않고 입력 검증 → Tool matching → tone별 Dose DOE → Focus DOE → 동결 Holdout 순으로 확인한다.
+"""
+    st.download_button("현재 결과 요약 TXT 다운로드", final_text.encode("utf-8-sig"), "photo_engineering_summary.txt", "text/plain")
+    st.markdown('<div class="cannot"><b>최종 결론의 경계</b><br>이 보고서는 현재 관찰 데이터에서 다음 검증 순서를 정합니다. 최적 Recipe, 인과효과, 실제 Fab 일반법칙 또는 품질 보증을 확정하지 않습니다.</div>', unsafe_allow_html=True)
+
+
 def run(project: Path):
     st.set_page_config(page_title="Photo Process Analysis Workbench", page_icon="🔬", layout="wide")
     theme(); default_path = project / "data" / "A" / "train.csv"
@@ -508,5 +596,4 @@ def run(project: Path):
         st.info("Target CD가 없는 CSV/XLSX 업로드 시 고정 Model 2 예측과 다운로드가 활성화됩니다.")
         engineer_note("현재 분석 데이터에는 실제 CD Target이 있어 Analysis Mode로 실행 중입니다.", "Blind Holdout은 정답을 숨긴 최종 예측용이며 모델 선택이나 변수 튜닝에 사용하면 평가 누수가 발생합니다.", "모델 구조를 확정한 뒤 Holdout 예측을 저장하고, 정답 공개 후에만 최종 성능을 한 번 평가합니다.", "정답 없는 Holdout에서는 R²·RMSE·MAE를 계산할 수 없습니다.")
     with tabs[7]:
-        st.warning("관찰 데이터이므로 인과효과를 확정할 수 없습니다. What-if/Sweep은 모델 예측이며 Random Forest와 Holdout 튜닝은 사용하지 않습니다.")
-        engineer_note("현재 결과는 특정 교육용 데이터와 관찰 범위에서 얻었습니다.", "좋은 엔지니어는 모델 점수보다 데이터 생성 구조, 누락 변수, 외삽, 재현 가능성을 먼저 확인합니다.", "결론마다 원자료 확인 항목·대안 가설·DOE·최종 Holdout 평가 조건을 문서화합니다.", "실제 Fab recipe 일반법칙, 최적 조건, 인과효과 또는 품질 보증으로 확대할 수 없습니다.")
+        final_engineering_report(raw, data, duplicates, flags, baseline, quality_summary, repeated, lots, st.session_state.get("custom_model"), st.session_state.get("logistic_model"))

@@ -1,5 +1,13 @@
 # AI 사용 기록
 
+## 2026-08-21 — Final Engineering Report
+
+- AI 작업: 마지막 탭을 문제 → 데이터 신뢰도 → 관찰 신호 → 대안 설명 → 검증 → Action의 사고 흐름을 따르는 동적 최종 보고서로 구성했다. 현재 업로드 데이터의 행·결측·오류 후보 비율, tone 구성, 산포 차이, dose slope, Tool gap, 단일·반복·Lot 성능, 품질 민감도와 최신 Custom/Logistic 결과를 사용한다.
+- 판단 분리: 반복 확인된 관찰과 아직 확신할 수 없는 최적 Dose·Tool 원인·입력 오류·일반화 성능을 분리하고, 각각 원자료 대조·Tool matching·tone×dose DOE·unseen Lot 검증으로 확인하도록 작성했다.
+- 위험 시나리오: tone 혼합, 입력 오류, Tool drift/편중, 극단 Lot, 외삽 및 약한 Logistic 분류력을 현재 숫자와 연결해 예상 문제상황과 개선 방법으로 표시한다.
+- Action Plan: P0 입력 검증부터 P1 Tool/tone-dose, P2 Focus DOE, P3 동결 Holdout까지 확인 방법과 완료 기준을 표로 제공하고 현재 요약 TXT 다운로드를 추가했다.
+- 해석 경계: 보고서는 다음 검증 순서를 정하며 최적 recipe, 인과효과, 실제 Fab 일반법칙 또는 품질 보증을 확정하지 않는다.
+
 ## 2026-08-21 — 전 탭 엔지니어 교육 해설
 
 - AI 작업: Data Audit부터 EDA, Linear/Ridge/Logistic, What-if, 반복·품질·Lot·방향 Validation, Blind Prediction, Limitations까지 각 결과 아래에 `데이터에서 보이는 것 → 엔지니어의 생각 → 다음 관리·검증 Action → 주의점` 카드를 추가했다.
