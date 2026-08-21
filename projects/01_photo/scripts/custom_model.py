@@ -10,8 +10,9 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge
+from sklearn.metrics import accuracy_score, log_loss, mean_absolute_error, mean_squared_error, r2_score, roc_auc_score
+from sklearn.preprocessing import StandardScaler
 
 from baseline_regression import TARGET, TrainOnlyFeatureBuilder
 from model_validation import MODEL2, repeated_split
@@ -102,6 +103,26 @@ class CustomFeatureBuilder:
         return result
 
 
+class ScaledFeatureBuilder:
+    """Train-only standardization wrapper used by regularized models."""
+    def __init__(self, base: CustomFeatureBuilder):
+        self.base = base
+
+    def fit(self, train: pd.DataFrame) -> "ScaledFeatureBuilder":
+        self.base.fit(train); self.feature_names = self.base.feature_names
+        self.scaler = StandardScaler().fit(self.base.transform(train)[self.feature_names])
+        self.inputs = self.base.inputs; self.ranges = self.base.ranges; self.medians = self.base.medians; self.levels = self.base.levels
+        self.dose_tone_interaction = self.base.dose_tone_interaction
+        return self
+
+    def transform(self, frame: pd.DataFrame) -> pd.DataFrame:
+        raw = self.base.transform(frame)[self.feature_names]
+        return pd.DataFrame(self.scaler.transform(raw), columns=self.feature_names, index=frame.index)
+
+    def unseen_categories(self, frame: pd.DataFrame) -> dict[str, list[str]]:
+        return self.base.unseen_categories(frame)
+
+
 @dataclass
 class FittedLinearModel:
     name: str
@@ -120,6 +141,23 @@ class FittedLinearModel:
         return self.model.predict(self.builder.transform(frame)[self.builder.feature_names])
 
 
+@dataclass
+class FittedClassificationModel:
+    name: str
+    target: str
+    inputs: list[str]
+    interaction: bool
+    builder: object
+    model: LogisticRegression
+    metrics: dict[str, float]
+    coefficients: pd.DataFrame
+
+    def predict_probability(self, frame: pd.DataFrame) -> np.ndarray:
+        unseen = self.builder.unseen_categories(frame)
+        if unseen: raise ValueError(f"Unseen categories: {unseen}")
+        return self.model.predict_proba(self.builder.transform(frame)[self.builder.feature_names])[:, 1]
+
+
 def _metrics(model: LinearRegression, builder, train: pd.DataFrame, validation: pd.DataFrame, target: str):
     train_prediction = model.predict(builder.transform(train)[builder.feature_names])
     validation_prediction = model.predict(builder.transform(validation)[builder.feature_names])
@@ -133,8 +171,10 @@ def _metrics(model: LinearRegression, builder, train: pd.DataFrame, validation: 
 
 
 def _coefficient_table(model: LinearRegression, names: list[str]) -> pd.DataFrame:
-    rows = [{"term": "intercept", "coefficient": float(model.intercept_)}]
-    rows.extend({"term": term, "coefficient": float(value)} for term, value in zip(names, model.coef_))
+    intercept = float(np.asarray(model.intercept_).reshape(-1)[0])
+    coefficients = np.asarray(model.coef_).reshape(-1)
+    rows = [{"term": "intercept", "coefficient": intercept}]
+    rows.extend({"term": term, "coefficient": float(value)} for term, value in zip(names, coefficients))
     return pd.DataFrame(rows)
 
 
@@ -144,16 +184,44 @@ def fit_custom_model(
     dose_tone_interaction: bool,
     target: str = TARGET,
     seed: int = 42,
+    model_kind: str = "Linear Regression",
+    ridge_alpha: float = 1.0,
 ) -> FittedLinearModel:
     frame = data[data[target].notna()].copy()
     train, validation = repeated_split(frame, seed)
-    builder = CustomFeatureBuilder(inputs, dose_tone_interaction).fit(train)
-    model = LinearRegression().fit(builder.transform(train)[builder.feature_names], train[target])
+    if model_kind == "Ridge Regression":
+        builder = ScaledFeatureBuilder(CustomFeatureBuilder(inputs, dose_tone_interaction)).fit(train)
+        model = Ridge(alpha=ridge_alpha).fit(builder.transform(train)[builder.feature_names], train[target])
+    elif model_kind == "Linear Regression":
+        builder = CustomFeatureBuilder(inputs, dose_tone_interaction).fit(train)
+        model = LinearRegression().fit(builder.transform(train)[builder.feature_names], train[target])
+    else: raise ValueError(f"Unsupported regression model: {model_kind}")
     return FittedLinearModel(
-        "Custom Model", target, list(inputs), builder.dose_tone_interaction, builder, model,
+        model_kind, target, list(inputs), builder.dose_tone_interaction, builder, model,
         _metrics(model, builder, train, validation, target),
         _coefficient_table(model, builder.feature_names),
     )
+
+
+def fit_logistic_model(data: pd.DataFrame, inputs: list[str], dose_tone_interaction: bool, seed: int = 42) -> FittedClassificationModel:
+    target = "spec_pass"
+    frame = data[data[target].notna()].copy(); frame[target] = frame[target].astype(str).str.upper().map({"FAIL": 0, "PASS": 1})
+    frame = frame[frame[target].notna()].copy(); train, validation = repeated_split(frame, seed)
+    builder = ScaledFeatureBuilder(CustomFeatureBuilder(inputs, dose_tone_interaction)).fit(train)
+    model = LogisticRegression(max_iter=2000, random_state=seed).fit(builder.transform(train)[builder.feature_names], train[target].astype(int))
+    train_probability = model.predict_proba(builder.transform(train)[builder.feature_names])[:, 1]
+    validation_probability = model.predict_proba(builder.transform(validation)[builder.feature_names])[:, 1]
+    validation_prediction = (validation_probability >= .5).astype(int)
+    majority_class = int(train[target].mean() >= .5)
+    metrics = {
+        "train_accuracy": accuracy_score(train[target], train_probability >= .5),
+        "validation_accuracy": accuracy_score(validation[target], validation_prediction),
+        "majority_baseline_accuracy": accuracy_score(validation[target], np.full(len(validation), majority_class)),
+        "validation_roc_auc": roc_auc_score(validation[target], validation_probability),
+        "validation_log_loss": log_loss(validation[target], validation_probability),
+        "n_train": len(train), "n_validation": len(validation),
+    }
+    return FittedClassificationModel("Logistic Regression", target, list(inputs), builder.dose_tone_interaction, builder, model, metrics, _coefficient_table(model, builder.feature_names))
 
 
 def fit_fixed_model2(data: pd.DataFrame, seed: int = 42) -> FittedLinearModel:

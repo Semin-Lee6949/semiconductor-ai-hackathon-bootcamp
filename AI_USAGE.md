@@ -1,5 +1,32 @@
 # AI 사용 기록
 
+## 2026-08-21 — Ridge 및 Logistic 교육용 Model Lab
+
+- AI 작업: CD 연속값 예측에는 Linear/Ridge Regression을 선택할 수 있게 하고, PASS/FAIL 분류에는 별도 Logistic Regression을 추가했다. 모든 모델은 공정 Input만 사용하고 동일 고정 분할과 Train-only 전처리를 적용했다.
+- 교육 설명: Linear·Ridge·Logistic의 문제 유형, Ridge alpha와 표준화 계수, R²/RMSE/MAE, Accuracy·다수 클래스 기준·ROC-AUC·Log Loss, 조건부 계수의 의미를 화면에 설명했다.
+- 안전장치: Logistic은 CD 예측이나 CD What-if에 사용하지 않고 `spec_pass`를 Target으로만 사용한다. 분류 Accuracy가 다수 클래스 기준 이하이거나 ROC-AUC 0.6 미만이면 모델 생성 성공과 실용 성능을 구분하도록 경고한다.
+- 기존 기준 보존: 기본 Linear 설정은 기존 Model 2 구조와 결과를 유지하며 Ridge/Logistic은 교육용 비교 모델로만 추가했다. Random Forest와 Holdout 튜닝은 사용하지 않았다.
+
+## 2026-08-21 — Engineering Summary 결과 대시보드
+
+- AI 작업: 앱의 첫 탭에 현재 데이터의 tone별 CD 표본수·평균·표준편차·IQR·범위, Model 2 tone별 dose slope, Tool별 평균·표본수·조건부 Tool 계수를 통합한 Engineering Summary를 추가했다.
+- 판단 지원: 데이터 품질 민감도와 최신 Custom Model의 Validation R² 차이를 Key Findings에 반영하고, 추천 Recipe가 아니라 tone별 Process Window·변동성·Tool baseline·DOE에서 다음으로 검증할 Action을 제안했다.
+- 안전장치: 기술통계의 표준편차 비율은 표본 구성과 검정 전에는 모집단 차이로 확정하지 않는다. slope·Tool 계수는 모델 기반 조건부 관계이며 인과효과가 아니고, 최적 Recipe·Fab 일반법칙·외삽 신뢰성을 확정할 수 없다고 별도 경고했다.
+- 기존 기능: Data Audit부터 Blind Prediction과 Limitations까지 기존 탭은 순서만 이동했으며 Model 2 로직, outputs, report와 Holdout 비튜닝 원칙은 변경하지 않았다.
+
+## 2026-08-21 — Variable Lab 교육용 공정 해설
+
+- AI 작업: Target과 선택 공정변수마다 의미·단위·CD와 함께 보는 이유·엔지니어가 이어서 물어야 할 질문을 Variable Lab에 추가했다. 상관행렬 아래에는 현재 데이터의 최대 절대 상관, tone별 Dose–CD 상관, Focus 비선형 주의 등 데이터 기반 사고 방향을 자동 표시했다.
+- 인간 판단 지원: 화면 문장은 결과를 원인으로 확정하지 않고 공정조건 연동, Tool/Lot 편중, 다중공선성, 원자료 및 DOE 확인으로 이어지는 질문 형태로 작성했다.
+- 해석 제한: 파라미터 설명은 교육용 공정 맥락이며 현재 합성 데이터에서 실제 recipe 법칙이나 인과효과가 증명됐다는 의미가 아니다.
+
+## 2026-08-21 — 오류 후보 Action 근거와 상관행렬 추가
+
+- AI 작업: Data Audit의 입력·단위 오류 후보마다 원자료 대조 방법과 해당 확인이 필요한 분석적 이유를 변수별 한글 문장으로 표시했다. Variable Lab & EDA에는 사용자가 선택한 숫자형 Input과 Target CD의 Pearson 상관계수 행렬을 추가했다.
+- 그룹 분리: 상관행렬은 전체·Positive·Negative를 선택해 비교할 수 있게 하여 PR tone 혼합이 관계를 가리는지 검토하도록 했다.
+- 해석 제한: 상관행렬은 선형 동행과 다중공선성 검토 도구이며 인과관계, 비선형 관계 부재 또는 공정효과를 증명하지 않는다고 명시했다.
+- 데이터 처리: 오류 후보 기준, 원본 행, 모델과 기존 outputs는 변경하지 않았다.
+
 ## 2026-08-21 — Data Audit 가독성 보완
 
 - AI 작업: 컬럼을 식별·그룹, 공정 입력, Target, CD 이후 결과(leakage 금지), 기타 메타데이터 카드로 분류하고 상세 dtype·결측·고유값 표를 접이식으로 제공했다. 숫자 변환 실패가 0건이면 불필요한 0 표 대신 정상 메시지를 표시하도록 변경했다.
