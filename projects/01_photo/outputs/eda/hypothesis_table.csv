@@ -1,0 +1,8 @@
+﻿variable,photo_process_meaning,reason_expected_to_relate_to_cd,expected_direction_pre_eda,counter_hypothesis_or_confounder
+normalized_dose_pct,기준 dose 대비 실제 노광량의 비율,노광량은 PR 반응·용해도와 잔존 선폭을 바꿀 수 있음,"Positive: 음(-), Negative: 양(+)","retained pattern 정의, dose 범위, focus·PEB 및 tone별 chemistry가 방향을 바꿀 수 있음"
+focus_um,최적 초점면 대비 defocus,영상 contrast와 aerial-image 선폭이 focus offset에 따라 달라질 수 있음,확인 필요,0을 중심으로 한 비선형·비대칭 관계일 수 있고 tool/field 및 dose와 교란될 수 있음
+coat_thickness_nm,도포 후 PR 막 두께,흡광·standing wave·현상 경로 길이가 유효 CD에 관련될 수 있음,확인 필요,두께 범위 내 영향이 작거나 bake/tool/PR 조성과 함께 변한 결과일 수 있음
+softbake_temp_c,노광 전 용매 제거를 위한 softbake 온도,잔류 용매와 감도·막 특성을 변화시켜 CD와 관련될 수 있음,확인 필요,시간 정보가 없고 좁은 공정창에서는 관계가 약하거나 PEB·두께와 교란될 수 있음
+peb_temp_c,노광 후 반응 확산을 진행시키는 PEB 온도,산 확산·가교 등 반응 범위가 바뀌어 선폭과 관련될 수 있음,확인 필요,tone/chemistry에 따라 방향이 다르고 dose·PEB 시간·tool과 교란될 수 있음
+develop_time_s,현상액 접촉 시간,용해 진행과 잔막/패턴 침식 정도가 잔존 CD에 관련될 수 있음,확인 필요,"현상 포화, 농도·온도·tone 및 retained pattern 정의에 따라 방향이 달라질 수 있음"
+developer_concentration_pct,현상액 유효 농도,용해 속도와 선택비 변화가 잔존 CD에 관련될 수 있음,확인 필요,변동 범위가 좁거나 develop time·온도·PR chemistry와 교란될 수 있음

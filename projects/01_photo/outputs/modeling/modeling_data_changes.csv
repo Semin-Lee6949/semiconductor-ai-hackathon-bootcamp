@@ -1,0 +1,14 @@
+﻿change_type,sample_id,source_row_number,affected_variable,primary_analysis_action,sensitivity_action,reason
+exact_duplicate_removed,S00687,272,ALL,removed extra copy before split,same,prevent identical-row Train/Validation leakage
+exact_duplicate_removed,S00054,417,ALL,removed extra copy before split,same,prevent identical-row Train/Validation leakage
+exact_duplicate_removed,S00360,594,ALL,removed extra copy before split,same,prevent identical-row Train/Validation leakage
+exact_duplicate_removed,S00780,694,ALL,removed extra copy before split,same,prevent identical-row Train/Validation leakage
+exact_duplicate_removed,S00421,697,ALL,removed extra copy before split,same,prevent identical-row Train/Validation leakage
+suspected_input_unit_error,S00160,85,see reason,included; missing values still train-median imputed,entire row excluded from preassigned Train split,focus_um=0.933515; operating cluster 대비 축 왜곡/소수점 입력 의심
+suspected_input_unit_error,S00475,453,see reason,included; missing values still train-median imputed,entire row excluded from preassigned Train split,softbake_temp_c=9.979035; 감사 물리 검토 하한 50 C 미만
+suspected_input_unit_error,S00634,516,see reason,included; missing values still train-median imputed,entire row excluded from preassigned Validation split,developer_concentration_pct=12.21005; 관측 군집 대비 약 5배
+suspected_input_unit_error,S00636,782,see reason,included; missing values still train-median imputed,entire row excluded from preassigned Train split,normalized_dose_pct=9.908105; 같은 행 exposure dose와 10배 차이
+suspected_input_unit_error,S00748,177,see reason,included; missing values still train-median imputed,entire row excluded from preassigned Train split,"coat_thickness_nm=9.465512; 관측 군집 대비 약 1/10, 단위/소수점 입력 의심"
+missing_value_handling,ALL,,normalized_dose_pct;focus_um;coat_thickness_nm;develop_time_s;peb_temp_c;softbake_temp_c;developer_concentration_pct,Train median imputation per numeric variable,same,no Validation information used
+categorical_missing_handling,ALL,,pr_tone,MISSING category retained,same,do not drop complete rows
+leakage_guard,ALL,,cdu_3sigma_nm;defect_probability;ler_nm;pattern_collapse_probability;scum_probability;spec_pass,prohibited/not used,same,post-CD quality outcomes

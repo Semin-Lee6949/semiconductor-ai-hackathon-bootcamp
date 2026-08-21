@@ -1,0 +1,48 @@
+﻿split,grouping,group,n,pct_within_split
+Analysis total,ALL,ALL,800,100.0
+Analysis total,pr_tone,MISSING,11,1.375
+Analysis total,pr_tone,NEGATIVE,270,33.75
+Analysis total,pr_tone,POSITIVE,519,64.875
+Analysis total,tool_id,T01,473,59.125
+Analysis total,tool_id,T02,211,26.375
+Analysis total,tool_id,T03,116,14.5
+Analysis total,pr_tone_x_tool_id,MISSING|T01,6,0.75
+Analysis total,pr_tone_x_tool_id,MISSING|T02,4,0.5
+Analysis total,pr_tone_x_tool_id,MISSING|T03,1,0.125
+Analysis total,pr_tone_x_tool_id,NEGATIVE|T01,155,19.375
+Analysis total,pr_tone_x_tool_id,NEGATIVE|T02,85,10.625
+Analysis total,pr_tone_x_tool_id,NEGATIVE|T03,30,3.75
+Analysis total,pr_tone_x_tool_id,POSITIVE|T01,312,39.0
+Analysis total,pr_tone_x_tool_id,POSITIVE|T02,122,15.25
+Analysis total,pr_tone_x_tool_id,POSITIVE|T03,85,10.625
+Train,ALL,ALL,559,100.0
+Train,pr_tone,MISSING,8,1.4311270125223614
+Train,pr_tone,NEGATIVE,189,33.810375670840784
+Train,pr_tone,POSITIVE,362,64.75849731663685
+Train,tool_id,T01,331,59.2128801431127
+Train,tool_id,T02,147,26.29695885509839
+Train,tool_id,T03,81,14.490161001788909
+Train,pr_tone_x_tool_id,MISSING|T01,4,0.7155635062611807
+Train,pr_tone_x_tool_id,MISSING|T02,3,0.5366726296958855
+Train,pr_tone_x_tool_id,MISSING|T03,1,0.17889087656529518
+Train,pr_tone_x_tool_id,NEGATIVE|T01,109,19.499105545617173
+Train,pr_tone_x_tool_id,NEGATIVE|T02,59,10.554561717352415
+Train,pr_tone_x_tool_id,NEGATIVE|T03,21,3.7567084078711988
+Train,pr_tone_x_tool_id,POSITIVE|T01,218,38.998211091234346
+Train,pr_tone_x_tool_id,POSITIVE|T02,85,15.20572450805009
+Train,pr_tone_x_tool_id,POSITIVE|T03,59,10.554561717352415
+Validation,ALL,ALL,241,100.0
+Validation,pr_tone,MISSING,3,1.2448132780082988
+Validation,pr_tone,NEGATIVE,81,33.60995850622407
+Validation,pr_tone,POSITIVE,157,65.14522821576763
+Validation,tool_id,T01,142,58.92116182572614
+Validation,tool_id,T02,64,26.556016597510375
+Validation,tool_id,T03,35,14.522821576763485
+Validation,pr_tone_x_tool_id,MISSING|T01,2,0.8298755186721992
+Validation,pr_tone_x_tool_id,MISSING|T02,1,0.4149377593360996
+Validation,pr_tone_x_tool_id,NEGATIVE|T01,46,19.08713692946058
+Validation,pr_tone_x_tool_id,NEGATIVE|T02,26,10.78838174273859
+Validation,pr_tone_x_tool_id,NEGATIVE|T03,9,3.7344398340248963
+Validation,pr_tone_x_tool_id,POSITIVE|T01,94,39.004149377593365
+Validation,pr_tone_x_tool_id,POSITIVE|T02,37,15.352697095435685
+Validation,pr_tone_x_tool_id,POSITIVE|T03,26,10.78838174273859

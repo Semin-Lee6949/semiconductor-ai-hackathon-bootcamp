@@ -1,0 +1,31 @@
+﻿section,item,value,unit_or_note
+dataset,source,datasets/student/01_photo/A/train.csv,read-only
+dataset,rows,805,schema expected 805
+dataset,columns,24,including identifiers/features/targets
+column,sample_id,identifier/context,category
+column,lot_id,identifier/context,category
+column,tool_id,identifier/context,category
+column,sequence,identifier/context,category
+column,pr_tone,feature,category
+column,retained_pattern_source,feature,category
+column,nominal_cd_nm,feature,nm
+column,exposure_dose_mj_cm2,feature,mJ/cm^2
+column,normalized_dose_pct,feature,%
+column,focus_um,feature,um
+column,coat_thickness_nm,feature,nm
+column,softbake_temp_c,feature,degC
+column,peb_temp_c,feature,degC
+column,develop_time_s,feature,s
+column,developer_concentration_pct,feature,%
+column,field_x,feature,normalized position
+column,field_y,feature,normalized position
+column,resist_line_cd_nm,target,nm
+column,cdu_3sigma_nm,target,nm
+column,ler_nm,target,nm
+column,scum_probability,target,"probability [0,1]"
+column,pattern_collapse_probability,target,"probability [0,1]"
+column,defect_probability,target,"probability [0,1]"
+column,spec_pass,target,category
+pr_tone_distribution,MISSING,11,1.37%
+pr_tone_distribution,NEGATIVE,271,33.66%
+pr_tone_distribution,POSITIVE,523,64.97%

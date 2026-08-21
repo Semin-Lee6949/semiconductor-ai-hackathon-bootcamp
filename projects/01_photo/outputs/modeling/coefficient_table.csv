@@ -1,0 +1,79 @@
+﻿model,analysis,term,coefficient,reference_or_unit
+Model 0,original_including_flagged,intercept_mean_cd_nm,50.32025697316637,nm
+Model 1,original_including_flagged,intercept,50.296595203800926,"PR=POSITIVE, tool=T01, dose centered at train median 100.032%"
+Model 1,original_including_flagged,dose_centered,-0.18464134880379485,Positive: nm CD per normalized-dose percentage point
+Model 1,original_including_flagged,pr_tone_NEGATIVE,-0.243043472507471,difference from POSITIVE at centered dose=0
+Model 1,original_including_flagged,pr_tone_MISSING,0.558185364121556,difference from POSITIVE at centered dose=0
+Model 1,original_including_flagged,dose_x_pr_tone_NEGATIVE,0.5203370665490692,Negative minus Positive dose slope
+Model 1,original_including_flagged,dose_x_pr_tone_MISSING,0.2168960096861642,nm CD per feature unit
+Model 1,original_including_flagged,derived_dose_slope_POSITIVE,-0.18464134880379485,nm CD per normalized-dose percentage point
+Model 1,original_including_flagged,derived_dose_slope_NEGATIVE,0.33569571774527435,main dose slope + NEGATIVE interaction
+Model 1,original_including_flagged,derived_dose_slope_MISSING,0.03225466088236936,descriptive only; MISSING tone is not a physical PR group
+Model 2,original_including_flagged,intercept,49.39610092951918,"PR=POSITIVE, tool=T01, dose centered at train median 100.032%"
+Model 2,original_including_flagged,dose_centered,-0.1940680985215194,Positive: nm CD per normalized-dose percentage point
+Model 2,original_including_flagged,pr_tone_NEGATIVE,-0.2154834712395564,difference from POSITIVE at centered dose=0
+Model 2,original_including_flagged,pr_tone_MISSING,0.15618869065271948,difference from POSITIVE at centered dose=0
+Model 2,original_including_flagged,dose_x_pr_tone_NEGATIVE,0.544657674697419,Negative minus Positive dose slope
+Model 2,original_including_flagged,dose_x_pr_tone_MISSING,0.3450220500012222,nm CD per feature unit
+Model 2,original_including_flagged,tool_id_T02,1.6731424622063014,difference from T01
+Model 2,original_including_flagged,tool_id_T03,3.0933471881148153,difference from T01
+Model 2,original_including_flagged,derived_dose_slope_POSITIVE,-0.1940680985215194,nm CD per normalized-dose percentage point
+Model 2,original_including_flagged,derived_dose_slope_NEGATIVE,0.3505895761758996,main dose slope + NEGATIVE interaction
+Model 2,original_including_flagged,derived_dose_slope_MISSING,0.1509539514797028,descriptive only; MISSING tone is not a physical PR group
+Model 3,original_including_flagged,intercept,51.175411955951155,"PR=POSITIVE, tool=T01, dose centered at train median 100.032%"
+Model 3,original_including_flagged,dose_centered,-0.1963860822179641,Positive: nm CD per normalized-dose percentage point
+Model 3,original_including_flagged,pr_tone_NEGATIVE,0.13847674952813482,difference from POSITIVE at centered dose=0
+Model 3,original_including_flagged,pr_tone_MISSING,0.0933843789836836,difference from POSITIVE at centered dose=0
+Model 3,original_including_flagged,dose_x_pr_tone_NEGATIVE,0.534155424573149,Negative minus Positive dose slope
+Model 3,original_including_flagged,dose_x_pr_tone_MISSING,0.3740787531479928,nm CD per feature unit
+Model 3,original_including_flagged,tool_id_T02,1.5989208141387619,difference from T01
+Model 3,original_including_flagged,tool_id_T03,3.1029283044353733,difference from T01
+Model 3,original_including_flagged,focus_um,-0.4246105782381302,nm CD per feature unit
+Model 3,original_including_flagged,focus_um_squared,2.678282982388486,nm CD per um^2
+Model 3,original_including_flagged,coat_thickness_nm,0.025349169573870706,nm CD per feature unit
+Model 3,original_including_flagged,develop_time_s,-0.06276265676376386,nm CD per feature unit
+Model 3,original_including_flagged,peb_temp_c,0.0009334527316595675,nm CD per feature unit
+Model 3,original_including_flagged,softbake_temp_c,0.006739304569845656,nm CD per feature unit
+Model 3,original_including_flagged,developer_concentration_pct,-0.8540187150530822,nm CD per feature unit
+Model 3,original_including_flagged,derived_dose_slope_POSITIVE,-0.1963860822179641,nm CD per normalized-dose percentage point
+Model 3,original_including_flagged,derived_dose_slope_NEGATIVE,0.3377693423551849,main dose slope + NEGATIVE interaction
+Model 3,original_including_flagged,derived_dose_slope_MISSING,0.17769267093002872,descriptive only; MISSING tone is not a physical PR group
+Model 0,flagged_rows_excluded_sensitivity,intercept_mean_cd_nm,50.31415142522522,nm
+Model 1,flagged_rows_excluded_sensitivity,intercept,50.33152206596836,"PR=POSITIVE, tool=T01, dose centered at train median 100.038%"
+Model 1,flagged_rows_excluded_sensitivity,dose_centered,-0.30897389889702487,Positive: nm CD per normalized-dose percentage point
+Model 1,flagged_rows_excluded_sensitivity,pr_tone_NEGATIVE,-0.279409236878802,difference from POSITIVE at centered dose=0
+Model 1,flagged_rows_excluded_sensitivity,pr_tone_MISSING,0.5234569971371811,difference from POSITIVE at centered dose=0
+Model 1,flagged_rows_excluded_sensitivity,dose_x_pr_tone_NEGATIVE,0.6438672307201222,Negative minus Positive dose slope
+Model 1,flagged_rows_excluded_sensitivity,dose_x_pr_tone_MISSING,0.3412285597793938,nm CD per feature unit
+Model 1,flagged_rows_excluded_sensitivity,derived_dose_slope_POSITIVE,-0.30897389889702487,nm CD per normalized-dose percentage point
+Model 1,flagged_rows_excluded_sensitivity,derived_dose_slope_NEGATIVE,0.33489333182309733,main dose slope + NEGATIVE interaction
+Model 1,flagged_rows_excluded_sensitivity,derived_dose_slope_MISSING,0.032254660882368946,descriptive only; MISSING tone is not a physical PR group
+Model 2,flagged_rows_excluded_sensitivity,intercept,49.43021572283897,"PR=POSITIVE, tool=T01, dose centered at train median 100.038%"
+Model 2,flagged_rows_excluded_sensitivity,dose_centered,-0.3178304669345397,Positive: nm CD per normalized-dose percentage point
+Model 2,flagged_rows_excluded_sensitivity,pr_tone_NEGATIVE,-0.2460605125315577,difference from POSITIVE at centered dose=0
+Model 2,flagged_rows_excluded_sensitivity,pr_tone_MISSING,0.13514837887535913,difference from POSITIVE at centered dose=0
+Model 2,flagged_rows_excluded_sensitivity,dose_x_pr_tone_NEGATIVE,0.6666240430596668,Negative minus Positive dose slope
+Model 2,flagged_rows_excluded_sensitivity,dose_x_pr_tone_MISSING,0.4679693827072846,nm CD per feature unit
+Model 2,flagged_rows_excluded_sensitivity,tool_id_T02,1.6373871405706044,difference from T01
+Model 2,flagged_rows_excluded_sensitivity,tool_id_T03,3.1192507537732763,difference from T01
+Model 2,flagged_rows_excluded_sensitivity,derived_dose_slope_POSITIVE,-0.3178304669345397,nm CD per normalized-dose percentage point
+Model 2,flagged_rows_excluded_sensitivity,derived_dose_slope_NEGATIVE,0.3487935761251271,main dose slope + NEGATIVE interaction
+Model 2,flagged_rows_excluded_sensitivity,derived_dose_slope_MISSING,0.1501389157727449,descriptive only; MISSING tone is not a physical PR group
+Model 3,flagged_rows_excluded_sensitivity,intercept,46.124734570486964,"PR=POSITIVE, tool=T01, dose centered at train median 100.038%"
+Model 3,flagged_rows_excluded_sensitivity,dose_centered,-0.31463858252971516,Positive: nm CD per normalized-dose percentage point
+Model 3,flagged_rows_excluded_sensitivity,pr_tone_NEGATIVE,0.12488157060499172,difference from POSITIVE at centered dose=0
+Model 3,flagged_rows_excluded_sensitivity,pr_tone_MISSING,0.009670167055836329,difference from POSITIVE at centered dose=0
+Model 3,flagged_rows_excluded_sensitivity,dose_x_pr_tone_NEGATIVE,0.6514755426546504,Negative minus Positive dose slope
+Model 3,flagged_rows_excluded_sensitivity,dose_x_pr_tone_MISSING,0.5204820493747225,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,tool_id_T02,1.5378082620918503,difference from T01
+Model 3,flagged_rows_excluded_sensitivity,tool_id_T03,3.212938246054538,difference from T01
+Model 3,flagged_rows_excluded_sensitivity,focus_um,-0.48068720168638646,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,focus_um_squared,51.37538219622074,nm CD per um^2
+Model 3,flagged_rows_excluded_sensitivity,coat_thickness_nm,0.027274029033914515,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,develop_time_s,-0.05928147288038773,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,peb_temp_c,0.0004952197449149542,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,softbake_temp_c,0.041251572985962874,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,developer_concentration_pct,-0.3756526719288211,nm CD per feature unit
+Model 3,flagged_rows_excluded_sensitivity,derived_dose_slope_POSITIVE,-0.31463858252971516,nm CD per normalized-dose percentage point
+Model 3,flagged_rows_excluded_sensitivity,derived_dose_slope_NEGATIVE,0.3368369601249352,main dose slope + NEGATIVE interaction
+Model 3,flagged_rows_excluded_sensitivity,derived_dose_slope_MISSING,0.20584346684500737,descriptive only; MISSING tone is not a physical PR group
