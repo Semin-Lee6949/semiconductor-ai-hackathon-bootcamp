@@ -114,8 +114,30 @@ def apply_portfolio_theme() -> None:
     .direction-card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:1rem; }
     .direction-card b { color:var(--navy-800); display:block; margin-bottom:.3rem; }
     .direction-card span { color:var(--muted); font-size:.85rem; line-height:1.55; }
+    .fishbone { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:1rem 5rem; margin:1.4rem 0; padding:1rem 0; }
+    .fishbone::before { content:""; position:absolute; left:10%; right:10%; top:50%; height:4px; background:linear-gradient(90deg,var(--navy-700),var(--gold)); border-radius:4px; }
+    .fishbone::after { content:"CD 변동 후보"; position:absolute; right:0; top:calc(50% - 1.15rem); background:var(--navy-900); color:#fff; padding:.55rem .8rem; border-radius:8px; font-size:.78rem; font-weight:800; }
+    .bone { position:relative; z-index:1; background:#fff; border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; box-shadow:0 7px 18px rgba(7,26,43,.06); }
+    .bone:nth-child(odd) { margin-right:2.5rem; }
+    .bone:nth-child(even) { margin-left:2.5rem; }
+    .bone b { color:var(--navy-800); display:block; font-size:1rem; }
+    .bone .evidence { color:#315e78; font-size:.83rem; margin:.25rem 0; }
+    .bone .action { color:var(--muted); font-size:.81rem; line-height:1.5; }
+    .bone.no-data { border-style:dashed; background:#f7f9fb; }
+    .sim-panel { background:linear-gradient(135deg,#0b2740,#174d72); color:white; border-radius:16px; padding:1.2rem 1.4rem; margin:1rem 0; }
+    .sim-panel b { color:#9ed7ea; }
+    .sim-panel span { color:#dce9f0; font-size:.88rem; }
+    .cd-visual { background:#fff; border:1px solid var(--line); border-radius:14px; padding:1.2rem; margin:1rem 0; }
+    .cd-row { display:grid; grid-template-columns:100px 1fr 92px; gap:.8rem; align-items:center; margin:.8rem 0; }
+    .cd-row .name { color:var(--navy-800); font-weight:800; }
+    .cd-track { height:38px; background:#e8eef2; border-radius:8px; display:flex; align-items:center; padding:5px; overflow:hidden; }
+    .cd-line { height:100%; border-radius:5px; min-width:8px; transition:width .25s ease; }
+    .cd-line.reference { background:#8fa5b4; }
+    .cd-line.prediction { background:linear-gradient(90deg,var(--navy-700),#3b91b6); }
+    .cd-value { text-align:right; color:var(--navy-900); font-weight:850; }
+    .delta-up { color:#a4483e; } .delta-down { color:#27776d; } .delta-flat { color:var(--muted); }
     @media(max-width:800px) { .guide-grid { grid-template-columns:1fr 1fr; } .portfolio-hero { padding:1.5rem; } }
-    @media(max-width:800px) { .direction-grid { grid-template-columns:1fr; } }
+    @media(max-width:800px) { .direction-grid { grid-template-columns:1fr; } .fishbone { grid-template-columns:1fr; gap:.7rem; } .fishbone::before,.fishbone::after { display:none; } .bone:nth-child(n) { margin:0; } }
     @media(max-width:520px) { .guide-grid { grid-template-columns:1fr; } }
     </style>
     """, unsafe_allow_html=True)
@@ -149,6 +171,23 @@ def correlation_direction(value: float) -> str:
     if abs(value) < 0.2:
         return "뚜렷한 선형 방향이 약합니다"
     return "증가할수록 CD가 감소하는 경향" if value < 0 else "증가할수록 CD가 증가하는 경향"
+
+
+def cd_bar_width(value: float, low: float = 35.0, high: float = 65.0) -> float:
+    return float(np.clip(12 + 80 * (value - low) / (high - low), 12, 92))
+
+
+def render_cd_visual(reference: float, prediction: float) -> None:
+    delta = prediction - reference
+    delta_class = "delta-up" if delta > 0.05 else "delta-down" if delta < -0.05 else "delta-flat"
+    arrow = "▲ 넓어짐" if delta > 0.05 else "▼ 좁아짐" if delta < -0.05 else "● 유사"
+    st.markdown(f"""
+    <div class="cd-visual">
+      <div class="cd-row"><div class="name">기준 조건</div><div class="cd-track"><div class="cd-line reference" style="width:{cd_bar_width(reference):.1f}%"></div></div><div class="cd-value">{reference:.2f} nm</div></div>
+      <div class="cd-row"><div class="name">선택 조건</div><div class="cd-track"><div class="cd-line prediction" style="width:{cd_bar_width(prediction):.1f}%"></div></div><div class="cd-value">{prediction:.2f} nm</div></div>
+      <div style="text-align:right;font-weight:800" class="{delta_class}">{arrow} · {delta:+.2f} nm</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 @st.cache_data(show_spinner=False)
@@ -528,7 +567,29 @@ section_guide(
     "현재 데이터에서는 tone별 dose 방향을 핵심 신호로 보되, Tool level 차이와 입력 오류 민감성을 함께 고려해야 합니다. 다음 행동은 원자료·Tool 상태 확인과 tone별 통제 DOE이며, 현재 그래프만으로 공정 원인을 확정하지 않습니다.",
 )
 
-st.header("4. 기준모델: Model 2")
+st.header("4. 데이터 기반 4M1E Fishbone")
+section_guide(
+    "Fishbone을 어떻게 쓰나요?",
+    "현재 데이터로 확인 가능한 가지는 수치 근거와 함께 표시하고, 컬럼이 없어 확인할 수 없는 가지는 추가 수집 항목으로 남깁니다. 원인 확정표가 아니라 다음 점검 순서를 정하는 가설 지도입니다.",
+)
+tool_low_text = "비교 불가"
+tool_high_text = "비교 불가"
+if len(tool_summary):
+    tool_low_text = f"{html.escape(str(tool_summary.index[0]))} {float(tool_summary.iloc[0]['mean']):.2f} nm"
+    tool_high_text = f"{html.escape(str(tool_summary.index[-1]))} {float(tool_summary.iloc[-1]['mean']):.2f} nm"
+field_missing = sum(int(raw[column].isna().sum()) for column in ["field_x", "field_y"] if column in raw)
+st.markdown(f"""
+<div class="fishbone">
+  <div class="bone"><b>Machine · 설비</b><div class="evidence">Tool 평균 CD: {tool_low_text} → {tool_high_text}</div><div class="action">확인: Tool별 calibration·condition·계측 offset을 같은 tone/dose 구간에서 비교합니다.</div></div>
+  <div class="bone"><b>Material · 재료</b><div class="evidence">Positive r={pos_r:+.3f} · Negative r={neg_r:+.3f}</div><div class="action">확인: PR tone을 분리하고 lot/chemistry 정보가 있다면 같은 재료군 안에서 dose response를 재검증합니다.</div></div>
+  <div class="bone"><b>Method · 공정조건</b><div class="evidence">Dose 방향 차이 관찰 · Focus 선형 상관은 약할 수 있음</div><div class="action">확인: tone별 dose DOE와 0 주변 focus 수준을 Tool block으로 반복합니다. Bake·develop 조건은 한 번에 하나씩 통제합니다.</div></div>
+  <div class="bone no-data"><b>Man · 작업</b><div class="evidence">현재 데이터에 작업자·교대조 컬럼 없음</div><div class="action">추가 수집: operator/shift, recipe 승인·수정 이력, 재작업 여부. 데이터 없이 작업자 영향으로 결론 내리지 않습니다.</div></div>
+  <div class="bone no-data"><b>Environment · 환경/위치</b><div class="evidence">Field 좌표 결측 {field_missing}셀 · 시간/온습도 정보 없음</div><div class="action">추가 확인: wafer field 위치, 처리 시간 순서, track/chamber 환경과 Lot 배치를 함께 기록해 공간·시간 패턴을 점검합니다.</div></div>
+</div>
+""", unsafe_allow_html=True)
+st.info("우선순위 제안: ① 입력 오류 후보 원자료 확인 → ② Tool별 calibration/condition 확인 → ③ PR tone별 Dose DOE → ④ Focus 비선형 DOE → ⑤ 작업·환경 메타데이터 추가 수집")
+
+st.header("5. 기준모델: Model 2")
 section_guide(
     "왜 Model 2인가요?",
     "Dose, PR tone, dose×tone, Tool만 사용한 해석 가능한 기준입니다. 변수를 더 많이 넣은 모델이 Validation을 개선하지 않아 단순한 구조를 유지했습니다.",
@@ -551,7 +612,72 @@ if model_ready:
         st.warning(f"Negative PR: 현재 데이터에서는 예상과 다른 방향 ({neg_slope:+.3f} nm/%p)")
     st.caption("계수는 PR tone과 Tool을 함께 고려한 관찰적 회귀 관계이며 인과효과가 아닙니다.")
 
-st.header("5. 검증 결과")
+st.header("6. Photo CD What-if 시뮬레이션")
+section_guide(
+    "직접 조건을 움직여 보세요",
+    "A/train 전체로 고정한 Model 2에서 PR tone, Tool, normalized dose만 바꿉니다. 결과는 데이터 기반 예측값이며 실제 recipe 변경의 인과효과나 품질 보증값이 아닙니다.",
+)
+simulation_train, _, _ = prepare_analysis_data(load_default_data())
+simulation_train = simulation_train[simulation_train[TARGET].notna()].copy()
+dose_values = simulation_train["normalized_dose_pct"].dropna()
+dose_low = float(np.floor(dose_values.quantile(.01) * 10) / 10)
+dose_high = float(np.ceil(dose_values.quantile(.99) * 10) / 10)
+dose_reference = float(dose_values.median())
+control_cols = st.columns(3)
+with control_cols[0]:
+    simulation_tone = st.selectbox("PR tone", ["POSITIVE", "NEGATIVE"], key="simulation_tone")
+with control_cols[1]:
+    simulation_tool = st.selectbox("Tool", ["T01", "T02", "T03"], key="simulation_tool")
+with control_cols[2]:
+    simulation_dose = st.slider(
+        "Normalized dose (%)", min_value=dose_low, max_value=dose_high,
+        value=float(np.clip(round(dose_reference, 1), dose_low, dose_high)), step=0.1,
+        key="simulation_dose",
+    )
+
+def simulation_frame(tone: str, tool: str, doses: list[float]) -> pd.DataFrame:
+    frame = pd.DataFrame({
+        "sample_id": [f"SIM_{index}" for index in range(len(doses))],
+        "pr_tone": [tone] * len(doses), "tool_id": [tool] * len(doses),
+        "normalized_dose_pct": doses,
+    })
+    frame["pr_tone_group"] = clean_category(frame["pr_tone"])
+    frame["tool_id_group"] = clean_category(frame["tool_id"])
+    return frame
+
+selected_prediction = float(blind_predictions(simulation_frame(simulation_tone, simulation_tool, [simulation_dose]))[0])
+reference_prediction = float(blind_predictions(simulation_frame(simulation_tone, "T01", [dose_reference]))[0])
+next_dose = min(simulation_dose + 1.0, dose_high)
+previous_dose = max(simulation_dose - 1.0, dose_low)
+if next_dose > simulation_dose:
+    local_slope = float(blind_predictions(simulation_frame(simulation_tone, simulation_tool, [next_dose]))[0] - selected_prediction) / (next_dose - simulation_dose)
+else:
+    previous_prediction = float(blind_predictions(simulation_frame(simulation_tone, simulation_tool, [previous_dose]))[0])
+    local_slope = (selected_prediction - previous_prediction) / (simulation_dose - previous_dose)
+
+simulation_metrics = st.columns(3)
+simulation_metrics[0].metric("예측 CD", f"{selected_prediction:.2f} nm")
+simulation_metrics[1].metric("기준 대비 변화", f"{selected_prediction-reference_prediction:+.2f} nm")
+simulation_metrics[2].metric("Dose +1%p 방향", f"{local_slope:+.3f} nm")
+st.markdown(
+    f'<div class="sim-panel"><b>현재 선택 해석</b><br><span>{simulation_tone} · {simulation_tool} · dose {simulation_dose:.1f}%에서 예측 CD는 {selected_prediction:.2f} nm입니다. '
+    f'같은 tone의 기준 조건(T01, train 중앙 dose {dose_reference:.1f}%) 대비 {selected_prediction-reference_prediction:+.2f} nm입니다.</span></div>',
+    unsafe_allow_html=True,
+)
+render_cd_visual(reference_prediction, selected_prediction)
+
+dose_grid = np.linspace(dose_low, dose_high, 60)
+grid_prediction = blind_predictions(simulation_frame(simulation_tone, simulation_tool, dose_grid.tolist()))
+fig, ax = plt.subplots(figsize=(9, 4.2))
+ax.plot(dose_grid, grid_prediction, color="#1d557d", lw=3, label=f"{simulation_tone} · {simulation_tool}")
+ax.scatter([simulation_dose], [selected_prediction], color="#c35e45", s=90, zorder=3, label="Selected condition")
+ax.axvline(dose_reference, color="#8fa5b4", ls="--", lw=1.4, label="Train median dose")
+ax.set(xlabel="Normalized dose (%)", ylabel="Predicted resist line CD (nm)", title="Model 2 predicted CD response within observed process window")
+ax.grid(alpha=.2); ax.legend(); fig.tight_layout()
+st.pyplot(fig, width="stretch")
+st.caption(f"시뮬레이션 범위 {dose_low:.1f}~{dose_high:.1f}%는 A/train의 1~99백분위입니다. Model 2에 없는 Focus·Bake·Develop·Material lot 변화는 이 예측에 반영되지 않습니다.")
+
+st.header("7. 검증 결과")
 section_guide(
     "점수가 흔들려도 방향은 유지될 수 있어요",
     "예측 R²의 안정성과 dose–CD 방향의 안정성은 서로 다른 질문입니다. 반복 분할과 unseen-Lot 검증으로 둘을 따로 확인합니다.",
@@ -592,7 +718,7 @@ if model_ready:
         ax.axhline(0, color="black", ls="--"); ax.set(ylabel="nm CD per dose %p")
         st.pyplot(fig, width="stretch")
 
-st.header("6. 분석 한계")
+st.header("8. 분석 한계")
 st.warning("""
 - 입력 오류에 모델 성능이 민감합니다.
 - 단일 관찰 데이터이므로 인과관계를 확정할 수 없습니다.

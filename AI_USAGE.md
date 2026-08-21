@@ -1,5 +1,16 @@
 # AI 사용 기록
 
+## 2026-08-21 — Photo 4M1E Fishbone과 CD What-if 시뮬레이션
+
+- AI 작업: EDA 종합 아래에 Machine·Material·Method·Man·Environment의 4M1E Fishbone UI를 추가하고, 각 가지에 현재 데이터 근거·미확인 정보·다음 점검 액션을 분리했다. Model 2의 PR tone·Tool·normalized dose를 직접 조절하는 What-if 시뮬레이터와 CD 폭 비교 그림, dose–예측 CD 곡선을 추가했다.
+- 데이터 경계: Machine·Material·Method는 Tool 평균, tone별 dose 상관과 기존 EDA를 근거로 표시했다. 작업자·교대조·시간·온습도 정보는 데이터에 없으므로 Man/Environment 영향은 결론 내리지 않고 추가 수집 항목으로 표시했다.
+- 모델 경계: 시뮬레이터는 A/train 전체로 고정한 기존 Model 2만 사용하고 dose 조절 범위를 A/train 1~99백분위로 제한했다. Focus·Bake·Develop·material lot은 Model 2 입력이 아니므로 예측에 반영되지 않는다고 명시했다.
+- 해석 제한: 시뮬레이션 값은 관찰 데이터 기반 예측이며 recipe 변경의 인과효과, Spec 판정 또는 품질 보증값이 아니다.
+- 검증: 기본 Analysis 지표 R² 0.679, RMSE 1.661 nm, MAE 1.140 nm를 유지했다. 시뮬레이터에서 dose 증가 시 Positive 예측 CD 감소와 Negative 예측 CD 증가를 확인했고, Blind Holdout 200/200행 예측도 유지했다.
+- 인간 판단: Fishbone을 원인 확정표가 아닌 점검 순서 지도에 사용하고, 입력 오류 원자료 → Tool 상태 → tone별 Dose DOE → Focus DOE → 작업·환경 메타데이터 순으로 확인하기로 했다.
+- AI 오류/수정: 최초 UI 테스트가 `st.info` 문구를 Markdown 목록에서만 찾아 실패했다. 요소 유형에 맞게 검증식을 수정했고 Matplotlib 한글 범례 경고는 영문 범례로 교체했다.
+- 인간 수정: 현재 없음.
+
 ## 2026-08-21 — Photo 앱 네이비 테마와 가설 안내 강화
 
 - AI 작업: `projects/01_photo/app.py`에 밝은 네이비 기반 포트폴리오 테마, 상단 문제·핵심 가설·대안 설명·판단 카드, 단계별 “왜 보는가” 안내를 추가했다.
