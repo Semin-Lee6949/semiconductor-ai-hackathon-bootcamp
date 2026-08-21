@@ -21,18 +21,32 @@ TABS = ["1 · Data Audit", "2 · Variable Lab & EDA", "3 · Model Lab", "4 · Wh
 def theme():
     st.markdown("""<style>
     :root{--navy:#0b2740;--navy2:#174d72;--paper:#f3f6f9;--ink:#132536;--muted:#607382;--gold:#c99a45;--line:#d7e1e8}
-    .stApp{background:linear-gradient(180deg,#dbe8f1 0,var(--paper) 28rem);color:var(--ink)}.block-container{max-width:1220px;padding-top:2rem;padding-bottom:5rem}h1,h2,h3{color:var(--navy)!important}
+    html,body,[class*="css"]{color:var(--ink)}.stApp,[data-testid="stAppViewContainer"]{background:linear-gradient(180deg,#dbe8f1 0,var(--paper) 28rem)!important;color:var(--ink)!important}.block-container{max-width:1220px;padding-top:2rem;padding-bottom:5rem}h1,h2,h3,p,label{color:var(--ink)!important}h1,h2,h3{color:var(--navy)!important}
     .hero{padding:2rem 2.2rem;border-radius:18px;background:linear-gradient(125deg,#071a2b,var(--navy2));box-shadow:0 18px 42px #071a2b38;margin-bottom:1rem}.hero small{color:#8ecbe4;font-weight:800;letter-spacing:.14em}.hero h1{color:#fff!important;margin:.35rem 0}.hero p{color:#dce9f0;margin:0}
     .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin:1rem 0 1.5rem}.flow div,.fish div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.75rem;text-align:center;color:var(--navy);font-weight:750;font-size:.82rem}
-    [data-testid="stMetric"]{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy2);border-radius:12px;padding:1rem}.guide,.note{background:#fff;border-left:5px solid var(--navy2);border-radius:0 12px 12px 0;padding:1rem;margin:.5rem 0 1rem}.guide b,.note b{color:var(--navy2)}.guide span,.note span{color:var(--muted)}
+    [data-testid="stMetric"]{background:#fff!important;border:1px solid var(--line);border-top:4px solid var(--navy2);border-radius:12px;padding:1rem;box-shadow:0 8px 20px #0b274012}[data-testid="stMetricLabel"],[data-testid="stMetricValue"]{color:var(--navy)!important}.guide,.note{background:#fff;border-left:5px solid var(--navy2);border-radius:0 12px 12px 0;padding:1rem;margin:.5rem 0 1rem}.guide b,.note b{color:var(--navy2)}.guide span,.note span{color:var(--muted)}
     .fish{display:grid;grid-template-columns:repeat(5,1fr);gap:.65rem}.fish div{border-top:4px solid var(--gold);text-align:left}.fish span{display:block;color:var(--muted);font-size:.76rem;line-height:1.5;margin-top:.3rem}
     .cd{background:linear-gradient(130deg,#071a2b,var(--navy2));border-radius:16px;padding:1.4rem;color:#fff;text-align:center;margin:1rem 0}.cd span{color:#9ed7ea}.cd strong{display:block;font-size:2.7rem}.cd small{color:#dce9f0}
-    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4;border-radius:8px 8px 0 0}@media(max-width:850px){.flow,.fish{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish{grid-template-columns:1fr}}
+    .question-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:1rem 0}.question-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:1rem;box-shadow:0 8px 22px #0b27400c}.question-card b{display:block;color:var(--navy2);margin-bottom:.35rem}.question-card span{color:var(--muted);font-size:.84rem;line-height:1.55}.question-card:nth-child(1){border-top:4px solid #b85f4b}.question-card:nth-child(2){border-top:4px solid var(--gold)}.question-card:nth-child(3){border-top:4px solid #398072}
+    .score{background:linear-gradient(140deg,#fff,#eef5f8);border:1px solid var(--line);border-radius:14px;padding:1.1rem;text-align:center}.score span{color:var(--muted);font-size:.78rem}.score strong{display:block;color:var(--navy);font-size:2rem}.score small{color:var(--muted)}
+    .cd-scheme{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.3rem;box-shadow:0 10px 28px #0b274012}.cd-scheme-title{color:var(--navy);font-weight:850;margin-bottom:1rem}.wafer-row{display:grid;grid-template-columns:95px 1fr 100px;gap:1rem;align-items:center;margin:.9rem 0}.wafer-label{color:var(--muted);font-weight:750}.wafer-window{height:58px;background:repeating-linear-gradient(135deg,#edf3f6,#edf3f6 8px,#e5edf1 8px,#e5edf1 16px);border-radius:9px;display:flex;align-items:center;justify-content:center;overflow:hidden}.cd-line{height:38px;border-radius:5px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px #0b274030}.cd-line.ref{background:#8ba1b0}.cd-line.pred{background:linear-gradient(90deg,#174d72,#36a0bd)}.wafer-value{font-weight:900;color:var(--navy);text-align:right}.delta-pill{display:inline-block;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.35rem .75rem;font-weight:800;margin-top:.35rem}
+    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
     </style>""", unsafe_allow_html=True)
 
 
 def guide(title, text):
     st.markdown(f'<div class="guide"><b>{title}</b><br><span>{text}</span></div>', unsafe_allow_html=True)
+
+
+def cd_scheme(reference, prediction):
+    low, high = 35.0, 65.0
+    width = lambda value: float(np.clip(18 + 76 * (value - low) / (high - low), 18, 94))
+    delta = prediction - reference
+    direction = "CD가 넓어지는 예측" if delta > .05 else "CD가 좁아지는 예측" if delta < -.05 else "기준과 유사한 예측"
+    st.markdown(f'''<div class="cd-scheme"><div class="cd-scheme-title">CD Line-width Visual · 모델 기반 상대 비교</div>
+    <div class="wafer-row"><div class="wafer-label">기준 조건</div><div class="wafer-window"><div class="cd-line ref" style="width:{width(reference):.1f}%"></div></div><div class="wafer-value">{reference:.2f} nm</div></div>
+    <div class="wafer-row"><div class="wafer-label">선택 조건</div><div class="wafer-window"><div class="cd-line pred" style="width:{width(prediction):.1f}%"></div></div><div class="wafer-value">{prediction:.2f} nm</div></div>
+    <div class="delta-pill">{direction} · ΔCD {delta:+.2f} nm</div></div>''', unsafe_allow_html=True)
 
 
 def prepare(raw, remove_duplicates):
@@ -52,7 +66,10 @@ def audit(raw, data, duplicates, invalid):
     flags = detect_suspected_input_errors(data)
     cols = st.columns(5)
     for box, (label, value) in zip(cols, [("행", len(raw)), ("열", raw.shape[1]), ("결측 셀", int(raw.isna().sum().sum())), ("완전 중복 추가행", duplicates), ("입력 오류 후보 행", flags["sample_id"].nunique() if not flags.empty else 0)]): box.metric(label, f"{value:,}")
-    st.write("**컬럼**", list(raw.columns)); left, right = st.columns(2)
+    with st.expander(f"컬럼 구조 보기 · {raw.shape[1]}개", expanded=False):
+        schema = pd.DataFrame({"컬럼": raw.columns, "데이터 타입": raw.dtypes.astype(str).values, "결측": raw.isna().sum().values})
+        st.dataframe(schema, width="stretch", hide_index=True)
+    left, right = st.columns(2)
     with left:
         missing = raw.isna().sum().rename("missing_count").to_frame(); missing["missing_pct"] = 100 * missing.missing_count / max(len(raw), 1)
         st.subheader("결측"); st.dataframe(missing, width="stretch")
@@ -112,6 +129,7 @@ def blind_prediction(default_data, data):
 
 
 def run(project: Path):
+    st.set_page_config(page_title="Photo Process Analysis Workbench", page_icon="🔬", layout="wide")
     theme(); default_path = project / "data" / "A" / "train.csv"
     st.markdown("""<div class="hero"><small>PHOTO PROCESS · HANDS-ON ANALYTICS</small><h1>Photo Process Analysis Workbench</h1><p>데이터 → 변수선택 → 탐색 → 모델 → 예측을 직접 수행합니다.</p></div><div class="flow"><div>1 · DATA</div><div>2 · VARIABLES</div><div>3 · EDA</div><div>4 · MODEL</div><div>5 · SIMULATE</div></div>""", unsafe_allow_html=True)
     uploaded = st.file_uploader("CSV 또는 Excel 업로드", type=["csv", "xlsx"])
@@ -121,7 +139,16 @@ def run(project: Path):
         else: raw = pd.read_excel(uploaded, engine="openpyxl")
     except Exception as exc: st.error(f"파일을 읽을 수 없습니다: {exc}"); st.stop()
     st.info(f"현재 데이터: {uploaded.name if uploaded else '기본 예제 · A/train.csv'}")
-    blind = TARGET not in raw; data, duplicates, invalid = prepare(raw, not blind); tabs = st.tabs(TABS)
+    blind = TARGET not in raw; data, duplicates, invalid = prepare(raw, not blind)
+    overview = st.columns(5)
+    overview[0].metric("Rows", f"{len(raw):,}")
+    overview[1].metric("Columns", f"{raw.shape[1]:,}")
+    overview[2].metric("Missing cells", f"{int(raw.isna().sum().sum()):,}")
+    overview[3].metric("Duplicate rows", f"{duplicates:,}")
+    overview[4].metric("Mode", "Blind Prediction" if blind else "Analysis")
+    if not blind:
+        st.markdown("""<div class="question-grid"><div class="question-card"><b>문제 · CD 변동</b><span>어떤 공정 입력과 조건 조합이 CD 변동과 관련되어 있는지 확인합니다.</span></div><div class="question-card"><b>가설 · Tone별 Dose 반응</b><span>Positive와 Negative PR의 Dose–CD 방향이 다를 가능성을 분리해 검토합니다.</span></div><div class="question-card"><b>대안 · Tool과 데이터 품질</b><span>Tool 조건, Lot 구성, 입력 오류가 관찰 관계와 예측력을 흔들 수 있습니다.</span></div></div>""", unsafe_allow_html=True)
+    tabs = st.tabs(TABS)
     with tabs[0]:
         st.header("Data Audit"); guide("분석 전 확인", "Schema·단위·결측·중복·입력 오류·편중을 먼저 봅니다."); flags = audit(raw, data, duplicates, invalid)
         if not blind: st.markdown("""<div class="fish"><div><b>Machine</b><span>Tool·calibration</span></div><div><b>Material</b><span>PR tone·lot</span></div><div><b>Method</b><span>Dose·Focus·Bake·Develop</span></div><div><b>Man</b><span>작업자/교대조 추가 수집</span></div><div><b>Environment</b><span>Field·시간·온습도</span></div></div>""", unsafe_allow_html=True)
@@ -151,14 +178,23 @@ def run(project: Path):
         eda_tabs = st.tabs(selected) if selected else []
         for variable, tab in zip(selected, eda_tabs):
             with tab: numeric_eda(data, variable, focus2) if variable in NUMERIC_INPUTS else categorical_eda(data, variable)
-    signature = (tuple(selected), bool(interaction), TARGET); baseline = fit_fixed_model2(data)
+    baseline = fit_fixed_model2(data)
     with tabs[2]:
-        st.header("Model Lab · Linear Regression"); guide("Build Model", "seed 42의 동일 분할과 Train-only 전처리로 Custom Model을 Model 2와 비교합니다.")
-        if st.button("Build Model", type="primary", disabled=not selected):
-            try: st.session_state.custom_model = fit_custom_model(data, selected, interaction); st.session_state.custom_signature = signature
+        st.header("Model Lab · Linear Regression"); guide("직접 모델을 설계해 보세요", "아래에서 공정변수를 선택하면 seed 42의 동일 Train/Validation 분할로 학습하고, 검증된 Model 2와 공정하게 비교합니다.")
+        model_selected = st.multiselect("모델 Input 변수", available, default=[x for x in DEFAULT_INPUTS if x in available], key="model_inputs")
+        model_interaction = st.checkbox("모델에 Dose × PR tone interaction 포함", True, disabled=not {"normalized_dose_pct", "pr_tone"}.issubset(model_selected), key="model_interaction")
+        st.caption("CD 이후 측정 결과는 선택 목록에서 제외되어 Target Leakage를 방지합니다. Random Forest는 사용하지 않습니다.")
+        signature = (tuple(model_selected), bool(model_interaction), TARGET)
+        if st.button("Build Model", type="primary", disabled=not model_selected):
+            try: st.session_state.custom_model = fit_custom_model(data, model_selected, model_interaction); st.session_state.custom_signature = signature
             except Exception as exc: st.error(str(exc))
         custom = st.session_state.get("custom_model") if st.session_state.get("custom_signature") == signature else None
         if custom:
+            score_cols = st.columns(4)
+            score_items = [("Train R²", custom.metrics["train_r2"]), ("Validation R²", custom.metrics["validation_r2"]), ("Validation 설명력", custom.metrics["validation_r2"] * 100), ("Model 2 Validation R²", baseline.metrics["validation_r2"])]
+            for box, (label, value) in zip(score_cols, score_items):
+                suffix = "%" if label == "Validation 설명력" else ""
+                box.markdown(f'<div class="score"><span>{label}</span><strong>{value:.1f}{suffix}</strong><small>{"R² × 100의 표시값" if suffix else "coefficient of determination"}</small></div>', unsafe_allow_html=True)
             table = pd.DataFrame([{"Metric": label, "Custom Model": custom.metrics[key], "Model 2": baseline.metrics[key]} for key, label in [("train_r2", "Train R²"), ("validation_r2", "Validation R²"), ("validation_rmse_nm", "RMSE"), ("validation_mae_nm", "MAE")]]); st.dataframe(table, width="stretch", hide_index=True)
             if len(custom.inputs) > len(baseline.inputs) and custom.metrics["validation_r2"] <= baseline.metrics["validation_r2"]: st.warning("변수 증가가 일반화 성능 개선으로 이어지지 않았습니다.")
             if custom.metrics["train_r2"] > baseline.metrics["train_r2"] and custom.metrics["validation_r2"] < baseline.metrics["validation_r2"]: st.warning("Train 성능은 좋아졌지만 Validation 성능은 낮아져 과적합 가능성이 있습니다.")
@@ -175,6 +211,7 @@ def run(project: Path):
         pred = float(active.predict(scenario(values))[0]); ref_values = {x: active.builder.medians[x] if x in NUMERIC_INPUTS else active.builder.levels[x][0] for x in active.inputs}; ref = float(active.predict(scenario(ref_values))[0])
         if outside: st.warning(f"⚠ 학습 데이터 범위를 벗어난 조건입니다. 예측 신뢰도가 낮을 수 있습니다. 범위 밖 변수: {', '.join(outside)}")
         st.markdown(f'<div class="cd"><span>Predicted CD</span><strong>{pred:.2f} nm</strong><small>기준조건 대비 ΔCD = {pred-ref:+.2f} nm</small></div>', unsafe_allow_html=True)
+        cd_scheme(ref, pred)
         sweep_options = [x for x in active.inputs if x in NUMERIC_INPUTS]; st.subheader("한 변수만 변화시켜 보기")
         if sweep_options:
             sweep = st.selectbox("Sweep variable", sweep_options); low, high = active.builder.ranges[sweep]; grid = np.linspace(low, high, 60); frames = pd.concat([scenario({**values, sweep: float(v)}) for v in grid], ignore_index=True); curve = active.predict(frames)

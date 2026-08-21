@@ -1,5 +1,13 @@
 # AI 사용 기록
 
+## 2026-08-21 — Workbench 시각 디자인 및 Model Lab 보완
+
+- AI 작업: Streamlit 전역 테마를 밝은 네이비로 고정하고 상단 데이터 KPI, 문제·가설·대안 카드, 접이식 컬럼 스키마를 추가했다. Model Lab 안에서 공정 입력과 Dose×PR 상호작용을 직접 선택하도록 보완하고 Custom Model의 Train/Validation R², Validation 설명력(%), RMSE, MAE와 Model 2 비교를 표시했다.
+- 시뮬레이션: 기준 조건과 선택 조건의 예측 CD를 선폭으로 비교하는 동적 CD line-width 스킴과 ΔCD 방향 표시를 추가했다. 기존 one-variable sweep 및 학습 범위 이탈 경고를 유지했다.
+- 검증: 기본 A/train에서 Model 2 지표와 Custom Model 생성, KPI·그래프·CD 스킴 렌더링을 AppTest로 확인하고 Blind Holdout 200행 예측 경로를 재확인했다.
+- 해석 제한: R² 백분율은 `R² × 100`의 가독성 표시이며 인과효과나 수율 보증 확률이 아니다. CD 시각화도 모델 기반 상대 비교다.
+- 인간 판단: 복잡한 ML을 추가하지 않고 해석 가능한 Linear Regression과 기존 Model 2를 기준으로 유지했다.
+
 ## 2026-08-21 — Photo 4M1E Fishbone과 CD What-if 시뮬레이션
 
 - AI 작업: EDA 종합 아래에 Machine·Material·Method·Man·Environment의 4M1E Fishbone UI를 추가하고, 각 가지에 현재 데이터 근거·미확인 정보·다음 점검 액션을 분리했다. Model 2의 PR tone·Tool·normalized dose를 직접 조절하는 What-if 시뮬레이터와 CD 폭 비교 그림, dose–예측 CD 곡선을 추가했다.
