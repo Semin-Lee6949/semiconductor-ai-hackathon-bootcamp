@@ -11,15 +11,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
+from sklearn.linear_model import LinearRegression
 
 
 SCRIPTS = PROJECT / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 from baseline_regression import (  # noqa: E402
+    CONTINUOUS,
     FLAGGED_SAMPLE_IDS,
     MODEL_FEATURES,
     TARGET,
+    TrainOnlyFeatureBuilder,
     clean_category,
     detect_suspected_input_errors,
 )
@@ -33,6 +36,7 @@ from model_validation import (  # noqa: E402
 
 
 DEFAULT_DATA = PROJECT / "data" / "A" / "train.csv"
+BLIND_REQUIRED_COLUMNS = {"sample_id", "tool_id", "pr_tone", "normalized_dose_pct"}
 REQUIRED_COLUMNS = {
     "sample_id", "lot_id", "tool_id", "pr_tone", "normalized_dose_pct",
     "focus_um", "coat_thickness_nm", "softbake_temp_c", "peb_temp_c",
@@ -43,6 +47,7 @@ NUMERIC_COLUMNS = [
     "peb_temp_c", "develop_time_s", "developer_concentration_pct", TARGET,
 ]
 MODEL2 = MODEL_FEATURES["Model 2"]
+PREDICTION_COLUMN = "predicted_resist_line_cd_nm"
 
 
 @st.cache_data(show_spinner=False)
@@ -64,6 +69,100 @@ def prepare_analysis_data(raw: pd.DataFrame) -> tuple[pd.DataFrame, int, dict]:
     frame["pr_tone_group"] = clean_category(frame["pr_tone"])
     frame["tool_id_group"] = clean_category(frame["tool_id"])
     return frame, int(duplicate_mask.sum()), invalid_numeric
+
+
+@st.cache_data(show_spinner=False)
+def prepare_blind_data(raw: pd.DataFrame) -> tuple[pd.DataFrame, int, dict]:
+    """Prepare every uploaded row for prediction without deleting duplicates."""
+    frame = raw.copy()
+    invalid_numeric = {}
+    for column in NUMERIC_COLUMNS:
+        if column not in frame:
+            continue
+        before = frame[column].notna()
+        converted = pd.to_numeric(frame[column], errors="coerce")
+        invalid_numeric[column] = int((before & converted.isna()).sum())
+        frame[column] = converted
+    duplicate_count = int(frame.duplicated(keep="first").sum())
+    frame["pr_tone_group"] = clean_category(frame["pr_tone"])
+    frame["tool_id_group"] = clean_category(frame["tool_id"])
+    return frame, duplicate_count, invalid_numeric
+
+
+@st.cache_data(show_spinner=False)
+def blind_predictions(frame: pd.DataFrame) -> np.ndarray:
+    """Fit the fixed Model 2 on A/train only and predict all blind rows."""
+    train_raw = load_default_data()
+    train, _, _ = prepare_analysis_data(train_raw)
+    train = train[train[TARGET].notna()].copy()
+    builder = TrainOnlyFeatureBuilder().fit(train)
+    train_x = builder.transform(train)[MODEL2]
+    model = LinearRegression().fit(train_x, train[TARGET])
+
+    prediction_frame = frame.copy()
+    for column in CONTINUOUS:
+        if column not in prediction_frame:
+            prediction_frame[column] = np.nan
+    prediction_x = builder.transform(prediction_frame)[MODEL2]
+    return model.predict(prediction_x)
+
+
+def render_blind_prediction(raw: pd.DataFrame) -> None:
+    st.info("Blind Prediction Mode · Target CD가 없는 파일로 인식했습니다.")
+    st.warning("""이 파일에는 실제 CD 정답이 없으므로 예측만 생성합니다.
+실제 예측 성능은 정답 데이터가 제공된 후 평가할 수 있습니다.""")
+    st.caption("모델 구조·변수·전처리 기준은 Holdout으로 수정하지 않으며, 기존 A/train 데이터에서만 학습합니다.")
+
+    data, duplicate_count, invalid_numeric = prepare_blind_data(raw)
+    flags = input_error_candidates(data)
+    unexpected_tones = sorted(set(data["pr_tone_group"]) - {"POSITIVE", "NEGATIVE", "MISSING"})
+    unexpected_tools = sorted(set(data["tool_id_group"]) - {"T01", "T02", "T03"})
+
+    st.header("1. Blind Holdout Data Quality")
+    metric_cols = st.columns(5)
+    metric_cols[0].metric("행", f"{len(raw):,}")
+    metric_cols[1].metric("열", f"{raw.shape[1]:,}")
+    metric_cols[2].metric("결측 셀", f"{int(raw.isna().sum().sum()):,}")
+    metric_cols[3].metric("완전 중복 추가행", f"{duplicate_count:,}")
+    metric_cols[4].metric("입력 오류 후보 행", f"{flags['sample_id'].nunique() if not flags.empty else 0:,}")
+
+    left, right = st.columns(2)
+    with left:
+        st.subheader("결측값")
+        missing = raw.isna().sum().rename("missing_count").to_frame()
+        missing["missing_pct"] = 100 * missing["missing_count"] / len(raw)
+        st.dataframe(missing, width="stretch")
+        st.subheader("PR tone 분포")
+        st.dataframe(data["pr_tone_group"].value_counts(dropna=False).rename("count"), width="stretch")
+    with right:
+        st.subheader("Tool 분포")
+        st.dataframe(data["tool_id_group"].value_counts(dropna=False).rename("count"), width="stretch")
+        st.subheader("숫자 변환 실패")
+        st.dataframe(pd.Series(invalid_numeric, name="invalid_non_numeric_count").to_frame(), width="stretch")
+
+    st.subheader("입력/단위 오류 검토 후보")
+    st.caption("검토 후보는 자동 수정하거나 예측에서 삭제하지 않습니다.")
+    st.dataframe(flags if not flags.empty else pd.DataFrame({"결과": ["후보 없음"]}), width="stretch")
+
+    if unexpected_tones or unexpected_tools:
+        st.error(f"Model 2가 학습하지 않은 범주가 있어 예측을 중단합니다. PR tone={unexpected_tones}, Tool={unexpected_tools}.")
+        return
+
+    prediction = blind_predictions(data)
+    if len(prediction) != len(raw):
+        raise AssertionError("Every blind Holdout row must receive exactly one prediction")
+    result = raw.copy()
+    result[PREDICTION_COLUMN] = prediction
+
+    st.header("2. Blind Holdout Prediction")
+    st.dataframe(result[["sample_id", PREDICTION_COLUMN]], width="stretch", hide_index=True)
+    st.download_button(
+        "전체 prediction CSV 다운로드",
+        data=result.to_csv(index=False).encode("utf-8-sig"),
+        file_name="photo_holdout_predictions.csv",
+        mime="text/csv",
+    )
+    st.caption(f"A/train으로 고정한 Model 2가 Holdout {len(result):,}행 모두에 예측을 생성했습니다. 성능 지표는 계산하지 않습니다.")
 
 
 @st.cache_data(show_spinner=False)
@@ -152,6 +251,15 @@ except Exception as exc:
 
 source_label = uploaded.name if uploaded is not None else "기본 예제: projects/01_photo/data/A/train.csv"
 st.info(f"현재 데이터: {source_label}")
+if TARGET not in raw.columns:
+    missing_blind_columns = sorted(BLIND_REQUIRED_COLUMNS.difference(raw.columns))
+    if missing_blind_columns:
+        st.error("Target CD가 없고 Model 2 예측에 필요한 입력 컬럼도 부족하여 분석을 중단했습니다.")
+        st.write("부족한 컬럼:", missing_blind_columns)
+        st.stop()
+    render_blind_prediction(raw)
+    st.stop()
+
 missing_columns = sorted(REQUIRED_COLUMNS.difference(raw.columns))
 if missing_columns:
     st.error("필수 컬럼이 없어 분석을 중단했습니다.")

@@ -1,5 +1,15 @@
 # AI 사용 기록
 
+## 2026-08-21 — Photo Blind Holdout 예측 모드
+
+- AI 작업: `projects/01_photo/app.py`에서 Target CD 유무로 Analysis Mode와 Blind Prediction Mode를 분기했다. Target이 없는 CSV는 데이터 품질을 점검한 뒤 기존 A/train 전체로 고정 Model 2를 학습하고 모든 업로드 행의 `predicted_resist_line_cd_nm`과 다운로드 CSV를 생성한다.
+- 기존 로직 보존: `resist_line_cd_nm`이 있는 데이터는 기존 Data Audit, EDA, Model 2, 단일·반복·Lot Validation 경로를 그대로 사용한다. Holdout으로 모델 구조·변수·전처리 기준을 수정하지 않으며 정답이 없을 때 R², RMSE, MAE를 계산하거나 표시하지 않는다.
+- 인간 판단: Blind Holdout의 중복·입력 오류 후보도 자동 삭제하지 않고 모든 원래 행에 예측을 생성하기로 결정했다. 미학습 PR tone 또는 Tool 범주는 잘못된 기준 범주로 예측하지 않고 중단하도록 했다.
+- 검증: Streamlit AppTest로 A/train.csv 실제 업로드 시 기존 R² 0.679, RMSE 1.661 nm, MAE 1.140 nm가 동일함을 확인했다. A/holdout_features.csv 실제 업로드 시 Blind Mode 안내, 성능지표 미표시, 200/200행 유한 예측, 화면 표와 prediction CSV 다운로드 버튼을 확인했다.
+- 보호 확인: STEP 2~5 `outputs/` 파일은 수정하지 않았고 API Key·비밀정보를 추가하지 않았다.
+- AI 오류/수정: 없음.
+- 인간 수정: 현재 없음.
+
 ## 최종 역할 구분
 
 ### AI가 지원한 일
