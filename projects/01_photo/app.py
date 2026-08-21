@@ -1,6 +1,7 @@
 """Reproducible Streamlit interface for Photo STEP 2-5 analyses."""
 
 from pathlib import Path
+import html
 import os
 import sys
 
@@ -48,6 +49,106 @@ NUMERIC_COLUMNS = [
 ]
 MODEL2 = MODEL_FEATURES["Model 2"]
 PREDICTION_COLUMN = "predicted_resist_line_cd_nm"
+
+
+def apply_portfolio_theme() -> None:
+    st.markdown("""
+    <style>
+    :root {
+        --navy-950: #071a2b;
+        --navy-900: #0b2740;
+        --navy-800: #123b5d;
+        --navy-700: #1d557d;
+        --blue-100: #e6f0f7;
+        --paper: #f3f6f9;
+        --card: #ffffff;
+        --ink: #132536;
+        --muted: #5f7180;
+        --gold: #c99a45;
+        --line: #d7e1e8;
+    }
+    .stApp { background: linear-gradient(180deg, #dce8f1 0, var(--paper) 26rem); color: var(--ink); }
+    [data-testid="stAppViewContainer"] > .main { background: transparent; }
+    .block-container { max-width: 1180px; padding-top: 2.2rem; padding-bottom: 5rem; }
+    h1, h2, h3 { color: var(--navy-900) !important; letter-spacing: -0.025em; }
+    h1 { font-weight: 850 !important; }
+    p, li, label, [data-testid="stCaptionContainer"] { color: var(--ink); }
+    [data-testid="stMetric"] {
+        background: rgba(255,255,255,.94); border: 1px solid var(--line);
+        border-top: 4px solid var(--navy-700); border-radius: 12px;
+        padding: 1rem 1.1rem; box-shadow: 0 8px 22px rgba(7,26,43,.07);
+    }
+    [data-testid="stMetricLabel"] { color: var(--muted); }
+    [data-testid="stMetricValue"] { color: var(--navy-900); }
+    [data-testid="stFileUploader"] section, [data-testid="stDataFrame"] {
+        border-color: var(--line); border-radius: 12px;
+    }
+    div[data-baseweb="tab-list"] { gap: .4rem; }
+    button[data-baseweb="tab"] { background: #e6eef4; border-radius: 9px 9px 0 0; }
+    button[data-baseweb="tab"][aria-selected="true"] { background: white; color: var(--navy-800); }
+    .portfolio-hero {
+        padding: 2.1rem 2.3rem; margin: 0 0 1.35rem;
+        border-radius: 18px; color: white;
+        background: linear-gradient(125deg, var(--navy-950), var(--navy-800));
+        box-shadow: 0 18px 42px rgba(7,26,43,.22);
+    }
+    .portfolio-hero .eyebrow { color: #8ecbe4; font-size: .76rem; font-weight: 800; letter-spacing: .15em; }
+    .portfolio-hero h1 { color: white !important; margin: .35rem 0 .65rem; font-size: clamp(2rem,4vw,3.25rem); }
+    .portfolio-hero p { color: #dbe8f0; margin: 0; max-width: 820px; }
+    .guide-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.8rem; margin:1rem 0 1.8rem; }
+    .guide-card { background:rgba(255,255,255,.95); border:1px solid var(--line); border-radius:12px; padding:1rem; box-shadow:0 8px 20px rgba(7,26,43,.06); }
+    .guide-card b { display:block; color:var(--navy-800); margin-bottom:.35rem; }
+    .guide-card span { display:block; color:var(--muted); font-size:.86rem; line-height:1.55; }
+    .guide-card.problem { border-top:4px solid #bb624f; }
+    .guide-card.hypothesis { border-top:4px solid var(--gold); }
+    .guide-card.alternative { border-top:4px solid #607f96; }
+    .guide-card.decision { border-top:4px solid #368175; }
+    .section-guide { background:#fff; border-left:5px solid var(--navy-700); border-radius:0 12px 12px 0; padding:1rem 1.15rem; margin:.4rem 0 1rem; box-shadow:0 6px 18px rgba(7,26,43,.05); }
+    .section-guide strong { color:var(--navy-800); }
+    .section-guide span { color:var(--muted); }
+    .interpret-card { background:#f8fbfd; border:1px solid var(--line); border-radius:12px; padding:1rem 1.15rem; margin:.8rem 0 1rem; }
+    .interpret-card .label { color:var(--gold); font-size:.76rem; font-weight:850; letter-spacing:.08em; }
+    .interpret-card h4 { color:var(--navy-900); margin:.25rem 0 .45rem; font-size:1.02rem; }
+    .interpret-card p { color:var(--muted); margin:0; line-height:1.65; }
+    .direction-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem; margin:1rem 0; }
+    .direction-card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:1rem; }
+    .direction-card b { color:var(--navy-800); display:block; margin-bottom:.3rem; }
+    .direction-card span { color:var(--muted); font-size:.85rem; line-height:1.55; }
+    @media(max-width:800px) { .guide-grid { grid-template-columns:1fr 1fr; } .portfolio-hero { padding:1.5rem; } }
+    @media(max-width:800px) { .direction-grid { grid-template-columns:1fr; } }
+    @media(max-width:520px) { .guide-grid { grid-template-columns:1fr; } }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def section_guide(title: str, message: str) -> None:
+    st.markdown(
+        f'<div class="section-guide"><strong>{title}</strong><br><span>{message}</span></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def interpretation_card(title: str, message: str, label: str = "CURRENT DATA INTERPRETATION") -> None:
+    st.markdown(
+        f'<div class="interpret-card"><div class="label">{html.escape(label)}</div>'
+        f'<h4>{html.escape(title)}</h4><p>{html.escape(message)}</p></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def tone_correlation(frame: pd.DataFrame, feature: str, tone: str) -> tuple[int, float]:
+    pair = frame.loc[frame["pr_tone_group"].eq(tone), [feature, TARGET]].dropna()
+    if len(pair) < 2 or pair[feature].nunique() < 2:
+        return len(pair), np.nan
+    return len(pair), float(pair[feature].corr(pair[TARGET]))
+
+
+def correlation_direction(value: float) -> str:
+    if np.isnan(value):
+        return "판단할 유효 표본이 부족합니다"
+    if abs(value) < 0.2:
+        return "뚜렷한 선형 방향이 약합니다"
+    return "증가할수록 CD가 감소하는 경향" if value < 0 else "증가할수록 CD가 증가하는 경향"
 
 
 @st.cache_data(show_spinner=False)
@@ -119,6 +220,10 @@ def render_blind_prediction(raw: pd.DataFrame) -> None:
     unexpected_tools = sorted(set(data["tool_id_group"]) - {"T01", "T02", "T03"})
 
     st.header("1. Blind Holdout Data Quality")
+    section_guide(
+        "먼저 확인할 문제 신호",
+        "결측·중복·입력 단위 오류와 PR tone/Tool 편중은 예측값을 흔들 수 있습니다. 후보를 자동 삭제하지 않고 원자료 확인 대상으로 표시합니다.",
+    )
     metric_cols = st.columns(5)
     metric_cols[0].metric("행", f"{len(raw):,}")
     metric_cols[1].metric("열", f"{raw.shape[1]:,}")
@@ -155,6 +260,10 @@ def render_blind_prediction(raw: pd.DataFrame) -> None:
     result[PREDICTION_COLUMN] = prediction
 
     st.header("2. Blind Holdout Prediction")
+    section_guide(
+        "이 숫자는 무엇인가요?",
+        "A/train에서 이미 고정한 관계를 새 행에 적용한 예상 CD입니다. 실제 정답이 없으므로 좋은 예측인지 평가한 점수는 아닙니다.",
+    )
     st.dataframe(result[["sample_id", PREDICTION_COLUMN]], width="stretch", hide_index=True)
     st.download_button(
         "전체 prediction CSV 다운로드",
@@ -239,8 +348,21 @@ def grouped_cd_plot(frame: pd.DataFrame, column: str, title: str):
 
 
 st.set_page_config(page_title="Photo Process AI Analysis", page_icon="🔬", layout="wide")
-st.title("Photo 공정 CD 분석")
-st.caption("STEP 2~5를 재현하는 해석 가능한 분석 앱 · Model 2 · 인과관계 추정 아님")
+apply_portfolio_theme()
+st.markdown("""
+<div class="portfolio-hero">
+  <div class="eyebrow">PHOTO PROCESS · EXPLAINABLE AI WORKFLOW</div>
+  <h1>Photo 공정 CD 분석</h1>
+  <p>데이터 품질을 먼저 의심하고, PR tone별 가설을 분리한 뒤, 단순 모델의 성능과 관계 방향이 반복해서 유지되는지 확인합니다.</p>
+</div>
+<div class="guide-grid">
+  <div class="guide-card problem"><b>⚠ 이게 문제일 수 있어요</b><span>CD 편차가 dose뿐 아니라 Tool 편중, Lot 차이, 입력 오류 때문에 커져 보일 수 있습니다.</span></div>
+  <div class="guide-card hypothesis"><b>◆ 핵심 가설</b><span>Normalized dose와 CD의 관계 방향은 Positive/Negative PR에서 다를 가능성이 있습니다.</span></div>
+  <div class="guide-card alternative"><b>↔ 이런 것도 영향을 줄 수 있어요</b><span>Focus의 비선형 반응, Tool condition, calibration, 누락된 recipe 조건을 대안 설명으로 검토합니다.</span></div>
+  <div class="guide-card decision"><b>✓ 그래서 이렇게 판단해요</b><span>단일 R²보다 반복검증·Lot 검증·데이터 품질 민감도를 함께 보고 다음 확인 순서를 정합니다.</span></div>
+</div>
+""", unsafe_allow_html=True)
+st.caption("STEP 2~5를 재현하는 해석 가능한 분석 앱 · 관찰적 관계이며 인과관계 추정 아님")
 
 uploaded = st.file_uploader("분석할 CSV 업로드", type=["csv"], help="업로드하지 않으면 A/train.csv 예제를 사용합니다.")
 try:
@@ -275,6 +397,10 @@ flags = input_error_candidates(data)
 flagged_ids = tuple(sorted(flags["sample_id"].astype(str).unique())) if not flags.empty else tuple()
 
 st.header("1. Data Quality")
+section_guide(
+    "왜 품질부터 보나요?",
+    "몇 개의 소수점·단위 오류 후보만으로도 Validation 성능과 안정성이 크게 달라질 수 있습니다. 낮은 점수를 보고 복잡한 AI를 추가하기 전에 입력을 먼저 확인합니다.",
+)
 metric_cols = st.columns(5)
 metric_cols[0].metric("원본 행", f"{len(raw):,}")
 metric_cols[1].metric("열", f"{raw.shape[1]:,}")
@@ -316,6 +442,10 @@ else:
         st.error("Model 2 검증에 필요한 유효 행 또는 PR tone 종류가 부족합니다. Data Quality와 EDA만 표시합니다.")
 
 st.header("2. 데이터 품질 민감도")
+section_guide(
+    "여기서 묻는 질문",
+    "오류 의심값을 포함하거나 검토용으로 제외했을 때 결론이 얼마나 달라질까요? 성능 개선은 오류 확정이 아니라 민감하다는 신호입니다.",
+)
 selection = st.radio("모델에 적용할 조건", ["오류 의심값 포함", "오류 의심값 제외"], horizontal=True)
 if flags.empty:
     st.info("현재 데이터에는 정의된 입력/단위 오류 후보가 없어 두 조건의 데이터가 같습니다.")
@@ -333,18 +463,76 @@ if model_ready:
         st.caption("차이는 입력 오류 후보가 Train의 기울기 추정 또는 Validation의 큰 오차에 미치는 영향 때문에 발생할 수 있습니다. 자동 보정이나 인과 해석은 하지 않습니다.")
 
 st.header("3. EDA")
+st.markdown("""
+<div class="guide-grid">
+  <div class="guide-card hypothesis"><b>H1 · Dose × PR tone</b><span>tone별 dose–CD 방향이 다르게 관찰될 가능성을 확인합니다. 두 tone을 한 관계로 합치지 않습니다.</span></div>
+  <div class="guide-card hypothesis"><b>H2 · Focus</b><span>선형 상관이 약해도 0 주변의 비선형·비대칭 관계일 가능성을 남겨둡니다.</span></div>
+  <div class="guide-card alternative"><b>대안 · Tool / Lot</b><span>관찰된 CD 차이가 Tool 구성이나 Lot별 조건 차이에서 나타났을 가능성을 함께 봅니다.</span></div>
+  <div class="guide-card problem"><b>반증 · 입력 오류</b><span>특정 극단값을 제외했을 때만 관계가 보인다면 원자료 확인 전에는 강한 결론을 보류합니다.</span></div>
+</div>
+""", unsafe_allow_html=True)
 eda_tabs = st.tabs(["Dose vs CD", "Focus vs CD", "Tool별 CD", "PR tone별 CD"])
 with eda_tabs[0]:
     st.pyplot(scatter_by_tone(data, "normalized_dose_pct"), width="stretch")
+    pos_n, pos_r = tone_correlation(data, "normalized_dose_pct", "POSITIVE")
+    neg_n, neg_r = tone_correlation(data, "normalized_dose_pct", "NEGATIVE")
+    interpretation_card(
+        "PR tone을 합치지 말고 방향을 따로 읽어야 합니다",
+        f"Positive는 n={pos_n}, Pearson r={pos_r:+.3f}로 {correlation_direction(pos_r)}입니다. "
+        f"Negative는 n={neg_n}, r={neg_r:+.3f}로 {correlation_direction(neg_r)}입니다. "
+        "두 방향 차이는 관찰적 관계이며 dose 변경의 인과효과를 뜻하지 않습니다.",
+    )
 with eda_tabs[1]:
     st.pyplot(scatter_by_tone(data, "focus_um", quadratic=True), width="stretch")
+    pos_focus_n, pos_focus_r = tone_correlation(data, "focus_um", "POSITIVE")
+    neg_focus_n, neg_focus_r = tone_correlation(data, "focus_um", "NEGATIVE")
+    interpretation_card(
+        "선형 상관이 약해도 Focus 영향이 없다고 단정하지 않습니다",
+        f"Positive는 n={pos_focus_n}, r={pos_focus_r:+.3f}, Negative는 n={neg_focus_n}, r={neg_focus_r:+.3f}입니다. "
+        "현재 범위의 직선 관계는 약할 수 있지만 최적 focus 주변의 곡률·비대칭, dose 및 Tool과의 상호작용 가능성은 별도 DOE로 확인해야 합니다.",
+    )
 with eda_tabs[2]:
     st.pyplot(grouped_cd_plot(data, "tool_id_group", "CD by Tool"), width="stretch")
+    tool_summary = data.groupby("tool_id_group")[TARGET].agg(["count", "mean"]).dropna().sort_values("mean")
+    if len(tool_summary):
+        low_tool, high_tool = str(tool_summary.index[0]), str(tool_summary.index[-1])
+        low_mean, high_mean = float(tool_summary.iloc[0]["mean"]), float(tool_summary.iloc[-1]["mean"])
+        interpretation_card(
+            "Tool별 CD level 차이는 중요한 대안 설명입니다",
+            f"현재 데이터의 평균 CD는 {low_tool} {low_mean:.2f} nm에서 {high_tool} {high_mean:.2f} nm 범위입니다. "
+            "이는 Tool 자체 효과의 증명이 아니며 calibration, condition, Lot·recipe 배치 차이가 함께 반영됐을 가능성이 있습니다.",
+        )
 with eda_tabs[3]:
     st.pyplot(grouped_cd_plot(data, "pr_tone_group", "CD by PR tone"), width="stretch")
+    tone_summary = data.groupby("pr_tone_group")[TARGET].agg(["count", "mean"]).dropna()
+    tone_parts = [f"{tone}: n={int(row['count'])}, 평균 {row['mean']:.2f} nm" for tone, row in tone_summary.iterrows()]
+    interpretation_card(
+        "Tone 평균만으로 공정 반응을 설명할 수는 없습니다",
+        "; ".join(tone_parts) + ". 평균이 비슷해도 dose에 대한 방향과 분포 폭이 다를 수 있으므로 tone별 산점도와 상호작용 계수를 함께 봅니다.",
+    )
 st.caption("관계선은 시각적 경향이며 원인이나 공정 효과를 확정하지 않습니다. PR tone 결측은 MISSING으로 유지하되 Positive/Negative 관계선에는 포함하지 않습니다.")
 
+st.subheader("전체 데이터 해석과 방향성")
+tool_direction = "Tool별 평균 차이가 보여 보정·원자료 확인이 필요합니다" if len(tool_summary) > 1 else "Tool 종류가 부족해 비교가 어렵습니다"
+focus_direction = "Focus의 단순 선형 방향은 약해 비선형 가능성을 남깁니다"
+quality_direction = f"입력 오류 후보 {len(flagged_ids)}행이 있어 포함/제외 민감도를 함께 봅니다" if flagged_ids else "정의된 입력 오류 후보는 발견되지 않았습니다"
+st.markdown(f"""
+<div class="direction-grid">
+  <div class="direction-card"><b>Dose 방향</b><span>Positive: {html.escape(correlation_direction(pos_r))}<br>Negative: {html.escape(correlation_direction(neg_r))}</span></div>
+  <div class="direction-card"><b>대안 설명</b><span>{html.escape(tool_direction)}<br>{html.escape(focus_direction)}</span></div>
+  <div class="direction-card"><b>판단 신뢰도</b><span>{html.escape(quality_direction)}<br>단일 그래프보다 반복검증과 Lot 검증을 우선합니다.</span></div>
+</div>
+""", unsafe_allow_html=True)
+section_guide(
+    "종합 판단",
+    "현재 데이터에서는 tone별 dose 방향을 핵심 신호로 보되, Tool level 차이와 입력 오류 민감성을 함께 고려해야 합니다. 다음 행동은 원자료·Tool 상태 확인과 tone별 통제 DOE이며, 현재 그래프만으로 공정 원인을 확정하지 않습니다.",
+)
+
 st.header("4. 기준모델: Model 2")
+section_guide(
+    "왜 Model 2인가요?",
+    "Dose, PR tone, dose×tone, Tool만 사용한 해석 가능한 기준입니다. 변수를 더 많이 넣은 모델이 Validation을 개선하지 않아 단순한 구조를 유지했습니다.",
+)
 if model_ready:
     _, validation_frame, selected_result, selected_prediction = fixed_details[selection]
     cards = st.columns(3)
@@ -364,6 +552,10 @@ if model_ready:
     st.caption("계수는 PR tone과 Tool을 함께 고려한 관찰적 회귀 관계이며 인과효과가 아닙니다.")
 
 st.header("5. 검증 결과")
+section_guide(
+    "점수가 흔들려도 방향은 유지될 수 있어요",
+    "예측 R²의 안정성과 dose–CD 방향의 안정성은 서로 다른 질문입니다. 반복 분할과 unseen-Lot 검증으로 둘을 따로 확인합니다.",
+)
 if model_ready:
     with st.spinner("30회 반복 분할과 Lot 검증을 계산하는 중입니다..."):
         repeated, repeated_summary, quality_detail, quality_summary, lot_results = current_validation_results(model_data, flagged_ids)

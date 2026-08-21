@@ -1,5 +1,17 @@
 # AI 사용 기록
 
+## 2026-08-21 — Photo 앱 네이비 테마와 가설 안내 강화
+
+- AI 작업: `projects/01_photo/app.py`에 밝은 네이비 기반 포트폴리오 테마, 상단 문제·핵심 가설·대안 설명·판단 카드, 단계별 “왜 보는가” 안내를 추가했다.
+- EDA 해석 강화: Dose, Focus, Tool, PR tone 탭마다 현재 업로드 데이터에서 계산한 표본 수·Pearson 상관·평균 CD를 사용해 그래프 읽는 법과 방향성을 표시했다. 탭 아래에는 Dose 방향, Tool/Focus 대안 설명, 입력 오류 민감도와 종합 판단을 한 화면에 정리했다.
+- 설명 개선: CD 차이는 dose뿐 아니라 Tool/Lot 편중·입력 오류·Focus 비선형성 등으로 설명될 수 있음을 먼저 보여주고, EDA에서 H1/H2/대안/반증을 분리했다. Model 2 선택 이유와 예측 점수 안정성·관계 방향 안정성의 차이도 화면에 설명했다.
+- 해석 제한: 모든 공정 설명을 가능성·가설·대안 설명으로 표현했으며 인과효과나 실제 recipe 일반 법칙으로 확정하지 않았다.
+- 기존 로직 보존: Analysis Mode와 Blind Prediction Mode의 데이터 처리·모델·검증·예측 계산은 변경하지 않았다.
+- 검증: A/train.csv 업로드 시 R² 0.679, RMSE 1.661 nm, MAE 1.140 nm가 동일했고 새 문제·가설·Model 2 안내가 렌더링됐다. A/holdout_features.csv는 Blind 안내와 200/200행 예측을 유지했으며 R²/RMSE/MAE를 표시하지 않았다.
+- 인간 판단: 품질 표만 나열하지 않고 “무엇이 문제일 수 있는가 → 무엇이 가설인가 → 어떤 대안이 있는가 → 무엇을 검증해 판단하는가” 순서로 사용자를 안내하기로 결정했다.
+- AI 오류/수정: 없음.
+- 인간 수정: 현재 없음.
+
 ## 2026-08-21 — Photo Blind Holdout 예측 모드
 
 - AI 작업: `projects/01_photo/app.py`에서 Target CD 유무로 Analysis Mode와 Blind Prediction Mode를 분기했다. Target이 없는 CSV는 데이터 품질을 점검한 뒤 기존 A/train 전체로 고정 Model 2를 학습하고 모든 업로드 행의 `predicted_resist_line_cd_nm`과 다운로드 CSV를 생성한다.
