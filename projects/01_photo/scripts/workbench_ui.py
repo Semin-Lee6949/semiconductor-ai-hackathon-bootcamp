@@ -1,6 +1,7 @@
 """Tabbed Streamlit UI for the Photo Process Analysis Workbench."""
 
 from pathlib import Path
+import html
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,8 +30,9 @@ def theme():
     .cd{background:linear-gradient(130deg,#071a2b,var(--navy2));border-radius:16px;padding:1.4rem;color:#fff;text-align:center;margin:1rem 0}.cd span{color:#9ed7ea}.cd strong{display:block;font-size:2.7rem}.cd small{color:#dce9f0}
     .question-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:1rem 0}.question-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:1rem;box-shadow:0 8px 22px #0b27400c}.question-card b{display:block;color:var(--navy2);margin-bottom:.35rem}.question-card span{color:var(--muted);font-size:.84rem;line-height:1.55}.question-card:nth-child(1){border-top:4px solid #b85f4b}.question-card:nth-child(2){border-top:4px solid var(--gold)}.question-card:nth-child(3){border-top:4px solid #398072}
     .score{background:linear-gradient(140deg,#fff,#eef5f8);border:1px solid var(--line);border-radius:14px;padding:1.1rem;text-align:center}.score span{color:var(--muted);font-size:.78rem}.score strong{display:block;color:var(--navy);font-size:2rem}.score small{color:var(--muted)}
+    .schema-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.schema-card{background:linear-gradient(145deg,#fff,#f7fafc);border:1px solid var(--line);border-radius:13px;padding:1rem}.schema-card b{color:var(--navy);display:flex;justify-content:space-between;align-items:center}.schema-card b em{font-style:normal;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.15rem .55rem;font-size:.72rem}.schema-card p{margin:.65rem 0 0!important;line-height:1.9}.column-pill{display:inline-block;background:#edf3f6;border:1px solid #d8e4ea;color:#294b62;border-radius:7px;padding:.2rem .48rem;margin:.12rem;font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.schema-card.leak{border-left:4px solid #b85f4b}.schema-card.target{border-left:4px solid #398072}
     .cd-scheme{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.3rem;box-shadow:0 10px 28px #0b274012}.cd-scheme-title{color:var(--navy);font-weight:850;margin-bottom:1rem}.wafer-row{display:grid;grid-template-columns:95px 1fr 100px;gap:1rem;align-items:center;margin:.9rem 0}.wafer-label{color:var(--muted);font-weight:750}.wafer-window{height:58px;background:repeating-linear-gradient(135deg,#edf3f6,#edf3f6 8px,#e5edf1 8px,#e5edf1 16px);border-radius:9px;display:flex;align-items:center;justify-content:center;overflow:hidden}.cd-line{height:38px;border-radius:5px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px #0b274030}.cd-line.ref{background:#8ba1b0}.cd-line.pred{background:linear-gradient(90deg,#174d72,#36a0bd)}.wafer-value{font-weight:900;color:var(--navy);text-align:right}.delta-pill{display:inline-block;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.35rem .75rem;font-weight:800;margin-top:.35rem}
-    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
+    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid,.schema-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid,.schema-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
     </style>""", unsafe_allow_html=True)
 
 
@@ -66,8 +68,23 @@ def audit(raw, data, duplicates, invalid):
     flags = detect_suspected_input_errors(data)
     cols = st.columns(5)
     for box, (label, value) in zip(cols, [("행", len(raw)), ("열", raw.shape[1]), ("결측 셀", int(raw.isna().sum().sum())), ("완전 중복 추가행", duplicates), ("입력 오류 후보 행", flags["sample_id"].nunique() if not flags.empty else 0)]): box.metric(label, f"{value:,}")
-    with st.expander(f"컬럼 구조 보기 · {raw.shape[1]}개", expanded=False):
-        schema = pd.DataFrame({"컬럼": raw.columns, "데이터 타입": raw.dtypes.astype(str).values, "결측": raw.isna().sum().values})
+    identifier = [x for x in ["sample_id", "lot_id", "wafer_id", "tool_id", "pr_tone"] if x in raw]
+    process = [x for x in ALLOWED_INPUTS if x in raw and x not in identifier]
+    target = [TARGET] if TARGET in raw else []
+    leakage_names = ["cdu_3sigma_nm", "ler_nm", "scum_probability", "pattern_collapse_probability", "defect_probability", "spec_pass"]
+    leakage = [x for x in leakage_names if x in raw]
+    assigned = set(identifier + process + target + leakage); other = [x for x in raw if x not in assigned]
+    groups = [("식별·그룹 정보", identifier, ""), ("공정 입력 후보", process, ""), ("예측 Target", target, "target"), ("CD 이후 결과 · Input 금지", leakage, "leak"), ("기타 측정·메타데이터", other, "")]
+    cards = []
+    for title, columns, css in groups:
+        if not columns: continue
+        pills = "".join(f'<span class="column-pill">{html.escape(column)}</span>' for column in columns)
+        cards.append(f'<div class="schema-card {css}"><b>{title}<em>{len(columns)}개</em></b><p>{pills}</p></div>')
+    st.subheader("컬럼 역할 지도")
+    st.caption("모델에 넣을 수 있는 공정 입력과 Target Leakage 위험 컬럼을 역할별로 구분했습니다.")
+    st.markdown(f'<div class="schema-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
+    with st.expander("데이터 타입·결측 상세 보기", expanded=False):
+        schema = pd.DataFrame({"컬럼": raw.columns, "데이터 타입": raw.dtypes.astype(str).values, "결측 수": raw.isna().sum().values, "고유값 수": raw.nunique(dropna=False).values})
         st.dataframe(schema, width="stretch", hide_index=True)
     left, right = st.columns(2)
     with left:
@@ -76,9 +93,28 @@ def audit(raw, data, duplicates, invalid):
         if "pr_tone" in raw: st.subheader("PR tone 분포"); st.dataframe(clean_category(raw.pr_tone).value_counts().rename("count"), width="stretch")
     with right:
         if "tool_id" in raw: st.subheader("Tool 분포"); st.dataframe(clean_category(raw.tool_id).value_counts().rename("count"), width="stretch")
-        st.subheader("숫자 변환 실패"); st.dataframe(pd.Series(invalid, name="invalid_non_numeric_count").to_frame(), width="stretch")
+        st.subheader("숫자 형식 검사")
+        failed = {column: count for column, count in invalid.items() if count > 0}
+        if failed:
+            st.warning("숫자형 공정 컬럼에 숫자로 읽을 수 없는 문자열이 있습니다. 원본 값 확인이 필요합니다.")
+            st.dataframe(pd.Series(failed, name="숫자 변환 실패 행 수").rename_axis("컬럼").to_frame(), width="stretch")
+        else:
+            st.success("숫자형 컬럼의 형식 변환 실패가 없습니다.")
     st.subheader("입력/단위 오류 검토 후보"); st.caption("후보를 자동 수정·삭제하지 않습니다.")
-    st.dataframe(flags if not flags.empty else pd.DataFrame({"결과": ["후보 없음"]}), width="stretch")
+    if not flags.empty:
+        reason_ko = {
+            "below 50%; decimal-place/unit entry suspect": "50% 미만으로 관측되어 소수점 위치 또는 단위 입력 오류가 의심됩니다.",
+            "absolute focus above 0.5 um; decimal-place entry suspect": "Focus 절댓값이 0.5 µm를 넘어 소수점 위치 입력 오류 가능성이 있습니다.",
+            "below 50 nm; about one tenth of observed operating cluster": "50 nm 미만이며 일반 관측 범위의 약 1/10 수준이라 단위 또는 소수점 오류 가능성이 있습니다.",
+            "below 50 C physical review bound": "50°C 미만으로 공정 검토 하한보다 낮아 원자료 확인이 필요합니다.",
+            "above 5%; far outside observed operating cluster": "5%를 초과해 일반 관측 범위에서 크게 벗어나 단위 또는 입력 오류 가능성이 있습니다.",
+        }
+        display_flags = flags.rename(columns={"row_index": "행 번호", "sample_id": "샘플 ID", "variable": "검토 변수", "value": "입력값"}).copy()
+        display_flags["검토 이유"] = flags["reason"].map(reason_ko).fillna(flags["reason"])
+        display_flags["권장 조치"] = "자동 삭제하지 않고 원본 기록·단위·소수점 위치를 담당자가 확인합니다."
+        st.dataframe(display_flags[["행 번호", "샘플 ID", "검토 변수", "입력값", "검토 이유", "권장 조치"]], width="stretch", hide_index=True)
+    else:
+        st.success("현재 기준에서 입력·단위 오류 검토 후보가 없습니다.")
     return flags
 
 
