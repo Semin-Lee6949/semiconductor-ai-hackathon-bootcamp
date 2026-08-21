@@ -137,3 +137,11 @@ AI가 계산과 초안 생성을 지원했지만, 분석 범위·신뢰할 결�
 - AI 작업: 10개 공정의 `projects/[공정명]/data/A`, `data/B`를 만들고 각 원본의 `train.csv`, `holdout_features.csv`를 분리된 상태로 복사했다.
 - 원본 보호: `datasets/student/` 파일은 이동·수정하지 않았으며, 복사 전후 원본과 복사본 40쌍의 SHA-256 일치를 검증했다.
 - 범위 제한: A/B 또는 train/holdout을 병합하지 않았고, 분석·결과 생성·PLAN 내용 변경을 수행하지 않았다.
+## 2026-08-21 — Photo Process Analysis Workbench 확장
+
+- AI 작업: 기존 Streamlit 결과 대시보드를 CSV/XLSX 입력, Data Audit, 누수 방지 Variable Lab, 선택 변수 기반 자동 EDA, Linear Regression Custom Model, 고정 Model 2 비교, 회귀계수 해석, What-if 및 한 변수 sweep을 제공하는 7단계 워크벤치로 확장했다.
+- 로직 재사용: 기존 `TrainOnlyFeatureBuilder`, 고정 seed 분할, 반복 검증, Lot 검증, 입력 오류 후보 규칙을 재사용했다. Custom Model 전처리는 Train에서만 학습하며 CD 이후 품질 결과를 선택 목록에서 제외했다.
+- 안전장치: 상관·회귀·What-if 결과를 인과효과로 표현하지 않고, 학습 범위 밖 숫자 입력과 미학습 범주를 경고 또는 차단한다. Blind Holdout은 기존 A/train의 고정 Model 2로만 예측하며 성능지표와 모델 재선택을 제공하지 않는다.
+- 검증: 기본 A/train의 Model 2가 R² 0.679, RMSE 1.661 nm, MAE 1.140 nm를 유지하는지 확인했다. 기본 변수 및 Thickness 추가 Custom Model, 선택 변수별 EDA 탭, dose 변경 예측, tone별 반대 dose 방향, 범위 밖 경고, 200행 Holdout 예측, XLSX 입력과 CSV 동일 지표를 테스트했다.
+- 인간 판단: Target은 이번 버전에서 CD로 제한하고, 허용 공정변수와 leakage 차단 목록, Model 2 기준 비교, Random Forest 미사용, Holdout 비튜닝 원칙, 최종 해석과 한계를 유지했다.
+- 기존 결과 보존: STEP 2~5 output CSV, 원본 데이터, `report/index.html`은 수정하지 않았다.
