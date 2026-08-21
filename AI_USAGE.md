@@ -1,5 +1,12 @@
 # AI 사용 기록
 
+## 2026-08-21 — 전 탭 엔지니어 교육 해설
+
+- AI 작업: Data Audit부터 EDA, Linear/Ridge/Logistic, What-if, 반복·품질·Lot·방향 Validation, Blind Prediction, Limitations까지 각 결과 아래에 `데이터에서 보이는 것 → 엔지니어의 생각 → 다음 관리·검증 Action → 주의점` 카드를 추가했다.
+- 데이터 기반 문장: Tool/PR box plot의 최대 평균 차이와 최대 산포 그룹, tone별 Pearson r, Model 2 대비 R² 차이, Logistic 기준모델 비교, sweep 시작·끝 예측, 반복 R² 평균·표준편차, worst Lot fold, 오류 후보 민감도와 slope 방향 반복 횟수를 현재 업로드 데이터에서 계산해 설명한다.
+- 교육 원칙: 산포가 큰 Tool은 calibration·PM·Lot·조건 구성을 확인하는 출발점으로 사용하고, 관찰 차이를 Tool 인과효과나 recipe 추천으로 확정하지 않는다. 모든 Action은 원자료 확인 또는 통제 DOE로 이어지게 했다.
+- 검증: 기본 Analysis에서 교육 카드 11개, 회귀/분류 모델 생성 후 13개가 렌더링됐고 Blind Holdout에서도 Audit 및 200행 예측 해설이 예외 없이 표시됐다.
+
 ## 2026-08-21 — Ridge 및 Logistic 교육용 Model Lab
 
 - AI 작업: CD 연속값 예측에는 Linear/Ridge Regression을 선택할 수 있게 하고, PASS/FAIL 분류에는 별도 Logistic Regression을 추가했다. 모든 모델은 공정 Input만 사용하고 동일 고정 분할과 Train-only 전처리를 적용했다.

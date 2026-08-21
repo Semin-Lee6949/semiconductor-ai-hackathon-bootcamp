@@ -45,13 +45,20 @@ def theme():
     .schema-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.schema-card{background:linear-gradient(145deg,#fff,#f7fafc);border:1px solid var(--line);border-radius:13px;padding:1rem}.schema-card b{color:var(--navy);display:flex;justify-content:space-between;align-items:center}.schema-card b em{font-style:normal;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.15rem .55rem;font-size:.72rem}.schema-card p{margin:.65rem 0 0!important;line-height:1.9}.column-pill{display:inline-block;background:#edf3f6;border:1px solid #d8e4ea;color:#294b62;border-radius:7px;padding:.2rem .48rem;margin:.12rem;font-size:.75rem;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.schema-card.leak{border-left:4px solid #b85f4b}.schema-card.target{border-left:4px solid #398072}
     .parameter-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.05rem;margin:.55rem 0;box-shadow:0 7px 18px #0b27400b}.parameter-head{display:flex;justify-content:space-between;gap:1rem;align-items:center}.parameter-head b{color:var(--navy);font-size:1rem}.parameter-head em{font-style:normal;color:var(--navy2);background:#e5eef4;border-radius:99px;padding:.18rem .6rem;font-size:.72rem}.parameter-code{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.76rem}.parameter-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.75rem}.parameter-grid div{background:#f7fafc;border-radius:9px;padding:.7rem}.parameter-grid strong{display:block;color:var(--navy2);font-size:.76rem;margin-bottom:.25rem}.parameter-grid span{color:var(--muted);font-size:.8rem;line-height:1.5}
     .finding{background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy2);border-radius:0 12px 12px 0;padding:.9rem 1rem;margin:.55rem 0}.finding b{color:var(--navy)}.finding span{display:block;color:var(--muted);font-size:.84rem;margin-top:.25rem}.decision{background:linear-gradient(135deg,#071a2b,#174d72);color:#fff;border-radius:14px;padding:1rem 1.15rem;margin:.65rem 0}.decision b{color:#9ed7ea}.decision span{display:block;color:#e0edf3;font-size:.86rem;line-height:1.55;margin-top:.25rem}.cannot{background:#fff7f2;border:1px solid #e8c8b8;border-left:5px solid #b85f4b;border-radius:0 12px 12px 0;padding:1rem;color:#744334}
+    .engineer{background:linear-gradient(145deg,#f7fbfd,#fff);border:1px solid #cbdde7;border-radius:14px;padding:1rem 1.1rem;margin:1rem 0;box-shadow:0 8px 22px #0b27400d}.engineer-head{color:var(--navy);font-weight:900;margin-bottom:.65rem}.engineer-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}.engineer-grid div{background:#fff;border:1px solid var(--line);border-radius:9px;padding:.72rem}.engineer-grid b{display:block;color:var(--navy2);font-size:.76rem;margin-bottom:.25rem}.engineer-grid span{color:var(--muted);font-size:.81rem;line-height:1.5}.engineer-limit{margin-top:.65rem;color:#835647;font-size:.76rem}
     .cd-scheme{background:#fff;border:1px solid var(--line);border-radius:16px;padding:1.3rem;box-shadow:0 10px 28px #0b274012}.cd-scheme-title{color:var(--navy);font-weight:850;margin-bottom:1rem}.wafer-row{display:grid;grid-template-columns:95px 1fr 100px;gap:1rem;align-items:center;margin:.9rem 0}.wafer-label{color:var(--muted);font-weight:750}.wafer-window{height:58px;background:repeating-linear-gradient(135deg,#edf3f6,#edf3f6 8px,#e5edf1 8px,#e5edf1 16px);border-radius:9px;display:flex;align-items:center;justify-content:center;overflow:hidden}.cd-line{height:38px;border-radius:5px;transition:width .7s cubic-bezier(.2,.8,.2,1);box-shadow:0 4px 12px #0b274030}.cd-line.ref{background:#8ba1b0}.cd-line.pred{background:linear-gradient(90deg,#174d72,#36a0bd)}.wafer-value{font-weight:900;color:var(--navy);text-align:right}.delta-pill{display:inline-block;background:#e5eef4;color:var(--navy2);border-radius:99px;padding:.35rem .75rem;font-weight:800;margin-top:.35rem}
-    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid,.schema-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid,.schema-grid,.parameter-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
+    div[data-baseweb="tab-list"]{gap:.2rem}button[data-baseweb="tab"]{background:#e5eef4!important;color:var(--navy)!important;border-radius:8px 8px 0 0}button[data-baseweb="tab"][aria-selected="true"]{background:#fff!important}.stDataFrame{background:#fff;border-radius:10px}@media(max-width:850px){.flow,.fish,.question-grid,.schema-grid{grid-template-columns:1fr 1fr}}@media(max-width:520px){.flow,.fish,.question-grid,.schema-grid,.parameter-grid,.engineer-grid{grid-template-columns:1fr}.wafer-row{grid-template-columns:75px 1fr}.wafer-value{grid-column:2}}
     </style>""", unsafe_allow_html=True)
 
 
 def guide(title, text):
     st.markdown(f'<div class="guide"><b>{title}</b><br><span>{text}</span></div>', unsafe_allow_html=True)
+
+
+def engineer_note(observation, thinking, action, limit):
+    st.markdown(f'''<div class="engineer"><div class="engineer-head">🎓 1타 엔지니어의 데이터 읽기</div><div class="engineer-grid">
+    <div><b>① 데이터에서 보이는 것</b><span>{html.escape(observation)}</span></div><div><b>② 이렇게 생각합니다</b><span>{html.escape(thinking)}</span></div>
+    <div style="grid-column:1/-1"><b>③ 다음 관리·검증 Action</b><span>{html.escape(action)}</span></div></div><div class="engineer-limit">주의 · {html.escape(limit)}</div></div>''', unsafe_allow_html=True)
 
 
 def cd_scheme(reference, prediction):
@@ -136,6 +143,12 @@ def audit(raw, data, duplicates, invalid):
             st.dataframe(pd.Series(failed, name="숫자 변환 실패 행 수").rename_axis("컬럼").to_frame(), width="stretch")
         else:
             st.success("숫자형 컬럼의 형식 변환 실패가 없습니다.")
+    if "pr_tone" in raw and "tool_id" in raw:
+        fig, axes = plt.subplots(1, 2, figsize=(10, 3.5))
+        for ax, column, title, color in [(axes[0], "pr_tone", "Sample count by PR tone", "#286f99"), (axes[1], "tool_id", "Sample count by Tool", "#c99a45")]:
+            counts = clean_category(raw[column]).value_counts(); ax.bar(counts.index.astype(str), counts.values, color=color); ax.set(title=title, ylabel="Count"); ax.grid(axis="y", alpha=.2)
+            for index, value in enumerate(counts.values): ax.text(index, value, f"{value:,}", ha="center", va="bottom", fontsize=8)
+        fig.tight_layout(); st.pyplot(fig, width="stretch")
     st.subheader("입력/단위 오류 검토 후보"); st.caption("후보를 자동 수정·삭제하지 않습니다.")
     if not flags.empty:
         reason_ko = {
@@ -167,6 +180,14 @@ def audit(raw, data, duplicates, invalid):
         st.caption("검토 후보는 자동 삭제·보정하지 않습니다. 원자료 확인 후 수정 여부와 근거를 별도 로그로 남겨야 합니다.")
     else:
         st.success("현재 기준에서 입력·단위 오류 검토 후보가 없습니다.")
+    missing_total = int(raw.isna().sum().sum()); tool_counts = clean_category(raw.tool_id).value_counts() if "tool_id" in raw else pd.Series(dtype=float)
+    imbalance = float(tool_counts.max() / tool_counts.min()) if len(tool_counts) > 1 and tool_counts.min() else 1.0
+    engineer_note(
+        f"결측 {missing_total:,}셀, 완전 중복 추가행 {duplicates:,}개, 입력 오류 검토 후보 {flags['sample_id'].nunique() if not flags.empty else 0}행이며 Tool 최대/최소 표본 비는 {imbalance:.2f}배입니다.",
+        "결측·입력 오류는 모델이 자동으로 해결할 문제가 아니라 원자료와 단위를 확인할 신호입니다. Tool 표본 편중이 크면 전체 평균이 특정 Tool 조건을 더 많이 반영할 수 있습니다.",
+        "오류 후보 원본 로그 확인 → 중복 생성 경로 확인 → tone×Tool 표본표 확인 → 부족한 조합의 추가 수집 순서로 관리합니다.",
+        "후보 표시는 오류 확정이나 삭제 근거가 아니며, 표본수 차이는 Tool 효과의 증명이 아닙니다.",
+    )
     return flags
 
 
@@ -186,6 +207,20 @@ def numeric_eda(data, variable, focus_squared):
     st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
     if variable == "focus_um": guide("Focus 해석", "선형 상관이 약해도 관계 없음으로 단정하지 않습니다. Focus²와 DOE로 비선형 가능성을 확인합니다.")
     if variable == "normalized_dose_pct": guide("Dose 해석", "Positive/Negative를 섞지 않고 방향을 따로 봅니다. 관찰적 관계이며 인과효과가 아닙니다.")
+    row_map = {row["PR tone"]: row for row in rows}; pos_r = row_map.get("POSITIVE", {}).get("Pearson r", np.nan); neg_r = row_map.get("NEGATIVE", {}).get("Pearson r", np.nan)
+    if variable == "normalized_dose_pct":
+        observation = f"Dose–CD Pearson r은 Positive {pos_r:+.3f}, Negative {neg_r:+.3f}로 관찰됩니다."
+        thinking = "tone별 방향이 다르면 두 PR을 합친 기울기는 공정 반응을 가릴 수 있습니다. interaction과 반복검증을 함께 봅니다."
+        action = "tone별 dose 구간을 나누고 Tool을 block으로 둔 반복 DOE에서 평균 CD와 산포를 동시에 비교합니다."
+    elif variable == "focus_um":
+        observation = f"Focus–CD 선형 r은 Positive {pos_r:+.3f}, Negative {neg_r:+.3f}입니다. 화면의 곡선 가이드도 함께 확인합니다."
+        thinking = "선형 r이 작아도 최적 focus 주변의 U자형·비대칭 공정창 가능성이 남습니다."
+        action = "0 주변 focus level을 대칭적으로 배치하고 tone·Tool별 CD 평균과 산포를 비교하는 DOE를 설계합니다."
+    else:
+        observation = f"{variable}–CD Pearson r은 Positive {pos_r:+.3f}, Negative {neg_r:+.3f}입니다."
+        thinking = "tone별 값이 다르거나 범위가 좁으면 단순 상관만으로 해당 조건의 중요도를 판단하기 어렵습니다."
+        action = f"{variable}의 실제 변경 범위와 tone·Tool·Lot 동시 변화를 확인하고, 필요하면 한 조건씩 통제해 재검증합니다."
+    engineer_note(observation, thinking, action, "Pearson r과 시각적 추세는 선형 연관이며 인과효과나 최적 recipe를 뜻하지 않습니다.")
 
 
 def categorical_eda(data, variable):
@@ -193,6 +228,15 @@ def categorical_eda(data, variable):
     labels = summary[group].astype(str).tolist(); values = [data.loc[data[group].astype(str).eq(label), TARGET].dropna() for label in labels]
     fig, ax = plt.subplots(figsize=(8, 4)); ax.boxplot(values, tick_labels=labels, showfliers=True); ax.set(title=f"CD by {variable}", ylabel=TARGET); fig.tight_layout(); st.pyplot(fig, width="stretch"); st.dataframe(summary, width="stretch", hide_index=True)
     guide("그룹 해석", "평균 차이는 원인 증명이 아닙니다. Lot 배치, recipe 연동, calibration을 함께 확인합니다.")
+    spread = data.groupby(group)[TARGET].std().dropna(); widest = str(spread.idxmax()) if len(spread) else "판단 불가"; widest_std = float(spread.max()) if len(spread) else np.nan
+    mean_gap = float(summary["mean"].max() - summary["mean"].min()) if len(summary) > 1 else 0.0
+    if variable == "tool_id":
+        thinking = f"{widest}의 산포가 가장 크다면 chamber/track condition, calibration, maintenance 시점 또는 투입 Lot 구성이 다른지 먼저 의심합니다."
+        action = f"{widest}에서 tone×dose를 맞춘 뒤 CD 산포를 재비교하고 calibration·PM·Lot 로그를 시간순으로 겹쳐 확인합니다."
+    else:
+        thinking = "PR tone 평균만 보면 dose에 대한 반대 방향과 분포 내부 구조를 놓칠 수 있습니다."
+        action = "tone별 dose scatter, slope, IQR과 Tool 구성을 함께 확인하고 tone별 Process Window를 별도로 검토합니다."
+    engineer_note(f"그룹 평균 CD 최대 차이는 {mean_gap:.3f} nm이고 {widest}의 표준편차가 {widest_std:.3f} nm로 가장 큽니다.", thinking, action, "Box plot의 산포 차이는 표본수·극단값·Lot 구성 영향을 포함하며 설비 또는 재료의 인과효과를 확정하지 않습니다.")
 
 
 def correlation_matrix(data, variables, tone):
@@ -335,6 +379,8 @@ def run(project: Path):
                     st.error(str(exc)); result = None
                 if result is not None:
                     st.dataframe(result[["sample_id", PREDICTION]], width="stretch", hide_index=True); st.download_button("전체 prediction CSV 다운로드", result.to_csv(index=False).encode("utf-8-sig"), "photo_holdout_predictions.csv", "text/csv"); st.success(f"{len(result):,}행 모두 예측했습니다. R²/RMSE/MAE는 계산하지 않았습니다.")
+                    prediction_std = float(result[PREDICTION].std()); prediction_min = float(result[PREDICTION].min()); prediction_max = float(result[PREDICTION].max())
+                    engineer_note(f"200행 예측 범위는 {prediction_min:.2f}~{prediction_max:.2f} nm, 예측 표준편차는 {prediction_std:.2f} nm입니다.", "예측 분포는 Holdout 조건 다양성을 보여주지만 실제 오차나 품질 수준을 뜻하지 않습니다. 정답 CD가 없기 때문입니다.", "예측 파일과 모델 버전을 고정해 저장하고, 정답 공개 후 sample_id로 결합해 최초 1회 최종 평가합니다.", "Holdout 예측을 보고 변수·모델·전처리를 다시 선택하면 평가 누수가 발생합니다.")
         with tabs[7]: st.warning("Holdout으로 모델 구조·변수·전처리를 수정하지 않습니다.")
         return
     required = {"sample_id", "pr_tone", "tool_id", TARGET}
@@ -393,6 +439,8 @@ def run(project: Path):
                 if len(custom.inputs) > len(baseline.inputs) and custom.metrics["validation_r2"] <= baseline.metrics["validation_r2"]: st.warning("변수 증가가 일반화 성능 개선으로 이어지지 않았습니다.")
                 coef = custom.coefficients.copy(); coef["교육용 해석"] = coef.term.map(explain_term); st.dataframe(coef, width="stretch", hide_index=True)
                 st.caption("Ridge 계수는 Train 표준화 후의 조건부 계수입니다. 두 모델 모두 인과효과를 의미하지 않습니다.")
+                delta_r2 = custom.metrics["validation_r2"] - baseline.metrics["validation_r2"]
+                engineer_note(f"{custom.name}의 Validation R²는 {custom.metrics['validation_r2']:.3f}, Model 2 대비 {delta_r2:+.3f}입니다.", "Train 점수가 아니라 unseen Validation 추가가치가 모델 채택 기준입니다. Ridge는 상관된 변수의 계수를 줄일 수 있지만 자동으로 성능을 높이지 않습니다.", "R²·RMSE·MAE를 Model 2와 함께 비교하고, 개선이 작거나 불안정하면 단순 Model 2를 유지합니다.", "한 번의 Validation 차이는 우연한 분할 영향이 있으므로 반복·Lot 검증 전에는 우열을 확정하지 않습니다.")
             else: st.info("변수와 회귀 종류를 선택한 뒤 Build CD Regression을 눌러주세요.")
         with logistic_tab:
             st.markdown("**Target: spec_pass · PASS=1 / FAIL=0 분류**")
@@ -413,6 +461,7 @@ def run(project: Path):
                 if classifier.metrics["validation_roc_auc"] < .6: st.warning("ROC-AUC가 0.6 미만으로 PASS/FAIL 순위 구분력이 약합니다. 모델 생성 성공과 유용한 예측 성능을 구분해야 합니다.")
                 coef = classifier.coefficients.copy(); coef["교육용 해석"] = "양수면 다른 조건이 같을 때 PASS log-odds 증가와 관련, 음수면 감소와 관련"; st.dataframe(coef, width="stretch", hide_index=True)
                 st.caption("Accuracy는 정답 비율, ROC-AUC는 PASS/FAIL 순위 구분력, Log Loss는 확률 예측의 틀린 확신까지 평가합니다. 계수는 인과효과가 아닙니다.")
+                engineer_note(f"Validation Accuracy {classifier.metrics['validation_accuracy']:.3f}, 다수 클래스 기준 {classifier.metrics['majority_baseline_accuracy']:.3f}, ROC-AUC {classifier.metrics['validation_roc_auc']:.3f}입니다.", "모델이 실행됐다는 사실과 PASS/FAIL을 유용하게 구분한다는 사실은 다릅니다. 기준보다 낮은 Accuracy와 0.5에 가까운 AUC는 약한 분류력을 뜻합니다.", "label 정의·class imbalance·누락 공정변수를 확인하고, 기준모델을 넘지 못하면 배포하지 않습니다.", "spec_pass는 CD와 다른 분류 Target이며 이 모델의 확률을 CD 예측값으로 해석할 수 없습니다.")
         with learning_tab:
             st.markdown("""- **Linear Regression**: CD와 Input의 조건부 선형 관계를 가장 직접적으로 해석합니다. 기준 Model 2와 같은 출발점입니다.
 - **Ridge Regression**: 상관된 변수가 많을 때 큰 계수를 줄여 안정화를 시도합니다. alpha가 클수록 규제가 강하지만 Validation 개선을 보장하지 않습니다.
@@ -434,13 +483,30 @@ def run(project: Path):
         if sweep_options:
             sweep = st.selectbox("Sweep variable", sweep_options); low, high = active.builder.ranges[sweep]; grid = np.linspace(low, high, 60); frames = pd.concat([scenario({**values, sweep: float(v)}) for v in grid], ignore_index=True); curve = active.predict(frames)
             fig, ax = plt.subplots(figsize=(9, 4)); ax.plot(grid, curve, color="#174d72", lw=3); ax.scatter([values[sweep]], [pred], color="#c15c4a", s=75); ax.set(xlabel=sweep, ylabel="Predicted CD (nm)", title=f"One-variable sweep · {active.name}"); ax.grid(alpha=.2); fig.tight_layout(); st.pyplot(fig, width="stretch"); st.caption("모델 예측 곡선이며 실제 공정 인과효과가 아닙니다.")
+            direction = "증가" if curve[-1] > curve[0] else "감소" if curve[-1] < curve[0] else "거의 변화 없음"
+            engineer_note(f"다른 선택 조건을 고정한 모델에서 {sweep} 최소→최대 변화 시 예측 CD는 {curve[0]:.2f}→{curve[-1]:.2f} nm로 {direction}합니다.", "이 곡선은 현재 모델이 학습한 조건부 반응을 직관적으로 점검하는 도구입니다. PR tone을 바꾸면 방향이 달라지는지도 비교해야 합니다.", "관심 후보 조건을 좁힌 뒤 실제 wafer DOE에서 중심값·산포·결함을 함께 측정해 재검증합니다.", "한 변수 sweep은 다른 조건이 실제 공정에서 독립적으로 고정 가능하다고 보장하지 않으며 외삽은 신뢰도가 낮습니다.")
     with tabs[5]:
         st.header("Validation"); guide("지표를 어떻게 판단하나요?", "R²는 평균 예측 대비 설명력, RMSE는 큰 오차에 더 민감한 nm 오차, MAE는 전형적인 절대 nm 오차입니다. 단일 분할보다 30회 반복·Lot 검증·방향 안정성을 함께 봅니다."); cards = st.columns(3); cards[0].metric("Validation R²", f"{baseline.metrics['validation_r2']:.3f}"); cards[1].metric("RMSE", f"{baseline.metrics['validation_rmse_nm']:.3f} nm"); cards[2].metric("MAE", f"{baseline.metrics['validation_mae_nm']:.3f} nm")
         repeated, summary, _ = repeated_validation(data); lots, _ = lot_group_validation(data, min(8, data.lot_id.nunique()))
         vt = st.tabs(["30회 반복", "데이터 품질", "Lot", "Dose 방향"])
-        with vt[0]: st.dataframe(summary[summary.model.eq("Model 2")], width="stretch")
-        with vt[1]: st.dataframe(quality_summary, width="stretch")
-        with vt[2]: st.dataframe(lots, width="stretch")
-        with vt[3]: m2 = repeated[repeated.model.eq("Model 2")]; c1, c2 = st.columns(2); c1.metric("Positive 음(-)", f"{int((m2.positive_dose_slope_nm_per_pct_point<0).sum())}/30"); c2.metric("Negative 양(+)", f"{int((m2.negative_dose_slope_nm_per_pct_point>0).sum())}/30")
-    with tabs[6]: st.info("Target CD가 없는 CSV/XLSX 업로드 시 고정 Model 2 예측과 다운로드가 활성화됩니다.")
-    with tabs[7]: st.warning("관찰 데이터이므로 인과효과를 확정할 수 없습니다. What-if/Sweep은 모델 예측이며 Random Forest와 Holdout 튜닝은 사용하지 않습니다.")
+        with vt[0]:
+            model2_summary = summary[summary.model.eq("Model 2")]; st.dataframe(model2_summary, width="stretch")
+            r2_row = model2_summary[model2_summary.metric.eq("validation_r2")].iloc[0]
+            engineer_note(f"30회 Validation R² 평균 {r2_row['mean']:.3f}, 표준편차 {r2_row['std']:.3f}입니다.", "평균 점수와 흔들림을 분리해서 봅니다. 평균이 양수여도 표준편차가 크면 새로운 데이터에서 성능 불확실성이 큽니다.", "분할별 실패 사례와 극단 오차를 확인하고, 단일 R² 대신 평균·표준편차·최솟값을 모델 승인 기준에 포함합니다.", "반복 random split도 시간·Tool·Lot 구조 누수를 완전히 제거하지는 않습니다.")
+        with vt[1]:
+            st.dataframe(quality_summary, width="stretch")
+            r2q = quality_summary[quality_summary.metric.eq("validation_r2")]; qmap = dict(zip(r2q.condition, r2q["mean"])); inc=qmap.get("A_including_flagged",np.nan); exc=qmap.get("B_excluding_5_flagged_rows",np.nan)
+            engineer_note(f"오류 후보 포함/검토 제외 반복 R² 평균은 {inc:.3f}/{exc:.3f}입니다.", "점수 상승을 삭제 정당화로 읽지 않고, 일부 입력값이 모델 안정성을 크게 움직인다는 데이터 품질 경고로 읽습니다.", "해당 5행의 설비·recipe 원본을 확인하고 수정 근거가 있을 때만 보정본을 별도 버전으로 관리합니다.", "검토 제외 결과는 민감도 분석이며 실제 오류 확정이나 최종 성능이 아닙니다.")
+        with vt[2]:
+            st.dataframe(lots, width="stretch")
+            worst = lots.loc[lots.validation_r2.idxmin()]
+            engineer_note(f"Lot holdout 중 가장 낮은 fold R²는 {worst.validation_r2:.3f}, RMSE는 {worst.validation_rmse_nm:.3f} nm입니다.", "특정 unseen Lot에서 성능이 낮다면 Lot별 재료·장비·recipe 구성 또는 극단 CD가 모델 범위를 벗어났는지 확인합니다.", f"Fold {int(worst.fold)}의 validation Lot과 큰 잔차 sample을 추적하고 Lot metadata를 추가 비교합니다.", "Fold 차이는 Lot 원인의 증명이 아니며 validation Lot 구성과 표본 수 영향을 받습니다.")
+        with vt[3]:
+            m2 = repeated[repeated.model.eq("Model 2")]; pos_ok=int((m2.positive_dose_slope_nm_per_pct_point<0).sum()); neg_ok=int((m2.negative_dose_slope_nm_per_pct_point>0).sum()); c1, c2 = st.columns(2); c1.metric("Positive 음(-)", f"{pos_ok}/30"); c2.metric("Negative 양(+)", f"{neg_ok}/30")
+            engineer_note(f"Positive 음의 방향 {pos_ok}/30회, Negative 양의 방향 {neg_ok}/30회입니다.", "예측 점수의 크기와 dose 방향의 안정성은 다른 질문입니다. 점수가 흔들려도 방향이 반복되면 DOE 우선순위를 정하는 가설로 사용할 수 있습니다.", "tone별 dose DOE에서 방향과 산포를 재현하고 Tool block을 포함해 공정창 후보를 검증합니다.", "방향 반복은 인과효과나 최적 dose를 증명하지 않습니다.")
+    with tabs[6]:
+        st.info("Target CD가 없는 CSV/XLSX 업로드 시 고정 Model 2 예측과 다운로드가 활성화됩니다.")
+        engineer_note("현재 분석 데이터에는 실제 CD Target이 있어 Analysis Mode로 실행 중입니다.", "Blind Holdout은 정답을 숨긴 최종 예측용이며 모델 선택이나 변수 튜닝에 사용하면 평가 누수가 발생합니다.", "모델 구조를 확정한 뒤 Holdout 예측을 저장하고, 정답 공개 후에만 최종 성능을 한 번 평가합니다.", "정답 없는 Holdout에서는 R²·RMSE·MAE를 계산할 수 없습니다.")
+    with tabs[7]:
+        st.warning("관찰 데이터이므로 인과효과를 확정할 수 없습니다. What-if/Sweep은 모델 예측이며 Random Forest와 Holdout 튜닝은 사용하지 않습니다.")
+        engineer_note("현재 결과는 특정 교육용 데이터와 관찰 범위에서 얻었습니다.", "좋은 엔지니어는 모델 점수보다 데이터 생성 구조, 누락 변수, 외삽, 재현 가능성을 먼저 확인합니다.", "결론마다 원자료 확인 항목·대안 가설·DOE·최종 Holdout 평가 조건을 문서화합니다.", "실제 Fab recipe 일반법칙, 최적 조건, 인과효과 또는 품질 보증으로 확대할 수 없습니다.")
