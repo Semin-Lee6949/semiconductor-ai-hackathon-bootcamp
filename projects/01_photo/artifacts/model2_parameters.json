@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "feature_names": [
+    "dose_centered",
+    "pr_tone_NEGATIVE",
+    "pr_tone_MISSING",
+    "dose_x_pr_tone_NEGATIVE",
+    "dose_x_pr_tone_MISSING",
+    "tool_id_T02",
+    "tool_id_T03"
+  ],
+  "dose_median": 100.122231,
+  "dose_center": 100.122231,
+  "intercept": 49.38248452767462,
+  "coefficients": [
+    -0.2238984948625781,
+    -0.07222500091808903,
+    -0.04893583605222513,
+    0.5791162254997164,
+    0.3830997988909073,
+    1.6628328599150015,
+    3.269677179761239
+  ],
+  "runtime_note": "Version-stable fallback for sklearn Pipeline artifact loading."
+}

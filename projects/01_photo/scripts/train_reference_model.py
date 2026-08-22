@@ -49,6 +49,17 @@ def main() -> None:
     assert round(metrics["validation_rmse_nm"], 3) == 1.661
     assert round(metrics["validation_mae_nm"], 3) == 1.140
     final_pipeline = pipeline().fit(data, data[TARGET])
+    feature_step = final_pipeline.named_steps["features"].builder_
+    regression = final_pipeline.named_steps["regression"]
+    parameters = {
+        "format_version": 1,
+        "feature_names": MODEL2,
+        "dose_median": float(feature_step.medians["normalized_dose_pct"]),
+        "dose_center": float(feature_step.dose_center),
+        "intercept": float(regression.intercept_),
+        "coefficients": [float(value) for value in regression.coef_],
+        "runtime_note": "Version-stable fallback for sklearn Pipeline artifact loading.",
+    }
     ranges = {}
     for column in CONTINUOUS:
         values = pd.to_numeric(data[column], errors="coerce").dropna()
@@ -66,6 +77,7 @@ def main() -> None:
     }
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     joblib.dump(final_pipeline, ARTIFACTS / "model2_pipeline.joblib")
+    (ARTIFACTS / "model2_parameters.json").write_text(json.dumps(parameters, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (ARTIFACTS / "reference_metrics.json").write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (ARTIFACTS / "schema_contract.json").write_text(json.dumps(schema, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(metrics, indent=2))

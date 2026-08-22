@@ -1,5 +1,11 @@
 # AI 사용 기록
 
+## 2026-08-22 — Streamlit Cloud Reference artifact 호환성 수정
+
+- 배포 오류: 로컬 scikit-learn 1.9에서 생성한 joblib Pipeline과 Cloud 런타임 버전이 다를 때 import/load 단계에서 앱이 중단될 가능성을 확인했다. 직접 사용하는 `joblib`도 배포 requirements에 명시되지 않았다.
+- 수정: sklearn Pipeline artifact는 유지하되 동일 Train 중앙값·dose center·회귀계수를 담은 `model2_parameters.json`을 추가했다. joblib load가 실패하면 버전 독립 JSON으로 동일 Model 2 feature와 예측을 재현한다.
+- 검증: 200행 Holdout에서 Pipeline 예측과 JSON fallback 예측의 최대 절대 차이가 0.0임을 확인하고, artifact 재생성·구문검사·Streamlit AppTest를 통과했다.
+
 ## 2026-08-22 — Frozen Reference Model Decision Support Workbench
 
 - AI 작업: A/train의 확정 Model 2 전처리와 회귀를 sklearn Pipeline artifact로 고정하고 metrics·schema contract와 생성 스크립트를 분리했다. 신규 CSV는 artifact로만 평가 또는 예측하며 자동 재학습하지 않는다.
