@@ -1,5 +1,14 @@
 # AI 사용 기록
 
+## 2026-08-22 — Frozen Reference Model Decision Support Workbench
+
+- AI 작업: A/train의 확정 Model 2 전처리와 회귀를 sklearn Pipeline artifact로 고정하고 metrics·schema contract와 생성 스크립트를 분리했다. 신규 CSV는 artifact로만 평가 또는 예측하며 자동 재학습하지 않는다.
+- 품질 Gate: 필수 schema, datatype, PR tone, 새 Tool, 결측, 중복, 기존 입력 오류 규칙과 A/train 관측 범위를 PASS/WARNING/BLOCK으로 판정한다. 범위는 산업 Spec이 아니라 Reference training range임을 표시하고 후보를 자동 삭제하지 않는다.
+- 의사결정 기능: Engineer Summary, Process/Lot sequence·residual, CD deviation, downstream outcome 분리, DOE evidence table, 큰 residual·Lot·입력 오류·품질 민감도 Failure View를 추가했다.
+- 모델 경계: target이 있으면 frozen Reference로 평가하고 없으면 예측만 한다. Custom Model은 사용자가 버튼을 누른 경우에만 별도 session에서 학습하며 artifact를 덮어쓰지 않는다. Random Forest와 Holdout 튜닝은 사용하지 않았다.
+- API 경계: API Key 없이 모든 Python 계산이 동작하며, 향후 API 연결 시 계산된 evidence만 전달할 수 있는 안내 영역만 마련했다.
+- 검증: A/train, target 포함 CSV, 200행 blind CSV, 필수 dose 누락 BLOCK, 새 Tool WARNING을 테스트하고 seed42 R²/RMSE/MAE와 STEP 5 CSV 불변을 확인했다.
+
 ## 2026-08-21 — Final Engineering Report
 
 - AI 작업: 마지막 탭을 문제 → 데이터 신뢰도 → 관찰 신호 → 대안 설명 → 검증 → Action의 사고 흐름을 따르는 동적 최종 보고서로 구성했다. 현재 업로드 데이터의 행·결측·오류 후보 비율, tone 구성, 산포 차이, dose slope, Tool gap, 단일·반복·Lot 성능, 품질 민감도와 최신 Custom/Logistic 결과를 사용한다.

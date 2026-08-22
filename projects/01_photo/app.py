@@ -8,7 +8,7 @@ PROJECT = Path(__file__).resolve().parent
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT / "outputs" / ".matplotlib-cache"))
 sys.path.insert(0, str(PROJECT / "scripts"))
 
-from workbench_ui import run  # noqa: E402
+from workbench_ui import run_v2 as run  # noqa: E402
 
 
 run(PROJECT)

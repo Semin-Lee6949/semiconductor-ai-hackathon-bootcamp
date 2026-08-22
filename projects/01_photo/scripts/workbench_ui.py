@@ -11,12 +11,14 @@ from sklearn.linear_model import LinearRegression
 
 from baseline_regression import CONTINUOUS, TARGET, TrainOnlyFeatureBuilder, clean_category, detect_suspected_input_errors
 from custom_model import ALLOWED_INPUTS, CATEGORICAL_INPUTS, DEFAULT_INPUTS, NUMERIC_INPUTS, explain_term, fit_custom_model, fit_fixed_model2, fit_logistic_model
+from decision_support import DOWNSTREAM_OUTCOMES, data_quality_gate, doe_candidates, evaluate_reference
 from model_validation import MODEL2, data_quality_sensitivity, lot_group_validation, repeated_validation
+from reference_model import load_reference_bundle
 
 
 PREDICTION = "predicted_resist_line_cd_nm"
 BLIND_REQUIRED = {"sample_id", "pr_tone", "tool_id", "normalized_dose_pct"}
-TABS = ["1 · Engineering Summary", "2 · Data Audit", "3 · Variable Lab & EDA", "4 · Model Lab", "5 · What-if Simulator", "6 · Validation", "7 · Blind Prediction", "8 · Final Engineering Report"]
+TABS = ["1 · Engineer Summary", "2 · Data Quality Gate", "3 · Process / Lot", "4 · Variable Lab & EDA", "5 · Model Lab", "6 · What-if", "7 · Validation", "8 · Failure Cases", "9 · Blind Prediction", "10 · Final Report"]
 PARAMETER_GUIDE = {
     "normalized_dose_pct": ("Normalized Dose", "%", "기준 노광량 대비 실제 노광량의 상대 비율", "PR tone별로 CD 반응 방향과 민감도가 달라지는지 확인합니다.", "같은 Tool·재료에서도 dose 조정에 따라 CD가 일관된 방향으로 움직이는가?"),
     "focus_um": ("Focus Offset", "µm", "기준 초점 위치에서 벗어난 정도", "최적 초점 주변에서는 직선보다 곡률이나 대칭성이 더 중요할 수 있습니다.", "0 근처에서 CD가 안정적인가, 양·음 방향의 비대칭 또는 공정창 축소가 있는가?"),
@@ -428,7 +430,96 @@ def final_engineering_report(raw, data, duplicates, flags, baseline, quality_sum
     st.markdown('<div class="cannot"><b>최종 결론의 경계</b><br>이 보고서는 현재 관찰 데이터에서 다음 검증 순서를 정합니다. 최적 Recipe, 인과효과, 실제 Fab 일반법칙 또는 품질 보증을 확정하지 않습니다.</div>', unsafe_allow_html=True)
 
 
-def run(project: Path):
+def reference_evidence(project, bundle):
+    repeated = pd.read_csv(project / "outputs" / "validation" / "repeated_validation.csv")
+    quality = pd.read_csv(project / "outputs" / "validation" / "data_quality_sensitivity_summary.csv")
+    lots = pd.read_csv(project / "outputs" / "validation" / "lot_group_validation.csv")
+    m2 = repeated[repeated.model.eq("Model 2")]; coef = bundle.coefficients.set_index("term")["coefficient"]
+    positive = float(coef["dose_centered"]); negative = positive + float(coef["dose_x_pr_tone_NEGATIVE"])
+    return {"repeated": repeated, "quality": quality, "lots": lots, "positive_slope": positive, "negative_slope": negative, "positive_direction_count": int((m2.positive_dose_slope_nm_per_pct_point < 0).sum()), "negative_direction_count": int((m2.negative_dose_slope_nm_per_pct_point > 0).sum()), "repeated_r2_mean": float(m2.validation_r2.mean()), "repeated_r2_std": float(m2.validation_r2.std(ddof=1))}
+
+
+def render_gate_banner(gate, uploaded_name):
+    color = {"PASS": "#398072", "WARNING": "#c99a45", "BLOCK": "#b85f4b"}[gate.status]
+    st.markdown(f'<div style="background:#fff;border:1px solid #d7e1e8;border-left:8px solid {color};border-radius:12px;padding:1rem 1.2rem;margin:.7rem 0"><b style="color:{color};font-size:1.25rem">DATA QUALITY GATE · {gate.status}</b><br><span style="color:#607382">{html.escape(uploaded_name)} · 범위 판정은 산업 Spec이 아니라 A/train Reference training range 기준입니다.</span></div>', unsafe_allow_html=True)
+
+
+def render_decision_summary(scored, gate, bundle, evidence, evaluation, uploaded):
+    st.header("ENGINEER DECISION SUMMARY")
+    stable = f"Positive dose 방향 {evidence['positive_direction_count']}/30 음(-), Negative {evidence['negative_direction_count']}/30 양(+)"
+    tool_summary = scored.groupby("tool_id_group")["predicted_resist_line_cd_nm"].mean() if "tool_id_group" in scored else pd.Series(dtype=float)
+    confounder = f"Tool별 예측 CD level 범위 {tool_summary.max()-tool_summary.min():.3f} nm" if len(tool_summary) > 1 else "Tool 비교 표본 부족"
+    outside = gate.outside_reference.sample_id.nunique() if len(gate.outside_reference) else 0
+    reliability = f"Reference R² {bundle.metrics['validation_r2']:.3f}, RMSE {bundle.metrics['validation_rmse_nm']:.3f} nm; Reference 범위 밖 {outside}행"
+    if gate.status == "BLOCK": action = "필수 schema·tone·dose 문제를 수정하기 전 모델 판단을 중단합니다."
+    elif outside or gate.status == "WARNING": action = "입력·단위·새 Tool·범위 이탈을 확인한 뒤 tone별 Dose DOE 후보를 검토합니다. 수치 수준은 Engineer input required."
+    else: action = "tone별 Dose Process Window를 Tool block 조건에서 검증합니다. 수치 수준은 Engineer input required."
+    cards = [("A · Data Quality", gate.status), ("B · Stable Evidence", stable), ("C · Main Confounder", confounder), ("D · Model Reliability", reliability), ("E · Recommended Next Action", action)]
+    for title, value in cards: st.markdown(f'<div class="finding"><b>{html.escape(title)}</b><span>{html.escape(value)}</span></div>', unsafe_allow_html=True)
+    if evaluation and uploaded: st.info(f"신규 데이터 Reference 평가 · n={evaluation['n_evaluated']}, R²={evaluation['r2']:.3f}, RMSE={evaluation['rmse_nm']:.3f} nm, MAE={evaluation['mae_nm']:.3f} nm. Reference 재학습 없이 평가했습니다.")
+    st.warning("관찰 데이터이므로 인과관계를 확정할 수 없습니다. 새로운 Tool·범위 밖 Recipe의 일반화는 보장되지 않으며 DOE 전에는 Recipe 변경 근거로 확정할 수 없습니다.")
+
+
+def render_process_lot(scored, has_target):
+    st.header("PROCESS / LOT MONITORING")
+    sequence = scored["sequence"] if "sequence" in scored else pd.Series(np.arange(1, len(scored)+1), index=scored.index)
+    st.caption("sequence 컬럼이 없으면 업로드 행 순서를 임시 sequence로 사용합니다. 정렬된 공정 시간이라는 보장은 없습니다.")
+    fig, axes = plt.subplots(2, 2, figsize=(12, 7)); axes = axes.ravel()
+    cd_column = TARGET if has_target else "predicted_resist_line_cd_nm"
+    axes[0].plot(sequence, scored[cd_column], color="#174d72", lw=1, alpha=.8); axes[0].set(title=f"{cd_column} by sequence", xlabel="sequence", ylabel="CD (nm)")
+    if has_target:
+        axes[1].plot(sequence, scored["residual_nm"], color="#b85f4b", lw=1); axes[1].axhline(0,color="black",ls="--",lw=1); axes[1].set(title="Residual by sequence", xlabel="sequence", ylabel="Actual - predicted (nm)")
+    else: axes[1].text(.5,.5,"No target CD\nResidual unavailable",ha="center",va="center"); axes[1].set_axis_off()
+    groups = [scored.loc[scored.tool_id_group.eq(tool), cd_column].dropna() for tool in sorted(scored.tool_id_group.unique())]; labels=sorted(scored.tool_id_group.unique())
+    axes[2].boxplot(groups, tick_labels=labels); axes[2].set(title=f"{cd_column} by Tool", ylabel="CD (nm)")
+    if has_target:
+        residual_groups=[scored.loc[scored.tool_id_group.eq(tool),"residual_nm"].dropna() for tool in labels]; axes[3].boxplot(residual_groups,tick_labels=labels); axes[3].axhline(0,color="black",ls="--",lw=1); axes[3].set(title="Residual by Tool",ylabel="Residual (nm)")
+    else: axes[3].text(.5,.5,"No target CD\nTool residual unavailable",ha="center",va="center"); axes[3].set_axis_off()
+    for ax in axes: ax.grid(alpha=.18)
+    fig.tight_layout(); st.pyplot(fig, width="stretch")
+    if has_target:
+        summaries=[]
+        if "lot_id" in scored:
+            lot=scored.groupby("lot_id").agg(sample_count=("residual_nm","size"),mean_residual_nm=("residual_nm","mean"),mean_absolute_error_nm=("absolute_error_nm","mean"),max_absolute_error_nm=("absolute_error_nm","max")).reset_index(); st.subheader("Lot residual summary"); st.dataframe(lot.sort_values("mean_absolute_error_nm",ascending=False),width="stretch",hide_index=True); summaries.append(f"최대 Lot MAE {lot.mean_absolute_error_nm.max():.3f} nm")
+        tone=scored.groupby("pr_tone_group").agg(sample_count=("residual_nm","size"),mean_residual_nm=("residual_nm","mean"),mean_absolute_error_nm=("absolute_error_nm","mean")).reset_index(); st.subheader("PR tone residual"); st.dataframe(tone,width="stretch",hide_index=True)
+        engineer_note("; ".join(summaries+[f"전체 MAE {scored.absolute_error_nm.mean():.3f} nm"]), "sequence나 그룹별 잔차가 한 방향으로 이어지는지 패턴 후보를 봅니다. 그래프만으로 drift를 선언하지 않습니다.", "큰 오차 sample의 sequence·Lot·Tool·tone과 입력 오류를 함께 대조합니다.", "추세선·그룹 평균은 drift 또는 불량의 통계적 확정이 아닙니다.")
+    else: engineer_note("Target CD가 없어 예측 CD sequence와 Tool 분포만 표시합니다.", "실측이 없으면 residual·drift·성능을 판단할 수 없습니다.", "정답 공개 후 같은 sample_id와 결합해 residual monitoring을 수행합니다.", "예측 분포를 실제 품질 분포로 해석하지 않습니다.")
+    downstream=[column for column in DOWNSTREAM_OUTCOMES if column in scored]
+    st.subheader("Downstream Quality Outcomes")
+    st.caption("아래 결과는 CD Reference Model predictor와 분리합니다.")
+    if downstream: st.dataframe(scored[downstream].describe(include="all").T,width="stretch")
+    else: st.info("표시할 downstream outcome 컬럼이 없습니다.")
+    if "nominal_cd_nm" in scored:
+        deviation="cd_deviation_nm" if has_target else "predicted_cd_deviation_nm"; st.subheader("CD Deviation"); st.dataframe(scored[[column for column in ["sample_id","nominal_cd_nm",deviation] if column in scored]],width="stretch",hide_index=True); st.caption("Spec limit이 정의되지 않아 deviation에 임의 PASS/FAIL 기준을 적용하지 않습니다.")
+
+
+def render_failure_cases(project, scored, gate, has_target, evidence):
+    st.header("ERROR / FAILURE CASE VIEW")
+    if has_target:
+        columns=[column for column in ["sample_id","lot_id","tool_id","pr_tone",TARGET,"predicted_resist_line_cd_nm","residual_nm","absolute_error_nm"] if column in scored]
+        st.subheader("신규/현재 데이터 absolute residual 상위 sample"); st.dataframe(scored.nlargest(min(20,len(scored)),"absolute_error_nm")[columns],width="stretch",hide_index=True)
+        engineer_note("Absolute residual이 큰 행은 Reference Model이 설명하지 못한 사례 후보입니다.", "입력 오류, 범위 이탈, 새 Tool, Lot별 누락 조건 또는 실제 CD 극단값 가능성을 동시에 봅니다.", "상위 sample을 Gate flag·Lot·Tool·sequence와 결합해 원자료부터 확인합니다.", "큰 residual만으로 sample 불량이나 공정 원인을 확정하지 않습니다.")
+    else: st.info("Target CD가 없어 신규 데이터 residual 실패 사례는 계산하지 않습니다.")
+    st.subheader("STEP 5 Reference OOF 큰 residual")
+    st.dataframe(pd.read_csv(project/"outputs"/"validation"/"largest_lot_oof_residuals.csv").head(20),width="stretch",hide_index=True)
+    st.subheader("입력 오류 의심 sample"); st.dataframe(gate.flagged_rows if len(gate.flagged_rows) else pd.DataFrame({"결과":["후보 없음"]}),width="stretch",hide_index=True)
+    st.subheader("오류 후보 포함/제외 성능")
+    st.dataframe(evidence["quality"],width="stretch",hide_index=True)
+
+
+def render_doe(evidence, columns):
+    st.subheader("NEXT DOE CANDIDATES")
+    table=doe_candidates(evidence,columns); st.dataframe(table,width="stretch",hide_index=True)
+    st.caption("수치 DOE level은 현재 근거만으로 생성하지 않습니다. 장비·재료·안전 제약을 반영할 Engineer input required.")
+
+
+def render_optional_ai():
+    st.subheader("Optional AI Interpretation Interface")
+    st.info("OPENAI_API_KEY 없이 모든 계산·그래프·DOE evidence가 동작합니다. 향후 API를 연결할 때는 Python이 계산한 evidence JSON만 전달하고 원본 데이터·비밀정보는 전송하지 않는 구조로 확장할 수 있습니다.")
+
+
+def legacy_run(project: Path):
+    """Pre-artifact workbench retained temporarily for UI regression reference; not executed."""
     st.set_page_config(page_title="Photo Process Analysis Workbench", page_icon="🔬", layout="wide")
     theme(); default_path = project / "data" / "A" / "train.csv"
     st.markdown("""<div class="hero"><small>PHOTO PROCESS · DECISION WORKBENCH</small><h1>Photo Process Analysis Workbench</h1><p>결론을 먼저 읽고 근거·모델·시뮬레이션·검증으로 내려가 판단을 확인합니다.</p></div><div class="flow"><div>1 · SUMMARY</div><div>2 · EVIDENCE</div><div>3 · MODEL</div><div>4 · SIMULATE</div><div>5 · VALIDATE</div></div>""", unsafe_allow_html=True)
@@ -597,3 +688,102 @@ def run(project: Path):
         engineer_note("현재 분석 데이터에는 실제 CD Target이 있어 Analysis Mode로 실행 중입니다.", "Blind Holdout은 정답을 숨긴 최종 예측용이며 모델 선택이나 변수 튜닝에 사용하면 평가 누수가 발생합니다.", "모델 구조를 확정한 뒤 Holdout 예측을 저장하고, 정답 공개 후에만 최종 성능을 한 번 평가합니다.", "정답 없는 Holdout에서는 R²·RMSE·MAE를 계산할 수 없습니다.")
     with tabs[7]:
         final_engineering_report(raw, data, duplicates, flags, baseline, quality_summary, repeated, lots, st.session_state.get("custom_model"), st.session_state.get("logistic_model"))
+
+
+def run_v2(project: Path):
+    """Frozen-reference decision-support workflow for new Lot data."""
+    st.set_page_config(page_title="Photo Engineer Decision Workbench", page_icon="🔬", layout="wide")
+    theme(); default_path = project / "data" / "A" / "train.csv"; bundle = load_reference_bundle(project); evidence = reference_evidence(project, bundle)
+    st.markdown("""<div class="hero"><small>PHOTO PROCESS · REFERENCE MODEL DECISION SUPPORT</small><h1>Photo Engineer Decision Workbench</h1><p>이 데이터를 믿을 수 있는가 → 무엇이 이상한가 → 무엇을 다음 DOE에서 검증할 것인가</p></div><div class="flow"><div>1 · TRUST</div><div>2 · MONITOR</div><div>3 · EXPLAIN</div><div>4 · TEST</div><div>5 · VERIFY</div></div>""", unsafe_allow_html=True)
+    uploaded = st.file_uploader("신규 Lot CSV 또는 Excel 업로드", type=["csv", "xlsx"])
+    try:
+        if uploaded is None: raw = pd.read_csv(default_path); source_name = "Reference example · A/train.csv"; is_reference = True
+        elif Path(uploaded.name).suffix.lower() == ".csv": raw = pd.read_csv(uploaded); source_name = uploaded.name; is_reference = False
+        else: raw = pd.read_excel(uploaded, engine="openpyxl"); source_name = uploaded.name; is_reference = False
+    except Exception as exc: st.error(f"파일을 읽을 수 없습니다: {exc}"); st.stop()
+    gate = data_quality_gate(raw, bundle.schema); render_gate_banner(gate, source_name)
+    data, duplicates, invalid = prepare(raw, is_reference)
+    tabs = st.tabs(TABS)
+    if gate.status == "BLOCK":
+        with tabs[0]:
+            st.header("ENGINEER DECISION SUMMARY"); st.error("BLOCK · Reference Model 평가/예측을 중단했습니다. 아래 Quality Gate의 구조적 문제를 먼저 수정하세요.")
+        with tabs[1]:
+            st.header("DATA QUALITY GATE"); st.dataframe(gate.checks, width="stretch", hide_index=True); audit(raw, data, duplicates, invalid)
+        for tab in tabs[2:]:
+            with tab: st.warning("Data Quality Gate가 BLOCK이므로 모델 결과를 생성하지 않습니다.")
+        return
+    scored, evaluation = evaluate_reference(bundle, data); has_target = TARGET in scored and pd.to_numeric(scored[TARGET], errors="coerce").notna().any()
+    analysis_data = scored[pd.to_numeric(scored[TARGET], errors="coerce").notna()].copy() if has_target else scored
+    available = [column for column in ALLOWED_INPUTS if column in scored]
+
+    with tabs[0]:
+        render_decision_summary(scored, gate, bundle, evidence, evaluation, uploaded is not None)
+        render_doe(evidence, list(scored.columns))
+    with tabs[1]:
+        st.header("DATA QUALITY GATE"); st.dataframe(gate.checks, width="stretch", hide_index=True)
+        if len(gate.outside_reference): st.subheader("Reference training range 밖"); st.dataframe(gate.outside_reference, width="stretch", hide_index=True)
+        audit(raw, data, duplicates, invalid)
+    with tabs[2]:
+        if is_reference: st.info("A/train의 현재 residual은 최종 artifact가 같은 800행에 fit된 진단값입니다. 일반화 실패 사례는 Failure Cases의 STEP 5 OOF residual을 우선하세요.")
+        render_process_lot(scored, has_target)
+    with tabs[3]:
+        st.header("Variable Lab & Automatic EDA")
+        if not has_target: st.info("Target CD가 없어 실제 CD EDA는 실행하지 않습니다. Process/Lot에서 예측 CD 분포만 확인하세요.")
+        else:
+            st.selectbox("Target", [TARGET]); selected = st.multiselect("공정 Input", available, default=[x for x in DEFAULT_INPUTS if x in available], key="selected_inputs_v2")
+            focus2 = st.checkbox("Focus² visual guide", True, disabled="focus_um" not in selected, key="focus_v2"); st.warning("상관관계는 인과관계를 의미하지 않습니다.")
+            with st.expander("선택 파라미터 교육 해설", expanded=True):
+                parameter_card(TARGET)
+                for column in selected: parameter_card(column)
+            numeric_selected = [column for column in selected if column in NUMERIC_INPUTS]
+            if numeric_selected:
+                scope = st.radio("상관행렬 데이터 범위", ["전체", "POSITIVE", "NEGATIVE"], horizontal=True, key="corr_v2"); fig, corr = correlation_matrix(analysis_data, numeric_selected, scope); st.pyplot(fig, width="stretch"); st.dataframe(corr.style.format("{:.3f}"), width="stretch")
+                for note in correlation_thoughts(analysis_data, numeric_selected, scope, corr): st.markdown(f"- {note}")
+            eda_tabs = st.tabs(selected)
+            for variable, tab in zip(selected, eda_tabs):
+                with tab: numeric_eda(analysis_data, variable, focus2) if variable in NUMERIC_INPUTS else categorical_eda(analysis_data, variable)
+    with tabs[4]:
+        st.header("Model Lab · Reference는 고정, Custom은 명시적 실험")
+        cards=st.columns(3); cards[0].metric("Reference Validation R²",f"{bundle.metrics['validation_r2']:.3f}"); cards[1].metric("Reference RMSE",f"{bundle.metrics['validation_rmse_nm']:.3f} nm"); cards[2].metric("Reference MAE",f"{bundle.metrics['validation_mae_nm']:.3f} nm")
+        st.info("업로드 시 Reference Model은 재학습되지 않습니다. 아래 Build 버튼은 사용자가 명시적으로 요청하는 교육용 Custom Model이며 Reference artifact를 덮어쓰지 않습니다.")
+        if has_target:
+            kind=st.radio("Custom 회귀",["Linear Regression","Ridge Regression"],horizontal=True,key="kind_v2"); inputs=st.multiselect("Custom Input",available,default=[x for x in DEFAULT_INPUTS if x in available],key="inputs_v2"); interaction=st.checkbox("Dose × PR tone interaction",True,disabled=not {"normalized_dose_pct","pr_tone"}.issubset(inputs),key="int_v2"); alpha=st.number_input("Ridge alpha",.01,100.0,1.0,.1,disabled=kind!="Ridge Regression",key="alpha_v2")
+            signature=(tuple(inputs),interaction,kind,float(alpha),source_name)
+            if st.button("Build explicit Custom Model",disabled=not inputs):
+                st.session_state.custom_model_v2=fit_custom_model(analysis_data,inputs,interaction,model_kind=kind,ridge_alpha=alpha);st.session_state.custom_signature_v2=signature;st.rerun()
+            custom=st.session_state.get("custom_model_v2") if st.session_state.get("custom_signature_v2")==signature else None
+            if custom:
+                result=pd.DataFrame({"Metric":["Validation R²","RMSE","MAE"],"Custom":[custom.metrics["validation_r2"],custom.metrics["validation_rmse_nm"],custom.metrics["validation_mae_nm"]],"Reference Model 2":[bundle.metrics["validation_r2"],bundle.metrics["validation_rmse_nm"],bundle.metrics["validation_mae_nm"]]});st.dataframe(result,width="stretch",hide_index=True); engineer_note(f"Custom Validation R² {custom.metrics['validation_r2']:.3f}, Reference 대비 {custom.metrics['validation_r2']-bundle.metrics['validation_r2']:+.3f}","변수 증가보다 unseen 성능 추가가치를 봅니다.","반복·Lot 구조에서 개선이 재현될 때만 후보로 유지합니다.","Custom 결과는 Reference artifact를 변경하지 않습니다.")
+        else: st.info("Target CD가 없어 Custom Model 학습을 비활성화했습니다.")
+    with tabs[5]:
+        st.header("Reference Model What-if")
+        active=bundle; values={}; outside=[]; controls=st.columns(3)
+        for index,variable in enumerate(active.inputs):
+            with controls[index%3]:
+                if variable in NUMERIC_INPUTS:
+                    low,high=active.builder.ranges[variable];values[variable]=st.number_input(variable,value=float(active.builder.medians[variable]),step=max((high-low)/100,.01),key=f"refsim_{variable}");st.caption(f"Reference range: {low:.3f} ~ {high:.3f}");outside += [variable] if values[variable]<low or values[variable]>high else []
+                else: values[variable]=st.selectbox(variable,active.builder.levels[variable],key=f"refsim_{variable}")
+        pred=float(active.predict(scenario(values))[0]);ref_values={x:active.builder.medians[x] if x in NUMERIC_INPUTS else active.builder.levels[x][0] for x in active.inputs};ref=float(active.predict(scenario(ref_values))[0])
+        if outside: st.warning(f"Reference training range 밖: {outside}. 외삽 신뢰도가 낮습니다.")
+        st.markdown(f'<div class="cd"><span>Predicted CD</span><strong>{pred:.2f} nm</strong><small>기준 대비 ΔCD {pred-ref:+.2f} nm</small></div>',unsafe_allow_html=True);cd_scheme(ref,pred)
+        low,high=active.builder.ranges["normalized_dose_pct"];grid=np.linspace(low,high,60);frames=pd.concat([scenario({**values,"normalized_dose_pct":float(value)}) for value in grid],ignore_index=True);curve=active.predict(frames);fig,ax=plt.subplots(figsize=(9,4));ax.plot(grid,curve,color="#174d72",lw=3);ax.scatter([values["normalized_dose_pct"]],[pred],color="#b85f4b");ax.set(xlabel="normalized_dose_pct",ylabel="Predicted CD (nm)",title="Frozen Reference Model 2 dose sweep");ax.grid(alpha=.2);fig.tight_layout();st.pyplot(fig,width="stretch");st.caption("모델 기반 관계이며 인과효과 또는 추천 Recipe가 아닙니다.")
+    with tabs[6]:
+        st.header("Reference Validation · 고정 결과")
+        metrics=pd.DataFrame([bundle.metrics]);st.dataframe(metrics,width="stretch",hide_index=True)
+        if evaluation: st.subheader("신규 데이터 평가");st.dataframe(pd.DataFrame([evaluation]),width="stretch",hide_index=True)
+        vt=st.tabs(["30회 반복","데이터 품질","Lot","Dose 방향"])
+        with vt[0]: st.dataframe(evidence["repeated"],width="stretch",hide_index=True)
+        with vt[1]: st.dataframe(evidence["quality"],width="stretch",hide_index=True)
+        with vt[2]: st.dataframe(evidence["lots"],width="stretch",hide_index=True)
+        with vt[3]: st.metric("Positive 음(-)",f"{evidence['positive_direction_count']}/30");st.metric("Negative 양(+)",f"{evidence['negative_direction_count']}/30")
+        engineer_note(f"Reference 반복 R² {evidence['repeated_r2_mean']:.3f} ± {evidence['repeated_r2_std']:.3f}","성능 흔들림과 dose 방향 안정성은 별도 판단합니다.","새 Lot 평가와 실패 사례를 Reference 분포에 대조합니다.","UI 변경은 STEP 4~5 확정 CSV를 재계산하지 않습니다.")
+    with tabs[7]: render_failure_cases(project,scored,gate,has_target,evidence)
+    with tabs[8]:
+        st.header("Blind Prediction")
+        if has_target: st.info("현재 파일에는 실제 CD가 있어 Reference Evaluation Mode입니다.")
+        else:
+            st.warning("실제 CD 정답이 없으므로 예측만 생성합니다. 성능은 정답 제공 후 평가할 수 있습니다."); display=[column for column in ["sample_id","predicted_resist_line_cd_nm","nominal_cd_nm","predicted_cd_deviation_nm"] if column in scored];st.dataframe(scored[display],width="stretch",hide_index=True);st.download_button("전체 prediction CSV 다운로드",scored.to_csv(index=False).encode("utf-8-sig"),"photo_reference_predictions.csv","text/csv")
+    with tabs[9]:
+        st.header("FINAL DECISION REPORT")
+        render_decision_summary(scored,gate,bundle,evidence,evaluation,uploaded is not None);render_doe(evidence,list(scored.columns));render_optional_ai()
+        st.subheader("현재 불확실성과 확인 계획");st.markdown("- 관찰 데이터이므로 인과관계 확정 불가\n- Model performance는 분할과 입력 오류에 민감\n- Positive/Negative dose 방향은 Reference 반복검증에서 안정적\n- 새로운 Tool·범위 밖 Recipe 일반화 보장 불가\n- 통제 DOE 전에는 Recipe 변경 근거로 확정 불가")

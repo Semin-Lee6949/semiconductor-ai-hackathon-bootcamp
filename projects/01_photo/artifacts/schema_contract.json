@@ -1,0 +1,81 @@
+{
+  "contract_version": 1,
+  "required_model_columns": [
+    "normalized_dose_pct",
+    "pr_tone",
+    "tool_id"
+  ],
+  "target_column": "resist_line_cd_nm",
+  "allowed_pr_tone": [
+    "POSITIVE",
+    "NEGATIVE",
+    "MISSING"
+  ],
+  "known_tool_id": [
+    "T01",
+    "T02",
+    "T03"
+  ],
+  "numeric_process_columns": [
+    "normalized_dose_pct",
+    "focus_um",
+    "coat_thickness_nm",
+    "develop_time_s",
+    "peb_temp_c",
+    "softbake_temp_c",
+    "developer_concentration_pct"
+  ],
+  "reference_ranges": {
+    "normalized_dose_pct": {
+      "min": 9.908105,
+      "max": 123.85307,
+      "q01": 85.25799812,
+      "q99": 114.45562238000001,
+      "median": 100.122231
+    },
+    "focus_um": {
+      "min": -0.214,
+      "max": 0.933515,
+      "q01": -0.17443735,
+      "q99": 0.16182394999999988,
+      "median": -0.0024475
+    },
+    "coat_thickness_nm": {
+      "min": 9.465512,
+      "max": 136.012249,
+      "q01": 76.28504088,
+      "q99": 122.93844079999992,
+      "median": 99.352917
+    },
+    "develop_time_s": {
+      "min": 4.772953,
+      "max": 76.337237,
+      "q01": 35.3885218,
+      "q99": 66.67336479999999,
+      "median": 49.886762000000004
+    },
+    "peb_temp_c": {
+      "min": 99.154204,
+      "max": 386.527363,
+      "q01": 100.32206339999999,
+      "q99": 115.1500206,
+      "median": 108.543562
+    },
+    "softbake_temp_c": {
+      "min": 9.979035,
+      "max": 105.527766,
+      "q01": 91.93125099000001,
+      "q99": 103.69273199,
+      "median": 97.7643645
+    },
+    "developer_concentration_pct": {
+      "min": 2.203127,
+      "max": 12.21005,
+      "q01": 2.2667805,
+      "q99": 2.5160481,
+      "median": 2.380694
+    }
+  },
+  "range_note": "Observed A/train reference range; not an industry specification.",
+  "suspected_input_rows": 5
+}

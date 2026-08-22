@@ -67,7 +67,13 @@ python -m pip install -r requirements-class.txt
 streamlit run projects/01_photo/app.py
 ```
 
-CSV를 업로드하지 않으면 `projects/01_photo/data/A/train.csv`를 사용합니다. 앱은 Holdout/B 데이터와 Random Forest를 사용하지 않습니다.
+CSV를 업로드하지 않으면 `projects/01_photo/data/A/train.csv`를 사용합니다. 앱은 `projects/01_photo/artifacts/`의 고정 A/train Model 2 Pipeline으로 신규 Lot을 평가하거나 예측하며, 업로드만으로 Reference Model을 재학습하지 않습니다. Target 없는 파일은 예측만 하고 Random Forest는 사용하지 않습니다.
+
+Reference artifact를 명시적으로 재생성할 때만 다음을 실행합니다.
+
+```bash
+python projects/01_photo/scripts/train_reference_model.py
+```
 
 단계별 산출물을 다시 생성하려면 저장소 루트에서 다음 순서로 실행합니다.
 

@@ -1,0 +1,20 @@
+{
+  "artifact_training_source": "projects/01_photo/data/A/train.csv",
+  "artifact_fit_rows": 800,
+  "random_state": 42,
+  "features": [
+    "dose_centered",
+    "pr_tone_NEGATIVE",
+    "pr_tone_MISSING",
+    "dose_x_pr_tone_NEGATIVE",
+    "dose_x_pr_tone_MISSING",
+    "tool_id_T02",
+    "tool_id_T03"
+  ],
+  "train_r2": 0.5225717848809207,
+  "validation_r2": 0.6788080264731287,
+  "validation_rmse_nm": 1.6612734690183597,
+  "validation_mae_nm": 1.1402799156307954,
+  "n_train": 559,
+  "n_validation": 241
+}
